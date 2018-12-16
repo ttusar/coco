@@ -9,7 +9,7 @@
 
 #include "coco.h"
 
-static void wait_in_seconds(unsigned int secs) {
+static void wait_in_seconds(time_t secs) {
     time_t retTime = time(0) + secs;
     while (time(0) < retTime);
 }
@@ -119,7 +119,7 @@ int main( int argc, char *argv[] )  {
 
   if ((argc == 2) && (strcmp(argv[1], "leak_check") == 0)) {
     valgrind_test();
-    run_once("produce_all_data 1");
+    run_once("produce_all_data: 1");
     multiple_observers();
   }
   else {

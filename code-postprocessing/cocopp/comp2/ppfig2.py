@@ -10,8 +10,6 @@ Scale up figures for two algorithms can be done with compall/ppfigs.py
 from __future__ import absolute_import
 
 import os
-import sys
-import warnings
 import matplotlib.pyplot as plt
 from pdb import set_trace
 try:
@@ -57,7 +55,7 @@ incrstars = 1.5
 fthresh = 1e-8
 xmax = 1000
 
-dimension_index = dict([(dimensions[i], i) for i in xrange(len(dimensions))])
+dimension_index = dict([(dimensions[i], i) for i in range(len(dimensions))])
 
 def _generateData(entry0, entry1, fthresh=None, downsampling=None):
 
@@ -65,9 +63,7 @@ def _generateData(entry0, entry1, fthresh=None, downsampling=None):
         """Returns two arrays of fevals aligned on function evaluations.
         """
 
-        res = readalign.alignArrayData(readalign.HArrayMultiReader([i0.evals,
-                                                                    i1.evals],
-                                                                    i0.isBiobjective()))
+        res = readalign.alignArrayData(readalign.HArrayMultiReader([i0.evals, i1.evals]))
         idx = 1 + i0.nbRuns()
         data0 = res[:, np.r_[0, 1:idx]]
         data1 = res[:, np.r_[0, idx:idx+i1.nbRuns()]]
@@ -167,14 +163,9 @@ def beautify(xmin=None):
 def annotate(entry0, entry1, dim, minfvalue=1e-8, nbtests=1):
     """Display some annotations associated to the graphs generated."""
 
-    isEarlyStop = False
     ha = 'left'
     va = 'center'
     lastfvalue = min(entry0.evals[-1][0], entry1.evals[-1][0])
-    if minfvalue < lastfvalue:
-        isEarlyStop = True
-        #ha = 'center'
-        #va = 'top'
 
     if not minfvalue or minfvalue < lastfvalue:
         minfvalue = lastfvalue
@@ -229,7 +220,7 @@ def annotate(entry0, entry1, dim, minfvalue=1e-8, nbtests=1):
     nbstars = 0
     # sign of z-value and data must agree
     if ((nbtests * p) < 0.05 and (z * signdata) > 0):
-        nbstars = np.min([5, -np.ceil(np.log10(nbtests * p + 1e-99))])
+        nbstars = int(np.min([5, -np.ceil(np.log10(nbtests * p + 1e-99))]))
     if nbstars > 0:
         xstars = annotcoord[0] * np.power(incrstars, np.arange(1., 1. + nbstars))
         # the additional slicing [0:int(nbstars)] is due to
@@ -238,17 +229,17 @@ def annotate(entry0, entry1, dim, minfvalue=1e-8, nbtests=1):
         ystars = [annotcoord[1]] * nbstars
 
         try:
-            h = plt.plot(xstars, ystars, marker='*', ls='', color='w',
-                         markersize=5*linewidth, markeredgecolor='k',
-                         markerfacecolor='None',
-                         zorder=20, markeredgewidth = 0.4 * linewidth,
-                         transform=trans, clip_on=False)
+            plt.plot(xstars, ystars, marker='*', ls='', color='w',
+                     markersize=5*linewidth, markeredgecolor='k',
+                     markerfacecolor='None',
+                     zorder=20, markeredgewidth = 0.4 * linewidth,
+                     transform=trans, clip_on=False)
         except KeyError:
             #Version problem
-            h = plt.plot(xstars, ystars, marker='+', ls='', color='w',
-                         markersize=2.5*linewidth, markeredgecolor='k',
-                         zorder=20, markeredgewidth = 0.2 * linewidth,
-                         transform=trans, clip_on=False)
+            plt.plot(xstars, ystars, marker='+', ls='', color='w',
+                     markersize=2.5*linewidth, markeredgecolor='k',
+                     zorder=20, markeredgewidth = 0.2 * linewidth,
+                     transform=trans, clip_on=False)
 
 def main(dsList0, dsList1, minfvalue=1e-8, outputdir=''):
     """Returns aRT1/aRT0 comparison figure."""
@@ -272,9 +263,6 @@ def main(dsList0, dsList1, minfvalue=1e-8, outputdir=''):
 
         filename = os.path.join(outputdir,'ppfig2_f%03d' % (func))
 
-        dims = sorted(set.intersection(set(dictDim0), set(dictDim1)))
-
-        handles = []
         dataperdim = {}
         fvalueswitch = {}
         nbtests = 0

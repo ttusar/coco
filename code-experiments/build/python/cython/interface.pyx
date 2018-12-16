@@ -7,11 +7,13 @@ cimport numpy as np
 
 from cocoex.exceptions import InvalidProblemException, NoSuchProblemException, NoSuchSuiteException
 
-known_suite_names = [b"bbob", b"bbob-biobj", b"bbob-biobj-ext"]
-_known_suite_names = [b"bbob", b"bbob-biobj", b"bbob-constrained", b"bbob-largescale"]
+known_suite_names = ["bbob", "bbob-biobj", "bbob-biobj-ext", "bbob-constrained"]
+# known_suite_names = ["bbob", "bbob-biobj", "bbob-biobj-ext"]
+_known_suite_names = ["bbob", "bbob-biobj", "bbob-biobj-ext", "bbob-constrained", "bbob-largescale",
+"bbob-mixint"]
 
 # _test_assignment = "seems to prevent an 'export' error (i.e. induce export) to make this module known under Linux and Windows (possibly because of the leading underscore of _interface)"
-# __all__ = ['Problem', 'Benchmark']
+# __all__ = ['Observer', 'Problem', 'Suite']
 
 # Must initialize numpy or risk segfaults
 np.import_array()
@@ -29,7 +31,8 @@ cdef extern from "coco.h":
     coco_observer_t *coco_observer(const char *observer_name, const char *options)
     void coco_observer_free(coco_observer_t *self)
     coco_problem_t *coco_problem_add_observer(coco_problem_t *problem, 
-                                              coco_observer_t *observer)    
+                                              coco_observer_t *observer)
+    const char *coco_observer_get_result_folder(const coco_observer_t *observer)
 
     coco_suite_t *coco_suite(const char *suite_name, const char *suite_instance, 
                              const char *suite_options)
@@ -52,123 +55,31 @@ cdef extern from "coco.h":
     size_t coco_problem_get_dimension(const coco_problem_t *problem)
     size_t coco_problem_get_number_of_objectives(const coco_problem_t *problem)
     size_t coco_problem_get_number_of_constraints(const coco_problem_t *problem)
+    size_t coco_problem_get_number_of_integer_variables(const coco_problem_t *problem)
     const char *coco_problem_get_id(const coco_problem_t *problem)
     const char *coco_problem_get_name(const coco_problem_t *problem)
     const double *coco_problem_get_smallest_values_of_interest(const coco_problem_t *problem)
     const double *coco_problem_get_largest_values_of_interest(const coco_problem_t *problem)
-    double coco_problem_get_final_target_fvalue1(const coco_problem_t *problem)
+    const double *coco_problem_get_largest_fvalues_of_interest(const coco_problem_t *problem)
+    # double coco_problem_get_final_target_fvalue1(const coco_problem_t *problem)
     size_t coco_problem_get_evaluations(const coco_problem_t *problem)
+    size_t coco_problem_get_evaluations_constraints(const coco_problem_t *problem)
     double coco_problem_get_best_observed_fvalue1(const coco_problem_t *problem)
     int coco_problem_final_target_hit(const coco_problem_t *problem)
+    void bbob_problem_best_parameter_print(const coco_problem_t *problem)
 
 cdef bytes _bstring(s):
     if type(s) is bytes:
         return <bytes>s
-    elif isinstance(s, unicode):
-        return s.encode('ascii')
+    if isinstance(s, (str, unicode)):
+        return s.encode('ascii')  # why not <bytes>s.encode('ascii') ?
     else:
         raise TypeError("expect a string, got %s" % str(type(s)))
 
 cdef coco_observer_t* _current_observer
 
 cdef class Suite:
-    """Suite of benchmark problems.
-
-    Input arguments to `Suite` are `name: str`, `instance: str`, `options: str`,
-    and passed to the respective C code (see `coco.h`).
-
-    >>> import cocoex as ex
-    >>> suite = ex.Suite("bbob", "", "")
-    >>> f = suite.next_problem()
-    >>> assert f.number_of_objectives == 1
-    >>> print("f([1,2]) = %.11f" % f([1,2]))
-    f([1,2]) = 90.00369408000
-
-    Sweeping through all problems is as simple as::
-
-    >>> import cocoex as ex
-    >>> suite = ex.Suite("bbob-biobj", "", "")
-    >>> observer = ex.Observer("bbob-biobj", "result_folder:doctest")
-    >>> for fun in suite:
-    ...     if fun.index == 0:
-    ...         print("Number of objectives %d, %d, %d" %
-    ...                 (fun.number_of_objectives,
-    ...                  suite.number_of_objectives[0],
-    ...                  suite.number_of_objectives[-1]))
-    ...     fun.observe_with(observer)
-    ...     assert fun.number_of_objectives == suite.number_of_objectives[0]
-    ...     # run run run using fun  # doctest: +ELLIPSIS
-    Number of objectives 2, 2, 2...
-
-    In the example, an observer was added to produce output data for the
-    COCO post-processing.
-
-    The following example runs the entire bbob2009 benchmark suite
-    on random search::
-
-    >>> import numpy as np
-    >>> from cocoex import Suite, Observer
-    ...
-    >>> MAX_FE = 22  # max f-evaluations
-    >>> def random_search(f, lb, ub, m):  # don't use m >> 1e5 with this implementation
-    ...     candidates = lb + (ub - lb) * np.random.rand(m, len(lb))
-    ...     return candidates[np.argmin([f(x) for x in candidates])]
-    ...
-    >>> solver = random_search
-    >>> suite = Suite("bbob", "year:2009", "")
-    >>> observer = Observer("bbob",
-    ...              "result_folder: %s_on_%s" % (solver.__name__, "bbob2009"))
-    >>> for fun in suite:
-    ...     if fun.dimension > 10:
-    ...         break
-    ...     print('Current problem index = %d' % fun.index)
-    ...     fun.observe_with(observer)
-    ...     solver(fun, fun.lower_bounds, fun.upper_bounds, MAX_FE)
-    ...   # data should be now in the "exdata/random_search_on_bbob2009" folder
-    ...   # doctest: +ELLIPSIS
-    Current problem index = 0...
-    >>> #
-    >>> # Exactly the same using another looping technique:
-    >>> for id in suite.ids():
-    ...     fun = suite.get_problem(id, observer)
-    ...     _ = solver(fun, fun.lower_bounds, fun.upper_bounds, MAX_FE)
-    ...     print("Evaluations on %s: %d" % (fun.name, fun.evaluations))
-    ...     fun.free()  # this is absolutely necessary here
-    ...     # doctest: +ELLIPSIS
-    Evaluations on ...
-
-    We can select a single function, say BBOB f9 in 20D, of a given suite like::
-
-    >>> import cocoex as ex
-    >>> suite = ex.Suite("bbob", "", "dimensions:20 instance_indices:1")
-    >>> len(suite)
-    24
-    >>> f9 = suite.get_problem(8)
-    >>> x = f9.initial_solution  # a copy of a feasible point
-    >>> all(x == 0)
-    True
-
-    See module attribute `cocoex.known_suite_names` for known suite names::
-
-    >>> import cocoex as ex
-    >>> for suite_name in ex.known_suite_names:
-    ...     suite = ex.Suite(suite_name, "", "")
-    ...     print(suite.dimensions)
-    ...     for f in suite:
-    ...         assert f.dimension in suite.dimensions
-    ...         # doctest: +ELLIPSIS
-    [2, 3, 5, 10, 20, 40]...
-
-    See file `example_experiment.py` for a full example use case.
-
-    Details: depending on the benchmark suite and observer, only one problem can
-    be open at a time. Using `get_problem` without `free` or mixing the use of
-    `next_problem` and `get_problem` may not be possible. For example, in this
-    case the "bbob" observer is known to lead to a crash of the Python
-    interpreter.
-
-    See also `Observer` and `example_experiment.py`.
-    """
+    """see __init__.py"""
     cdef coco_suite_t* suite  # AKA _self
     cdef coco_problem_t* _current_problem
     cdef bytes _name  # used in @property name
@@ -209,10 +120,11 @@ cdef class Suite:
         self._names = []
         self._dimensions = []
         self._number_of_objectives = []
-        if str(self._name) not in [str(n) for n in known_suite_names]:
-            raise NoSuchSuiteException("""Unkown benchmark suite name "%s".
+        if self._name not in [_bstring(name) for name in known_suite_names]:
+            raise NoSuchSuiteException("""
+Unkown benchmark suite name %s.
 Known suite names are %s.
-If "%s" was not a typo, you can add the desired name to `known_suite_names`::
+If %s was not a typo, you can add the desired name to `known_suite_names`::
 
         >> import cocoex as ex
         >> ex.known_suite_names.append(b"my_name")  # must be a byte string
@@ -307,7 +219,7 @@ also report back a missing name to https://github.com/numbbo/coco/issues
           might just silently die, which is e.g. a known issue of the "bbob"
           observer.
 
-        See also `ids`.
+        See also `ids`, `get_problem_by_function_dimension_instance`.
         """
         if not self.initialized:
             raise ValueError("Suite has been finalized/free'ed")
@@ -368,7 +280,8 @@ also report back a missing name to https://github.com/numbbo/coco/issues
 
     def free(self):
         """free underlying C structures"""
-        self.__dealloc__()
+        if self.suite:  # for some reason __dealloc__ cannot be called here
+            coco_suite_free(self.suite)
         self.suite = NULL
         self.initialized = False  # not (yet) visible from outside
     def __dealloc__(self):
@@ -473,7 +386,7 @@ also report back a missing name to https://github.com/numbbo/coco/issues
         return list(self._indices)
     @property
     def name(self):
-        """name of this suite as used to instantiate the suite via `Suite(name, ...)`"""
+        """see __init__.py"""
         return self._name
     @property
     def instance(self):
@@ -516,8 +429,10 @@ also report back a missing name to https://github.com/numbbo/coco/issues
                 try:
                     problem = s.next_problem()
                     if problem is None:
+                        return  # StopIteration is deprecated
                         raise StopIteration
                 except NoSuchProblemException:
+                    return  # StopIteration is deprecated
                     raise StopIteration
                 yield problem
         except:
@@ -526,34 +441,7 @@ also report back a missing name to https://github.com/numbbo/coco/issues
             s is self or s.free()
 
 cdef class Observer:
-    """Observer which can be "attached to" one or several problems, however not
-    necessarily at the same time.
-
-    The typical observer records data to be used in the COCO post-processing
-    module `cocopp` afterwards.
-
-    >>> import cocoex as ex
-    >>> suite = ex.Suite("bbob", "", "")
-    >>> assert len(suite) == 2160
-    >>> f = suite.get_problem(33)
-    >>> assert f.id.endswith('f003_i04_d02')
-    >>> observer = ex.Observer("bbob",
-    ...                        "result_folder: doctest")
-    >>> f.observe_with(observer)  # the same as observer.observe(f)  # doctest: +ELLIPSIS
-    <cocoex...
-    >>> # work work work with observed f
-    >>> f.free()
-
-    Details:
-    - `f.free()` in the above example must be called before to observe
-      another problem with the "bbob" observer. Otherwise the Python
-      interpreter will crash due to an error raised from the C code.
-    - Due to technical sublties between Python/Cython/C, the pointer to the
-      underlying C observer is passed by global assignment with
-      `_update_current_observer_global()`
-
-
-    """
+    """see __init__.py"""
     cdef coco_observer_t* _observer
     cdef bytes _name
     cdef bytes _options
@@ -595,6 +483,9 @@ cdef class Observer:
     @property
     def state(self):
         return self._state
+    @property
+    def result_folder(self):
+        return coco_observer_get_result_folder(self._observer)
 
     def free(self):
         self.__dealloc__()
@@ -614,27 +505,23 @@ cdef Problem_init(coco_problem_t* problem, free=True, suite_name=None):
     res._suite_name = suite_name
     return res._initialize(problem, free)
 cdef class Problem:
-    """`Problem` instances are usually generated using `Suite`.
-    
-    The main feature of a problem instance is that it is callable, returning the
-    objective function value when called with a candidate solution as input.
-    """
+    """see __init__.py"""
     cdef coco_problem_t* problem
     cdef np.ndarray y_values  # argument for coco_evaluate
     cdef np.ndarray constraint_values  # argument for coco_evaluate
     cdef np.ndarray x_initial  # argument for coco_problem_get_initial_solution
-    # cdef public const double[:] test_bounds
-    # cdef public np.ndarray lower_bounds
-    # cdef public np.ndarray upper_bounds
-    cdef public np.ndarray _lower_bounds
-    cdef public np.ndarray _upper_bounds
+    cdef np.ndarray _lower_bounds
+    cdef np.ndarray _upper_bounds
+    cdef np.ndarray _largest_fvalues_of_interest
     cdef size_t _number_of_variables
     cdef size_t _number_of_objectives
     cdef size_t _number_of_constraints
+    cdef size_t _number_of_integer_variables
     cdef _suite_name  # for the record
     cdef _list_of_observers  # for the record
     cdef _problem_index  # for the record, this is not public but used in index property
     cdef _do_free
+    cdef _initial_solution_proposal_calls
     cdef initialized
     def __cinit__(self):
         cdef np.npy_intp shape[1]
@@ -656,9 +543,11 @@ cdef class Problem:
         self._number_of_variables = coco_problem_get_dimension(self.problem)
         self._number_of_objectives = coco_problem_get_number_of_objectives(self.problem)
         self._number_of_constraints = coco_problem_get_number_of_constraints(self.problem)
+        self._number_of_integer_variables = coco_problem_get_number_of_integer_variables(self.problem)
         self.y_values = np.zeros(self._number_of_objectives)
         self.constraint_values = np.zeros(self._number_of_constraints)
         self.x_initial = np.zeros(self._number_of_variables)
+        self._initial_solution_proposal_calls = 0
         ## FIXME: Inefficient because we copy the bounds instead of
         ## sharing the data.
         self._lower_bounds = -np.inf * np.ones(self._number_of_variables)
@@ -669,14 +558,15 @@ cdef class Problem:
                 self._lower_bounds[i] = coco_problem_get_smallest_values_of_interest(self.problem)[i]
             if coco_problem_get_largest_values_of_interest(self.problem) is not NULL:
                 self._upper_bounds[i] = coco_problem_get_largest_values_of_interest(self.problem)[i]
+        self._largest_fvalues_of_interest = None
         self.initialized = True
         return self
     def constraint(self, x):
-        """return constraint values for `x`. 
-
-        By convention, constraints with values >= 0 are satisfied.
-        """
-        raise NotImplementedError("has never been tested, incomment this to start testing")
+        """see __init__.py"""
+        if self.number_of_constraints <= 0:
+            return  # return None, prevent Python kernel from dying
+            # or should we return `[]` for zero constraints?
+            # `[]` is more likely to produce quietly unexpected result?
         cdef np.ndarray[double, ndim=1, mode="c"] _x
         x = np.array(x, copy=False, dtype=np.double, order='C')
         if np.size(x) != self.number_of_variables:
@@ -761,6 +651,42 @@ cdef class Problem:
         """"inofficial" interface to `self` with target f-value of zero. """
         return self(x) - self.final_target_fvalue1
 
+    def initial_solution_proposal(self, restart_number=None):
+        """return feasible initial solution proposals.
+
+        For unconstrained problems, the proposal is different for each
+        consecutive call without argument and for each `restart_number`
+        and may be different under repeated calls with the same
+        `restart_number`. ``self.initial_solution_proposal(0)`` is the
+        same as ``self.initial_solution``.
+
+        Conceptual example::
+
+            # given: a suite instance, a budget, and fmin
+            for problem in suite:
+                # restart until budget is (over-)exhausted
+                while problem.evaluations < budget and not problem.final_target_hit:
+                    fmin(problem, problem.initial_solution_proposal())
+
+        Details: by default, the first proposal is the domain middle or
+        the (only) known feasible solution.
+        Subsequent proposals are coordinate-wise sampled as the sum
+        of two iid random variates uniformly distributed within the
+        domain boundaries. On the ``'bbob'`` suite their density is
+        0.2 * (x / 5 + 1) for x in [-5, 0] and
+        0.2 * (1 - x / 5) for x in [0, 5] and zero otherwise.
+
+        """
+        if restart_number is None:
+            restart_number = self._initial_solution_proposal_calls
+            self._initial_solution_proposal_calls += 1  # count calls without explicit argument
+        if restart_number <= 0:
+            return self.initial_solution
+        rv_triangular = np.random.rand(self.dimension) + np.random.rand(self.dimension)
+        if self.number_of_constraints > 0:
+            return self.initial_solution + 1.0 * (rv_triangular - 1)
+        return self.lower_bounds + rv_triangular * (
+                                    self.upper_bounds - self.lower_bounds) / 2
     @property
     def initial_solution(self):
         """return feasible initial solution"""
@@ -768,8 +694,17 @@ cdef class Problem:
                                           <double *>np.PyArray_DATA(self.x_initial))
         return np.array(self.x_initial, copy=True)
     @property
-    def list_of_observers(self):
+    def observers(self):
+        """list of observers wrapped around this problem"""
         return self._list_of_observers
+    @property
+    def is_observed(self):
+        """problem ``p`` is observed ``p.is_observed`` times.
+
+        See also: the list of observers in property `observers`.
+        """
+        return len(self._list_of_observers)
+
     property number_of_variables:  # this is cython syntax, not known in Python
         # this is a class definition which is instantiated automatically!?
         """Number of variables this problem instance expects as input."""
@@ -788,6 +723,10 @@ cdef class Problem:
         "number of constraints"
         return self._number_of_constraints
     @property
+    def number_of_integer_variables(self):
+        "number of integer variables"
+        return self._number_of_integer_variables
+    @property
     def lower_bounds(self):
         """depending on the test bed, these are not necessarily strict bounds
         """
@@ -801,19 +740,34 @@ cdef class Problem:
     def evaluations(self):
         return coco_problem_get_evaluations(self.problem)
     @property
+    def evaluations_constraints(self):
+        return coco_problem_get_evaluations_constraints(self.problem)
+    @property
     def final_target_hit(self):
         """return 1 if the final target is known and has been hit, 0 otherwise
         """
         assert(self.problem)
         return coco_problem_final_target_hit(self.problem)
-    @property
-    def final_target_fvalue1(self):
-        assert(self.problem)
-        return coco_problem_get_final_target_fvalue1(self.problem)
+    #@property
+    #def final_target_fvalue1(self):
+    #    assert(self.problem)
+    #    return coco_problem_get_final_target_fvalue1(self.problem)
     @property
     def best_observed_fvalue1(self):
         assert(self.problem)
         return coco_problem_get_best_observed_fvalue1(self.problem)
+    @property
+    def largest_fvalues_of_interest(self):
+        "largest f-values of interest (defined only for multi-objective problems)"
+        assert(self.problem)
+        if self._number_of_objectives > 1 and coco_problem_get_largest_fvalues_of_interest(self.problem) is not NULL:
+            self._largest_fvalues_of_interest = np.asarray(
+                [coco_problem_get_largest_fvalues_of_interest(self.problem)[i] for i in range(self._number_of_objectives)])
+        return self._largest_fvalues_of_interest
+
+    def _best_parameter(self, what=None):
+        if what == 'print':
+            bbob_problem_best_parameter_print(self.problem)
 
     def free(self, force=False):
         """Free the given test problem.
@@ -862,6 +816,31 @@ cdef class Problem:
         if self.problem is not NULL:
             return coco_problem_get_id(self.problem)
 
+    def _parse_id(self, substr):
+        "search `substr` in `id` and return converted `int` up to '_'"
+        if self.problem is NULL:
+            return None
+        i = self.id.find(substr)
+        if i < 0:
+            raise ValueError()
+        return int(self.id[i + len(substr):].split('_')[0])
+
+    @property
+    def id_function(self):
+        "see __init__.py"
+        try:
+            return self._parse_id('_f')
+        except ValueError:
+            raise ValueError("cannot deduce function id from '%s'" % self.id)
+
+    @property
+    def id_instance(self):
+        "see __init__.py"
+        try:
+            return self._parse_id('_i')
+        except ValueError:
+            raise ValueError("cannot deduce instance id from '%s'" % self.id)
+
     @property
     def name(self):
         if self.problem is not NULL:
@@ -879,20 +858,34 @@ cdef class Problem:
 
     @property
     def info(self):
+        """see __init__.py"""
         return str(self)
 
     def __str__(self):
         if self.problem is not NULL:
-            objective = "%s-objective" % ('single'
-                    if self.number_of_objectives == 1 
-                    else str(self.number_of_objectives))
-            return "%s %s problem (%s)" % (self.id, objective,  
-                self.name.replace(self.name.split()[0], 
-                                  self.name.split()[0] + "(%d)" 
-                                  % (self.index if self.index is not None else -2)))
+            dimensional = "%d-dimensional" % self.dimension
+            objective = "%s-objective" % {
+                    1: 'single',
+                    2: 'bi'}.get(self.number_of_objectives,
+                                 str(self.number_of_objectives))
+            constraints = "" if self.number_of_constraints == 0 else (
+                " with %d constraint%s" % (self.number_of_constraints,
+                                           "s" if self.number_of_constraints > 1 else "")
+                )
+            integer_variables = "" if self.number_of_integer_variables == 0 else (
+                " %s %d integer variable%s" % ("and" if constraints != "" else "with",
+                self.number_of_integer_variables,
+                "s" if self.number_of_integer_variables > 1 else "")
+            )
+            return '%s: a %s %s problem%s%s (problem %d of suite "%s" with name "%s")' % (
+                    self.id, dimensional, objective, constraints, integer_variables, self.index,
+                    self.suite, self.name)
+                    # self.name.replace(self.name.split()[0], 
+                    #               self.name.split()[0] + "(%d)"
+                    #               % (self.index if self.index is not None else -2)))
         else:
             return "finalized/invalid problem"
-    
+
     def __repr__(self):
         if self.problem is not NULL:
             return "<%s(), id=%r>" % (
@@ -903,7 +896,8 @@ cdef class Problem:
             return "<finalized/invalid problem>"
         
     def __enter__(self):
-        """Allows ``with Benchmark(...).get_problem(...) as problem:``"""
+        """Allows ``with Suite(...)[index] as problem:`` (or ``Suite(...).get_problem(...)``)
+        """
         return self
     def __exit__(self, exception_type, exception_value, traceback):
         try:
