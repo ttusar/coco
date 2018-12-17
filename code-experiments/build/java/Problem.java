@@ -12,7 +12,6 @@ public class Problem {
 	
 	private double[] lower_bounds;
 	private double[] upper_bounds;
-	private int number_of_integer_variables;
 	
 	private String id;
 	private String name;
@@ -34,7 +33,6 @@ public class Problem {
 			
 			this.lower_bounds = CocoJNI.cocoProblemGetSmallestValuesOfInterest(pointer);
 			this.upper_bounds = CocoJNI.cocoProblemGetLargestValuesOfInterest(pointer);
-			this.number_of_integer_variables = CocoJNI.cocoProblemGetNumberOfIntegerVariables(pointer);
 			
 			this.id = CocoJNI.cocoProblemGetId(pointer);
 			this.name = CocoJNI.cocoProblemGetName(pointer);
@@ -98,14 +96,6 @@ public class Problem {
 		return this.upper_bounds[index];
 	}
 	
-	public int getNumberOfIntegerVariabls() {
-		return this.number_of_integer_variables;
-	}
-
-	public double[] getLargestFValuesOfInterest() {
-		return CocoJNI.cocoProblemGetLargestFValuesOfInterest(pointer);
-	}
-	
 	public String getId() {
 		return this.id;
 	}
@@ -116,10 +106,6 @@ public class Problem {
 	
 	public long getEvaluations() {
 		return CocoJNI.cocoProblemGetEvaluations(pointer);
-	}
-	
-	public long getEvaluationsConstraints() {
-		return CocoJNI.cocoProblemGetEvaluationsConstraints(pointer);
 	}
 	
 	public long getIndex() {

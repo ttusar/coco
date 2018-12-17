@@ -37,21 +37,15 @@ else:
 if True or 'darwin' in sys.platform or 'linux' in sys.platform:
     extensions.append(Extension('cocoex.interface',
                                 sources=[interface_file, 'cython/coco.c'],
-                                include_dirs=[np.get_include()],
-                                libraries=["rw_top_trumps"],
-                                extra_link_args=["-L."]
-                                ))
+                                include_dirs=[np.get_include()]))
 if 'linux' in sys.platform:
     extensions.append(Extension('cocoex._interface',
                                 sources=[interface_file, 'cython/coco.c'],
-                                include_dirs=[np.get_include()],
-                                libraries=["rw_top_trumps"],
-                                extra_link_args=["-L."]
-                                ))
+                                include_dirs=[np.get_include()]))
 
 setup(
     name = 'cocoex',
-    version = "$COCO_VERSION",  # replaced when setup.py.in becomes setup.py
+    version = "$COCO_VERSION",
     packages = ['cocoex'],
     package_dir = {'cocoex': 'python'},
     cmdclass=cmdclass,
@@ -59,8 +53,8 @@ setup(
     ext_modules = extensions,
     url = 'https://github.com/numbbo/coco/',
     license = 'BSD',
-    maintainer = ['Dimo Brockhoff', 'Nikolaus Hansen', 'Tea Tusar'],
-    maintainer_email = '_-_dimo.brockhoff_-_@_-_inria.fr',
+    maintainer = 'Olaf Mersmann',
+    maintainer_email = 'olafm@p-value.net',
     # author = ['Anne Auger', 'Bernd Bischl', 'Dimo Brockhoff',
     #            'Nikolaus Hansen', 'Olaf Mersmann', 'Petr Posik',
     #            'Mike Preuss',  'Rodolphe le Riche', 'Guenter Rudolph',

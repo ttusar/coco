@@ -2,31 +2,37 @@
 # -*- coding: utf-8 -*-
 
 """Routines for the generation of TeX tables."""
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 
-import os
-import sys
+import os, sys
+from pdb import set_trace
 import warnings
 import numpy
-
-from .. import genericsettings, bestalg, toolsstats, pproc, ppfigparam, testbedsettings, captions, ppfig
+from .. import genericsettings, bestalg, toolsstats, pproc, ppfigparam, testbedsettings, captions
 from ..pptex import writeFEvals2, writeFEvalsMaxPrec, tableXLaTeX, numtotext
 from ..toolsstats import significancetest, significance_all_best_vs_other
-from ..toolsdivers import str_to_latex, strip_pathname1, replace_in_file, get_version_label, prepend_to_file
+from ..toolsdivers import str_to_latex, strip_pathname1, replace_in_file, get_version_label
+
+"""
+See Section Comparison Tables in
+http://tao.lri.fr/tiki-index.php?page=BBOC+Data+presentation
+
+"""
 
 
 def get_table_caption():
-    """Sets table caption.
-    
-       Based on the testbedsettings.current_testbed
-       and genericsettings.runlength_based_targets.
+    """ Sets table caption, based on the testbedsettings.current_testbed
+        and genericsettings.runlength_based_targets.
+        
+        TODO: \hvref and \fopt should be defined via the current_testbed, 
+        preferably with a single latex command. 
     """
 
     table_caption_one = r"""%
         Average runtime (\aRT\ in number of function 
         evaluations) divided by the respective !!BEST-ART!! in
         #1.
-        This \aRT\ ratio and, in braces as dispersion measure, the half difference between
+        The \aRT\ and in braces, as dispersion measure, the half difference between 
         10 and 90\%-tile of bootstrapped run lengths appear for each algorithm and 
         """
     table_caption_one_noreference = r"""%
@@ -34,7 +40,7 @@ def get_table_caption():
         in number of function evaluations, in #1. For each function, the \aRT\ 
         and, in braces as dispersion measure, the half difference between 10 and 
         90\%-tile of (bootstrapped) runtimes is shown for the different
-        target !!DF!!-values as shown in the top row. 
+        target !!DI!!-values as shown in the top row. 
         \#succ is the number of trials that reached the last target
         $!!FOPT!! + """ + testbedsettings.current_testbed.hardesttargetlatex + r"""$.
         """
@@ -55,15 +61,13 @@ def get_table_caption():
         Entries, succeeded by a star, are statistically significantly better (according to
         the rank-sum test) when compared to all other algorithms of the table, with
         $p = 0.05$ or $p = 10^{-k}$ when the number $k$ following the star is larger
-        than 1, with Bonferroni correction by the number of functions (!!TOTAL-NUM-OF-FUNCTIONS!!). """ +
-                          (r"""A $\downarrow$ indicates the same tested against !!THE-REF-ALG!!. """
-                           if not (testbedsettings.current_testbed.name == testbedsettings.testbed_name_bi_ext)
-                           else "") + r"""Best results are printed in bold.
+        than 1, with Bonferroni correction of #2. """ +
+        (r"""A $\downarrow$ indicates the same tested against !!THE-REF-ALG!!. """
+        if not (testbedsettings.current_testbed.name == testbedsettings.testbed_name_bi_ext)
+        else "") + r"""Best results are printed in bold.
         """ + r"""\cocoversion""")
 
-    table_caption = None
-    if testbedsettings.current_testbed.name in [testbedsettings.testbed_name_bi_ext,
-                                                testbedsettings.testbed_name_cons]:
+    if testbedsettings.current_testbed.name in [testbedsettings.testbed_name_bi_ext]:
         # NOTE: no runlength-based targets supported yet
         table_caption = table_caption_one_noreference + table_caption_rest
     elif testbedsettings.current_testbed.name in [testbedsettings.testbed_name_single,
@@ -95,7 +99,7 @@ precscien = 2
 precdispersion = 1  # significant digits for dispersion
 
 
-def cite(alg_name, is_noise_free, is_noisy):
+def cite(algName, isNoisefree, isNoisy):
     """Returns the citation key associated to the algorithm name.
 
     Hard coded while no other solution is found.
@@ -104,107 +108,107 @@ def cite(alg_name, is_noise_free, is_noisy):
     res = []
     # The names of the algorithms must correspond to the name of the folder
     # containing the data. The citations keys must be in bbob.bib.
-    if is_noise_free:
-        if alg_name == "ALPS-GA":
+    if isNoisefree:
+        if algName == "ALPS-GA":
             res.append("Hornby:2009")
-        if alg_name in ("AMaLGaM IDEA", "iAMaLGaM IDEA"):
+        if algName in ("AMaLGaM IDEA", "iAMaLGaM IDEA"):
             res.append("DBLP:conf/gecco/BosmanGT09")
-        if alg_name == "BayEDAcG":
+        if algName == "BayEDAcG":
             res.append("DBLP:conf/gecco/Gallagher09")
-        if alg_name == "BFGS":
+        if algName == "BFGS":
             res.append("DBLP:conf/gecco/Ros09")
-        if alg_name == "Cauchy EDA":
+        if algName == "Cauchy EDA":
             res.append("DBLP:conf/gecco/Posik09")
-        if alg_name == "BIPOP-CMA-ES":
+        if algName == "BIPOP-CMA-ES":
             res.append("DBLP:conf/gecco/Hansen09")
-        if alg_name == "(1+1)-CMA-ES":
+        if algName == "(1+1)-CMA-ES":
             res.append("DBLP:conf/gecco/AugerH09")
-        if alg_name == "DASA":
+        if algName == "DASA":
             res.append("DBLP:conf/gecco/KorosecS09")
-        if alg_name == "DEPSO":
+        if algName == "DEPSO":
             res.append("DBLP:conf/gecco/Garcia-NietoAA09")
-        if alg_name == "DIRECT":
+        if algName == "DIRECT":
             res.append("DBLP:conf/gecco/Posik09a")
-        if alg_name == "EDA-PSO":
+        if algName == "EDA-PSO":
             res.append("DBLP:conf/gecco/El-AbdK09")
-        if alg_name == "CMA-EGS":
+        if algName == "CMA-EGS":
             res.append("Finck:2009")
-        if alg_name == "G3-PCX":
+        if algName == "G3-PCX":
             res.append("DBLP:conf/gecco/Posik09b")
-        if alg_name == "simple GA":
+        if algName == "simple GA":
             res.append("DBLP:conf/gecco/Nicolau09")
-        if alg_name == "GLOBAL":
+        if algName == "GLOBAL":
             res.append("Pal:2009a")
-        if alg_name in ("LSfminbnd", "LSstep"):
+        if algName in ("LSfminbnd", "LSstep"):
             res.append("DBLP:conf/gecco/Posik09c")
-        if alg_name == "MA-LS-Chain":
+        if algName == "MA-LS-Chain":
             res.append("DBLP:conf/gecco/MolinaLH09")
-        if alg_name == "MCS":
+        if algName == "MCS":
             res.append("Huyer:2009b")
-        if alg_name == "NELDER (Han)":
+        if algName == "NELDER (Han)":
             res.append("DBLP:conf/gecco/Hansen09b")
-        if alg_name == "NELDER (Doe)":
+        if algName == "NELDER (Doe)":
             res.append("DBLP:conf/gecco/DoerrFSW09")
-        if alg_name in ("NEWUOA", "avg NEWUOA", "full NEWUOA"):
+        if algName in ("NEWUOA", "avg NEWUOA", "full NEWUOA"):
             res.append("DBLP:conf/gecco/Ros09b")
-        if alg_name == "(1+1)-ES":
+        if algName == "(1+1)-ES":
             res.append("DBLP:conf/gecco/Auger09")
-        if alg_name == "POEMS":
+        if algName == "POEMS":
             res.append("DBLP:conf/gecco/Kubalik09a")
-        if alg_name == "PSO":
+        if algName == "PSO":
             res.append("DBLP:conf/gecco/El-AbdK09a")
-        if alg_name == "PSO\_Bounds":
+        if algName == "PSO\_Bounds":
             res.append("DBLP:conf/gecco/El-AbdK09b")
-        if alg_name == "Monte Carlo":
+        if algName == "Monte Carlo":
             res.append("DBLP:conf/gecco/AugerR09")
-        if alg_name == "Rosenbrock":
+        if algName == "Rosenbrock":
             res.append("DBLP:conf/gecco/Posik09d")
-        if alg_name == "IPOP-SEP-CMA-ES":
+        if algName == "IPOP-SEP-CMA-ES":
             res.append("DBLP:conf/gecco/Ros09d")
-        if alg_name == "VNS (Garcia)":
+        if algName == "VNS (Garcia)":
             res.append("DBLP:conf/gecco/Garcia-MartinezL09")
-    if is_noisy:
-        if alg_name == "ALPS-GA":
+    if isNoisy:
+        if algName == "ALPS-GA":
             res.append("Hornby:2009a")
-        elif alg_name in ("AMaLGaM IDEA", "iAMaLGaM IDEA"):
+        elif algName in ("AMaLGaM IDEA", "iAMaLGaM IDEA"):
             res.append("DBLP:conf/gecco/BosmanGT09a")
-        elif alg_name in ("avg NEWUOA", "full NEWUOA", "NEWUOA"):
+        elif algName in ("avg NEWUOA", "full NEWUOA", "NEWUOA"):
             res.append("DBLP:conf/gecco/Ros09c")
-        elif alg_name == "BayEDAcG":
+        elif algName == "BayEDAcG":
             res.append("DBLP:conf/gecco/Gallagher09a")
-        elif alg_name == "BFGS":
+        elif algName == "BFGS":
             res.append("DBLP:conf/gecco/Ros09a")
-        elif alg_name == "BIPOP-CMA-ES":
+        elif algName == "BIPOP-CMA-ES":
             res.append("DBLP:conf/gecco/Hansen09a")
-        elif alg_name == "(1+1)-CMA-ES":
+        elif algName == "(1+1)-CMA-ES":
             res.append("DBLP:conf/gecco/AugerH09a")
-        elif alg_name == "DASA":
+        elif algName == "DASA":
             res.append("DBLP:conf/gecco/KorosecS09a")
-        elif alg_name == "DEPSO":
+        elif algName == "DEPSO":
             res.append("DBLP:conf/gecco/Garcia-NietoAA09a")
-        elif alg_name == "EDA-PSO":
+        elif algName == "EDA-PSO":
             res.append("DBLP:conf/gecco/El-AbdK09")
-        elif alg_name == "CMA-EGS":
+        elif algName == "CMA-EGS":
             res.append("Finck:2009a")
-        elif alg_name == "GLOBAL":
+        elif algName == "GLOBAL":
             res.append("Pal:2009")
-        elif alg_name == "MA-LS-Chain":
+        elif algName == "MA-LS-Chain":
             res.append("DBLP:conf/gecco/MolinaLH09a")
-        elif alg_name == "MCS":
+        elif algName == "MCS":
             res.append("Huyer:2009a")
-        elif alg_name == "(1+1)-ES":
+        elif algName == "(1+1)-ES":
             res.append("DBLP:conf/gecco/Auger09a")
-        elif alg_name == "PSO":
+        elif algName == "PSO":
             res.append("DBLP:conf/gecco/El-AbdK09a")
-        elif alg_name == "PSO\_Bounds":
+        elif algName == "PSO\_Bounds":
             res.append("DBLP:conf/gecco/El-AbdK09b")
-        elif alg_name == "Monte Carlo":
+        elif algName == "Monte Carlo":
             res.append("DBLP:conf/gecco/AugerR09a")
-        elif alg_name == "IPOP-SEP-CMA-ES":
+        elif algName == "IPOP-SEP-CMA-ES":
             res.append("DBLP:conf/gecco/Ros09e")
-        elif alg_name == "SNOBFIT":
+        elif algName == "SNOBFIT":
             res.append("Huyer:2009")
-        elif alg_name == "VNS (Garcia)":
+        elif algName == "VNS (Garcia)":
             res.append("DBLP:conf/gecco/Garcia-MartinezL09a")
 
     if res:
@@ -216,27 +220,27 @@ def cite(alg_name, is_noise_free, is_noisy):
     return res
 
 
-def get_top_indices_of_columns(table, max_rank=None):
+def getTopIndicesOfColumns(table, maxRank=None):
     """For each column, returns a list of the maxRank-ranked elements.
 
     This list may have a length larger than maxRank in the case of ties.
 
     """
-    if max_rank is None:
-        max_rank = numpy.shape(table)[0]
+    if maxRank is None:
+        maxRank = numpy.shape(table)[0]
 
     ranked = []  # the length of ranked will be the number of columns in table.
-    trans_table = numpy.transpose(table)
-    for line in trans_table:
+    ttable = numpy.transpose(table)
+    for line in ttable:
         sid = line.argsort()  # returns the sorted index of the elements of line
-        prev_value = None
+        prevValue = None
         rank = []
         for idx in sid:
-            if line[idx] == prev_value:  # tie
+            if line[idx] == prevValue:  # tie
                 continue
-            prev_value = line[idx]
-            rank.extend(numpy.where(line == prev_value)[0])
-            if len(rank) >= max_rank:
+            prevValue = line[idx]
+            rank.extend(numpy.where(line == prevValue)[0])
+            if len(rank) >= maxRank:
                 break
         ranked.append(rank)
 
@@ -244,7 +248,7 @@ def get_top_indices_of_columns(table, max_rank=None):
 
 
 # TODO: function_headings argument need to be tested, default should be changed according to templates
-def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, latex_commands_file=''):  # [1, 13, 101]
+def main(dictAlg, sortedAlgs, outputdir='.', function_targets_line=True):  # [1, 13, 101]
     """Generate one table per func with results of multiple algorithms."""
     """Difference with the first version:
 
@@ -262,34 +266,29 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
     # TODO: method is long, terrible to read, split if possible
 
     testbed = testbedsettings.current_testbed
-    targets_of_interest = testbed.pptablemany_targetsOfInterest
+    targetsOfInterest = testbed.pptablemany_targetsOfInterest
 
     refalgentries = bestalg.load_reference_algorithm(testbed.reference_algorithm_filename)
 
-    plotting_style_list = ppfig.get_plotting_styles(sorted_algs, True)
-    sorted_algs = plotting_style_list[0].algorithm_list
-
     # Sort data per dimension and function
-    dict_data = {}
-    dsListperAlg = list(dict_alg[i] for i in sorted_algs)
+    dictData = {}
+    dsListperAlg = list(dictAlg[i] for i in sortedAlgs)
     for n, entries in enumerate(dsListperAlg):
         tmpdictdim = entries.dictByDim()
         for d in tmpdictdim:
             tmpdictfun = tmpdictdim[d].dictByFunc()
             for f in tmpdictfun:
-                dict_data.setdefault((d, f), {})[n] = tmpdictfun[f]
+                dictData.setdefault((d, f), {})[n] = tmpdictfun[f]
 
-    nbtests = len(dict_data)
+    nbtests = len(dictData)
 
-    fun_infos = ppfigparam.read_fun_infos()
+    funInfos = ppfigparam.read_fun_infos()
 
-    tables_header = []
-    additional_commands = []
-    for df in sorted(dict_data):
+    for df in sorted(dictData):
         # Generate one table per df
         # first update targets for each dimension-function pair if needed:
-        targets = targets_of_interest((df[1], df[0]))
-        if isinstance(targets_of_interest, pproc.RunlengthBasedTargetValues):
+        targets = targetsOfInterest((df[1], df[0]))
+        if isinstance(targetsOfInterest, pproc.RunlengthBasedTargetValues):
             targetf = targets[-1]
         else:
             targetf = testbed.pptable_ftarget
@@ -314,21 +313,21 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
         algtestres = []
         algentries = []
 
-        for n in sorted(dict_data[df].keys()):
-            entries = dict_data[df][n]
+        for n in sorted(dictData[df].keys()):
+            entries = dictData[df][n]
             # the number of datasets for a given dimension and function (df)
             # should be strictly 1. TODO: find a way to warn
             # TODO: do this checking before... why wasn't it triggered by ppperprof?
             if len(entries) > 1:
-                print(entries)
+                print entries
                 txt = ("There is more than a single entry associated with "
-                       "folder %s on %d-D f%d." % (sorted_algs[n], df[0], df[1]))
+                       "folder %s on %d-D f%d." % (sortedAlgs[n], df[0], df[1]))
                 raise Exception(txt)
 
             entry = entries[0]
             algentries.append(entry)
 
-            algnames.append(sorted_algs[n])
+            algnames.append(sortedAlgs[n])
 
             evals = entry.detEvals(targets)
             # tmpdata = []
@@ -367,12 +366,12 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
         # Process over all data
         # find best values...
 
-        nalgs = len(dict_data[df])
+        nalgs = len(dictData[df])
         maxRank = 1 + numpy.floor(0.14 * nalgs)  # number of algs to be displayed in bold
 
         isBoldArray = []  # Point out the best values
         algfinaldata = []  # Store median function values/median number of function evaluations
-        tmptop = get_top_indices_of_columns(algerts, max_rank=maxRank)
+        tmptop = getTopIndicesOfColumns(algerts, maxRank=maxRank)
         for i, erts in enumerate(algerts):
             tmp = []
             for j, ert in enumerate(erts):  # algi targetj
@@ -388,24 +387,24 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
         table = []
         tableHtml = []
         spec = r'@{}c@{}|*{%d}{@{\,}r@{}X@{\,}}|@{}r@{}@{}l@{}' % (
-        len(targets_of_interest))  # in case StrLeft not working: replaced c@{} with l@{ }
+        len(targetsOfInterest))  # in case StrLeft not working: replaced c@{} with l@{ }
         spec = r'@{}c@{}|*{%d}{@{}r@{}X@{}}|@{}r@{}@{}l@{}' % (
-        len(targets_of_interest))  # in case StrLeft not working: replaced c@{} with l@{ }
+        len(targetsOfInterest))  # in case StrLeft not working: replaced c@{} with l@{ }
         extraeol = []
 
         # Generate header lines
         if with_table_heading:
-            header = fun_infos[df[1]] if df[1] in fun_infos.keys() else 'f%d' % df[1]
+            header = funInfos[df[1]] if df[1] in funInfos.keys() else 'f%d' % df[1]
             table.append([r'\multicolumn{%d}{@{\,}c@{\,}}{{\textbf{%s}}}'
-                          % (2 * len(targets_of_interest) + 2, header)])
+                          % (2 * len(targetsOfInterest) + 2, header)])
             extraeol.append('')
 
         # generate line with displayed quality indicator and targets:
         if function_targets_line is True or (function_targets_line and df[1] in function_targets_line):
-            if isinstance(targets_of_interest, pproc.RunlengthBasedTargetValues):
+            if isinstance(targetsOfInterest, pproc.RunlengthBasedTargetValues):
                 curline = [r'\#FEs/D']
                 counter = 1
-                for i in targets_of_interest.labels():
+                for i in targetsOfInterest.labels():
                     curline.append(r'\multicolumn{2}{@{}c@{}}{%s}' % i)
                     counter += 1
             else:
@@ -419,19 +418,19 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
                                    % writeFEvals2(t, precision=1, isscientific=True))
                     counter += 1
                 #                curline.append(r'\multicolumn{2}{@{\,}l@{}|}{%s}'
-                #                            % writeFEvals2(targets_of_interest[-1], precision=1, isscientific=True))
+                #                            % writeFEvals2(targetsOfInterest[-1], precision=1, isscientific=True))
             if (testbed.name == testbedsettings.testbed_name_bi):
                 curline.append(r'\multicolumn{2}{|@{}l@{}}{\begin{rotate}{30}\#succ\end{rotate}}')
             else:
                 curline.append(r'\multicolumn{2}{|@{}l@{}}{\#succ}')
-            tables_header = curline[:]
+            table.append(curline)
 
         # do the same for the HTML output, but all the time:
         curlineHtml = []
-        if isinstance(targets_of_interest, pproc.RunlengthBasedTargetValues):
+        if isinstance(targetsOfInterest, pproc.RunlengthBasedTargetValues):
             curlineHtml = ['<thead>\n<tr>\n<th>#FEs/D<br>REPLACEH</th>\n']
             counter = 1
-            for i in targets_of_interest.labels():
+            for i in targetsOfInterest.labels():
                 curlineHtml.append('<td>%s<br>REPLACE%d</td>\n' % (i, counter))
                 counter += 1
         else:
@@ -451,15 +450,15 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
         
         # line with function name and potential aRT values of reference algorithm
         curline = [r'\textbf{f%d}' % df[1]]
-        replaceValue = '<b>f%d, %d-D</b>' % (df[1], df[0])
+        replaceValue = '<b>f%d</b>' % df[1]
         curlineHtml = [item.replace('REPLACEH', replaceValue) for item in curlineHtml]
         
         if refalgentries:
-            if isinstance(targets_of_interest, pproc.RunlengthBasedTargetValues):
+            if isinstance(targetsOfInterest, pproc.RunlengthBasedTargetValues):
                 # write ftarget:fevals
                 counter = 1
-                for i in range(len(refalgert[:-1])):
-                    temp = "%.1e" % targets_of_interest((df[1], df[0]))[i]
+                for i in xrange(len(refalgert[:-1])):
+                    temp = "%.1e" % targetsOfInterest((df[1], df[0]))[i]
                     if temp[-2] == "0":
                         temp = temp[:-2] + temp[-1]
                     curline.append(r'\multicolumn{2}{@{}c@{}}{\textit{%s}:%s \quad}'
@@ -468,7 +467,7 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
                     curlineHtml = [item.replace('REPLACE%d' % counter, replaceValue) for item in curlineHtml]
                     counter += 1
 
-                temp = "%.1e" % targets_of_interest((df[1], df[0]))[-1]
+                temp = "%.1e" % targetsOfInterest((df[1], df[0]))[-1]
                 if temp[-2] == "0":
                     temp = temp[:-2] + temp[-1]
                 curline.append(r'\multicolumn{2}{@{}c@{}|}{\textit{%s}:%s }'
@@ -497,8 +496,8 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
             curlineHtml = [item.replace('REPLACEF', replaceValue) for item in curlineHtml]
 
         else:  # if not refalgentries
-            curline.append(r'\multicolumn{%d}{@{}c@{}|}{} & ' % (2 * (len(targets_of_interest))))
-            for counter in range(1, len(targets_of_interest) + 1):
+            curline.append(r'\multicolumn{%d}{@{}c@{}|}{} & ' % (2 * (len(targetsOfInterest))))
+            for counter in range(1, len(targetsOfInterest) + 1):
                 curlineHtml = [item.replace('REPLACE%d' % counter, '&nbsp;') for item in curlineHtml]
             curlineHtml = [item.replace('REPLACEF', '&nbsp;') for item in curlineHtml]
 
@@ -508,17 +507,15 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
         tableHtml.append('<tbody>\n')
         extraeol.append('')
 
-        additional_commands = ['\\providecommand{\\ntables}{%d}' % len(targets_of_interest)]
+        header = r'\providecommand{\ntables}{%d}' % len(targetsOfInterest)
         for i, alg in enumerate(algnames):
             tableHtml.append('<tr>\n')
             # algname, entries, irs, line, line2, succ, runs, testres1alg in zip(algnames,
             # data, dispersion, isBoldArray, isItalArray, nbsucc, nbruns, testres):
-            command_name = r'\alg%stables' % numtotext(i)
-            #            header += r'\providecommand{%s}{{%s}{}}' % (command_name, str_to_latex(strip_pathname(alg)))
-            if df[0] == genericsettings.tabDimsOfInterest[0]:
-                additional_commands.append('\\providecommand{%s}{\\StrLeft{%s}{\\ntables}}' %
-                                           (command_name, str_to_latex(strip_pathname1(alg))))
-            curline = [command_name + r'\hspace*{\fill}']  # each list element becomes a &-separated table entry?
+            commandname = r'\alg%stables' % numtotext(i)
+            #            header += r'\providecommand{%s}{{%s}{}}' % (commandname, str_to_latex(strip_pathname(alg)))
+            header += r'\providecommand{%s}{\StrLeft{%s}{\ntables}}' % (commandname, str_to_latex(strip_pathname1(alg)))
+            curline = [commandname + r'\hspace*{\fill}']  # each list element becomes a &-separated table entry?
             curlineHtml = ['<th>%s</th>\n' % str_to_latex(strip_pathname1(alg))]
 
             zipToEnumerate = zip(algerts[i], algdisp[i], isBoldArray[i], algtestres[i]) if refalgentries else zip(
@@ -622,7 +619,7 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
                             tmpHtml += ' (%s)' % tmpdisp
                         curline.append(r'\multicolumn{2}{%s}{%s%s}' % (alignment, tmp, str_significance_subsup))
                         if (numpy.isinf(sortKey)):
-                            sortKey = sys.maxsize
+                            sortKey = sys.maxint
                         curlineHtml.append('<td sorttable_customkey=\"%f\">%s%s</td>' % (
                         sortKey, tmpHtml, str_significance_subsup_html))
                     else:
@@ -666,19 +663,18 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
             extraeol.append('')
 
         # Write table
-        res = tableXLaTeX(table, spec=spec, extra_eol=extraeol, add_begin_tabular=False, add_end_tabular=False)
+        res = tableXLaTeX(table, spec=spec, extraeol=extraeol)
         try:
-            filename = os.path.join(output_dir, 'pptables_f%03d_%02dD.tex' % (df[1], df[0]))
+            filename = os.path.join(outputdir, 'pptables_f%03d_%02dD.tex' % (df[1], df[0]))
             f = open(filename, 'w')
-            if with_table_heading:
-                f.write(header + '\n')
+            f.write(header + '\n')
             f.write(res)
 
-            res = "".join(str(item) for item in tableHtml)
+            res = ("").join(str(item) for item in tableHtml)
             res = '\n<table class=\"sortable\" style=\"width:800px \">\n%s</table>\n<p/>\n' % res
 
             if True:
-                filename = os.path.join(output_dir, genericsettings.pptables_file_name + '.html')
+                filename = os.path.join(outputdir, genericsettings.pptables_file_name + '.html')
                 lines = []
                 html_string = '<!--pptablesHtml_%d-->' % df[0]
                 with open(filename) as infile:
@@ -693,21 +689,11 @@ def main(dict_alg, sorted_algs, output_dir='.', function_targets_line=True, late
                 
                 replace_in_file(filename, '??COCOVERSION??', '<br />Data produced with COCO %s' % (get_version_label(None)))
 
+
             if genericsettings.verbose:
-                print('Wrote table in %s' % filename)
+                print 'Wrote table in %s' % filename
         except:
             raise
         else:
             f.close()
             # TODO: return status
-
-    if len(additional_commands) > 0:
-        for command in additional_commands:
-            prepend_to_file(latex_commands_file, [command])
-    if len(tables_header) > 0 and df[0] == genericsettings.tabDimsOfInterest[0]:
-        extraeol = [r'\hline']
-        res = tableXLaTeX([tables_header], spec=spec, extra_eol=extraeol, add_end_tabular=False)
-        prepend_to_file(latex_commands_file, ['\\providecommand{\\pptablesheader}{', res, '}'])
-
-        res = tableXLaTeX([], spec=spec, add_begin_tabular=False)
-        prepend_to_file(latex_commands_file, ['\\providecommand{\\pptablesfooter}{', res, '}'])

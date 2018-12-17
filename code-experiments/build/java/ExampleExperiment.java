@@ -35,7 +35,6 @@ public class ExampleExperiment {
 	 */
 	public interface Function {
 		double[] evaluate(double[] x);
-		double[] evaluateConstraint(double[] x);
     }
 
 	/**
@@ -45,9 +44,6 @@ public class ExampleExperiment {
     	public double[] evaluate(double[] x) {
     		return PROBLEM.evaluateFunction(x);
     	}
-	public double[] evaluateConstraint(double[] x) {
-		return PROBLEM.evaluateConstraint(x);
-        }
     };
 
 	/**
@@ -71,8 +67,6 @@ public class ExampleExperiment {
          *   bbob-biobj           55 unconstrained noiseless bi-objective functions
          *   bbob-biobj-ext       92 unconstrained noiseless bi-objective functions
          *   bbob-largescale      24 unconstrained noiseless single-objective functions in large dimension
-         *   bbob-constrained     48 constrained noiseless single-objective functions
-         *   bbob-mixint          mixed-integer single-objective functions
          *
          * Adapt to your need. Note that the experiment is run according
          * to the settings, defined in exampleExperiment(...) below.
@@ -89,7 +83,7 @@ public class ExampleExperiment {
 	 * A simple example of benchmarking random search on a given suite with default instances
      * that can serve also as a timing experiment.
      *
-     * @param suiteName Name of the suite (e.g. "bbob", "bbob-biobj", or "bbob-constrained").
+     * @param suiteName Name of the suite (e.g. "bbob" or "bbob-biobj").
      * @param observerName Name of the observer matching with the chosen suite (e.g. "bbob-biobj" 
      * when using the "bbob-biobj-ext" suite).
 	 * @param randomGenerator The random number generator.
@@ -122,7 +116,7 @@ public class ExampleExperiment {
 				/* Run the algorithm at least once */
 				for (int run = 1; run <= 1 + INDEPENDENT_RESTARTS; run++) {
 
-					long evaluationsDone = PROBLEM.getEvaluations() + PROBLEM.getEvaluationsConstraints();
+					long evaluationsDone = PROBLEM.getEvaluations();
 					long evaluationsRemaining = (long) (dimension * BUDGET_MULTIPLIER) - evaluationsDone;
 
 					/* Break the loop if the target was hit or there are no more remaining evaluations */
@@ -133,10 +127,8 @@ public class ExampleExperiment {
 					myRandomSearch(evaluateFunction,
 							       dimension,
 							       PROBLEM.getNumberOfObjectives(),
-							       PROBLEM.getNumberOfConstraints(),
 							       PROBLEM.getSmallestValuesOfInterest(),
 							       PROBLEM.getLargestValuesOfInterest(),
-							       PROBLEM.getNumberOfIntegerVariabls(),
 							       evaluationsRemaining,
 							       randomGenerator);
 
@@ -169,17 +161,14 @@ public class ExampleExperiment {
 	 */
 	public static void myRandomSearch(Function f, 
 			                          int dimension, 
-			                          int numberOfObjectives,
-                                      int numberOfConstraints,
+			                          int numberOfObjectives, 
 			                          double[] lowerBounds,
 			                          double[] upperBounds, 
-                                      int numberOfIntegerVariables,
 			                          long maxBudget, 
 			                          Random randomGenerator) {
 
 		double[] x = new double[dimension];
 		double[] y = new double[numberOfObjectives];
-		double[] z = new double[numberOfConstraints];
 		double range;
 		
 		for (int i = 0; i < maxBudget; i++) {
@@ -188,16 +177,10 @@ public class ExampleExperiment {
 			for (int j = 0; j < dimension; j++) {
 				range = upperBounds[j] - lowerBounds[j];
 				x[j] = lowerBounds[j] + randomGenerator.nextDouble() * range;
-				/* Round the variable if integer */
-				if (j < numberOfIntegerVariables)
-					x[j] = (double) Math.round(x[j]);
 			}
-			
 
 		    /* Call the evaluate function to evaluate x on the current problem (this is where all the COCO logging
 		     * is performed) */
-			if (numberOfConstraints > 0)
-				z = f.evaluateConstraint(x);
 			y = f.evaluate(x);
 		}
 		

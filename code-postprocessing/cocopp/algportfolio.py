@@ -14,28 +14,34 @@ functions.
 .. plot::
    :width: 75%
 
+   import urllib
+   import tarfile
    import glob
    from pylab import *
    import pickle
-   import cocopp
+   import cocopp as bb
    import cocopp.compall.pprldmany
    import cocopp.algportfolio
 
    # Collect and unarchive data
    dsets = {}
    for alg in ('BIPOP-CMA-ES_hansen_noiseless', 'NEWUOA_ros_noiseless'):
-      dsets[alg] = cocopp.load(cocopp.bbob(alg))
+      dataurl = 'http://coco.gforge.inria.fr/data-archive/2009/' + alg + '.tgz'
+      filename, headers = urllib.urlretrieve(dataurl)
+      archivefile = tarfile.open(filename)
+      archivefile.extractall()  # write to disc
+      dsets[alg] = bb.load(filename)
 
    # Generate the algorithm portfolio
-   dspf = cocopp.algportfolio.build(dsets)
+   dspf = bb.algportfolio.build(dsets)
    dsets['Portfolio'] = dspf # store the portfolio in dsets
 
    # plot the run lengths distribution functions
    plt.figure()
-   for algname, ds in dsets.items():
+   for algname, ds in dsets.iteritems():
       dataset = ds.dictByDimFunc()[10][13]  # DataSet dimension 10 on F13
-      cocopp.compall.pprldmany.plot(dataset, label=algname)
-   cocopp.compall.pprldmany.beautify()
+      bb.compall.pprldmany.plot(dataset, label=algname)
+   bb.compall.pprldmany.beautify()
    legend(loc='best') # Display legend
    plt.show()   
    
@@ -43,7 +49,7 @@ functions.
 
 # TODO: generalize behaviour for data sets that have different instances...
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 
 import sys
 from pdb import set_trace
@@ -149,7 +155,7 @@ class DataSet(pp.DataSet):
                 tmpfunvals.append(ds.funvals[:, np.r_[0, corresp[j][i]+1]].copy())
             maxevals.append(np.sum(tmpmaxevals))
             finalfunvals.append(min(tmpfinalfunvals))
-            tmpevals = ra.alignArrayData(ra.HArrayMultiReader(tmpevals))
+            tmpevals = ra.alignArrayData(ra.HArrayMultiReader(tmpevals, dslist[0].isBiobjective()))
             tmpres = []
             for j in tmpevals:
                 tmp = []
@@ -168,7 +174,7 @@ class DataSet(pp.DataSet):
             funvals.append(np.column_stack((tmpfunvals[:, 0], tmpres)))
         self.maxevals = np.array(maxevals)
         self.finalfunvals = np.array(finalfunvals)
-        self.evals = ra.alignArrayData(ra.HArrayMultiReader(evals))
+        self.evals = ra.alignArrayData(ra.HArrayMultiReader(evals, dslist[0].isBiobjective()))
         self.funvals = ra.alignArrayData(ra.VArrayMultiReader(funvals))
         self.computeERTfromEvals()
 
@@ -189,8 +195,8 @@ def build(dictAlg, sortedAlg=None):
     if not sortedAlg:
         sortedAlg = dictAlg.keys()
     tmpres = []
-    for f, i in pp.dictAlgByFun(dictAlg).items():
-        for d, j in pp.dictAlgByDim(i).items():
+    for f, i in pp.dictAlgByFun(dictAlg).iteritems():
+        for d, j in pp.dictAlgByDim(i).iteritems():
             tmp = []
             if sortedAlg:
                 tmplist = list(j[k] for k in sortedAlg)
@@ -201,8 +207,8 @@ def build(dictAlg, sortedAlg=None):
                 tmp.append(k[0])
             try:
                 tmpres.append(DataSet(tmp))
-            except Usage as err:
-                print(err.msg, file=sys.stderr)
+            except Usage, err:
+                print >>sys.stderr, err.msg
     res = pp.DataSetList()
     res.extend(tmpres)
     return res

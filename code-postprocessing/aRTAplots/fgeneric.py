@@ -45,7 +45,6 @@ import warnings
 from pdb import set_trace
 import copy
 import numpy as np
-from __future__ import print_function
 
 deltaftarget = 1e-8
 nb_evaluations_always_written = '1'  # '100 + 10 * dim'  # 100 + dim;10*dim add about 7;17MB to final data
@@ -205,7 +204,7 @@ class LoggingFunction(object):
             else:
                 tmp = str(self.funId)
             res.append('funcId = %s' % tmp)
-            for i in self._fun_kwargs.items():
+            for i in self._fun_kwargs.iteritems():
                 if isinstance(i[1], str):
                     tmp = "'%s'" % i[1]
                 else:
@@ -230,11 +229,11 @@ class LoggingFunction(object):
             filepath, filename = os.path.split(datafile)
             try:
                 os.makedirs(filepath)
-            except OSError as e:
-                if e.err == errno.EEXIST:
+            except OSError as (err, strerror):
+                if err == errno.EEXIST:
                     pass
                 else:
-                    print(e.errno, e.strerror)
+                    print errno, strerror
             f = open(datafile, 'a')
             f.write('%% function evaluation | noise-free fitness - Fopt'
                     ' (%13.12e) | best noise-free fitness - Fopt | measured '
@@ -367,13 +366,13 @@ class LoggingFunction(object):
         try:
             os.makedirs(datapath)
         except AttributeError:
-            print('Input argument datapath is an invalid datapath.', file=sys.stderr)
+            print >>sys.stderr, 'Input argument datapath is an invalid datapath.'
             raise
-        except OSError as e:
-            if e.err == errno.EEXIST:
+        except OSError as (err, strerror):
+            if err == errno.EEXIST:
                 pass
             else:
-                print(e.errno, e.strerror)
+                print errno, strerror
         self._datapath = datapath
 
     datapath = property(_getdatapath, _setdatapath)
@@ -575,3 +574,5 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()  # run all doctests in this module
     print '  done'
+    
+    

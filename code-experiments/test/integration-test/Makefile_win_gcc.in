@@ -15,7 +15,7 @@ CCFLAGS = -g -ggdb -std=c89 -pedantic -Wall -Wextra -Wstrict-prototypes -Wshadow
 
 ########################################################################
 ## Toplevel targets
-all: test_coco test_instance_extraction test_biobj test_bbob-constrained test_bbob-mixint test_rw_suites
+all: test_coco test_instance_extraction test_biobj
 
 clean:
 	IF EXIST "coco.o" DEL /F coco.o
@@ -25,32 +25,17 @@ clean:
 	IF EXIST "test_instance_extraction.exe" DEL /F test_instance_extraction.exe
 	IF EXIST "test_biobj.o" DEL /F test_biobj.o 
 	IF EXIST "test_biobj.exe" DEL /F test_biobj.exe
-	IF EXIST "test_bbob-constrained.o" DEL /F test_bbob-constrained.o 
-	IF EXIST "test_bbob-constrained.exe" DEL /F test_bbob-constrained.exe
-	IF EXIST  "test_bbob-mixint.o" DEL /F test_bbob-mixint.o
-	IF EXIST  "test_bbob-mixint.exe" DEL /F test_bbob-mixint.exe  
-	IF EXIST  "test_rw_suites.o" DEL /F test_rw_suites.o
-	IF EXIST  "test_rw_suites.exe" DEL /F test_rw_suites.exe  
 
 ########################################################################
 ## Programs
-test_coco: test_coco.o coco.o 
+test_coco: test_coco.o coco.o
 	${CC} ${CCFLAGS} -o test_coco coco.o test_coco.o ${LDFLAGS}  
 	
 test_instance_extraction: test_instance_extraction.o coco.o
 	${CC} ${CCFLAGS} -o test_instance_extraction coco.o test_instance_extraction.o ${LDFLAGS}  
 	
 test_biobj: test_biobj.o coco.o
-	${CC} ${CCFLAGS} -o test_biobj coco.o test_biobj.o ${LDFLAGS} 
-
-test_bbob-constrained: test_bbob-constrained.o coco.o
-	${CC} ${CCFLAGS} -o test_bbob-constrained coco.o test_bbob-constrained.o ${LDFLAGS}  
-
-test_bbob-mixint: test_bbob-mixint.o
-	${CC} ${CCFLAGS} -o test_bbob-mixint test_bbob-mixint.o ${LDFLAGS}  
-
-test_rw_suites: test_rw_suites.o
-	${CC} ${CCFLAGS} -o test_rw_suites test_rw_suites.o ${LDFLAGS}  
+	${CC} ${CCFLAGS} -o test_biobj coco.o test_biobj.o ${LDFLAGS}  
 
 ########################################################################
 ## Additional dependencies
@@ -62,9 +47,3 @@ test_instance_extraction.o: coco.h coco.c test_instance_extraction.c
 	${CC} -c ${CCFLAGS} -o test_instance_extraction.o test_instance_extraction.c
 test_biobj.o: coco.h coco.c test_biobj.c
 	${CC} -c ${CCFLAGS} -o test_biobj.o test_biobj.c
-test_bbob-constrained.o: coco.h coco.c test_bbob-constrained.c
-	${CC} -c ${CCFLAGS} -o test_bbob-constrained.o test_bbob-constrained.c
-test_bbob-mixint.o: test_bbob-mixint.c
-	${CC} -c ${CCFLAGS} -o test_bbob-mixint.o test_bbob-mixint.c
-test_rw_suites.o: test_rw_suites.c
-	${CC} -c ${CCFLAGS} -o test_rw_suites.o test_rw_suites.c

@@ -27,16 +27,13 @@ import pickle, gzip  # gzip is for future functionality: we probably never want 
 import warnings
 import json
 import hashlib
-import functools
-import collections
 from pdb import set_trace
-from six import string_types, advance_iterator
 import numpy, numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 from . import genericsettings, findfiles, toolsstats, toolsdivers
-from . import testbedsettings, dataformatsettings
-from .readalign import split, align_data, HMultiReader, VMultiReader, openfile
+from . import testbedsettings
+from .readalign import split, alignData, HMultiReader, VMultiReader, openfile
 from .readalign import HArrayMultiReader, VArrayMultiReader, alignArrayData
 from .ppfig import consecutiveNumbers, Usage
 
@@ -69,7 +66,7 @@ def _DataSet_complement_data(self, step=10**0.2, final_target=1e-8):
     i = 0
     newdat = []
     self.evals = np.array(self.evals, copy=False)
-    for i in range(len(self.evals) - 1):
+    for i in xrange(len(self.evals) - 1):
         newdat.append(self.evals[i])
         target = self.evals[i][0] / step
         while target >= final_target and target > self.evals[i+1][0] and target / self.evals[i+1][0] - 1 > 1e-9:
@@ -91,23 +88,12 @@ def cocofy(filename):
     for line in fileinput.input(filename, inplace=1):
 #       if "bbob" in line:
         sys.stdout.write(line.replace("bbob_pproc","cocopp"))
-    fileinput.close()
+    fileinput.close
 
 # CLASS DEFINITIONS
 
-def asTargetValues(target_values):
-    if isinstance(target_values, TargetValues):
-        return target_values
-    if isinstance(target_values, list):
-        return TargetValues(target_values)
-    try:
-        isinstance(target_values((1, 20)), list)
-        return target_values
-    except:
-        raise NotImplementedError("""type %s not recognized""" %
-                                  str(type(target_values)))
 class TargetValues(object):
-    """store and retrieve a list of target function values:
+    """store and retrieve a list of target function values::
 
         >>> import numpy as np
         >>> import cocopp.pproc as pp
@@ -199,21 +185,22 @@ class TargetValues(object):
 
 class RunlengthBasedTargetValues(TargetValues):
     """a class instance call returns f-target values based on 
-    reference runlengths:
+    reference runlengths::
     
-        >>> import cocopp
+        >>> import os
+        >>> import cocopp as bb
         >>> # make sure to use the right `bbob` test suite for the test below:
-        >>> cocopp.genericsettings.isNoisy = False
-        >>> cocopp.genericsettings.isNoiseFree = False
-        >>> cocopp.config.config('GECCOBBOBTestbed')
-        >>> targets = cocopp.pproc.RunlengthBasedTargetValues([0.5, 1.2, 3, 10, 50])  # by default times_dimension==True
+        >>> bb.genericsettings.isNoisy = False
+        >>> bb.genericsettings.isNoiseFree = False
+        >>> bb.config.config('GECCOBBOBTestbed')
+        >>> targets = bb.pproc.RunlengthBasedTargetValues([0.5, 1.2, 3, 10, 50])  # by default times_dimension==True
         >>> # make also sure to have loaded the corresponding reference algo
         >>> # from BBOB-2009:
         >>> targets.reference_data = 'testbedsettings'
-        >>> t = targets(fun_dim=(1, 20)) # doctest:+ELLIPSIS
+        >>> targets(fun_dim=(1, 20)) # doctest:+ELLIPSIS
         Loading best algorithm data from ...
-        >>> assert 6.30957345e+01 <= t[0] <= 6.30957346e+01
-        >>> assert t[-1] == 1.00000000e-08
+        array([  6.30957345e+01,   3.98107171e+01,   1.00000000e-08,
+                 1.00000000e-08,   1.00000000e-08])
              
     returns a list of target f-values for F1 in 20-D, based on the 
     aRT values ``[0.5,...,50]``. 
@@ -303,26 +290,25 @@ class RunlengthBasedTargetValues(TargetValues):
             # TODO: remove targets smaller than 1e-8
         elif type(self.reference_data) is str:  # self.reference_data in ('RANDOMSEARCH', 'IPOP-CMA-ES') should work
             self._short_info = 'reference budgets from ' + self.reference_data
-            # dsl = DataSetList(os.path.join(sys.modules[globals()['__name__']].__file__.split('cocopp')[0],
-            #                                'cocopp', 'data', self.reference_data))
-            dsl = DataSetList(findfiles.COCODataArchive().get_one(self.reference_data))
+            dsl = DataSetList(os.path.join(sys.modules[globals()['__name__']].__file__.split('cocopp')[0],
+                                           'cocopp', 'data', self.reference_data))
             dsd = {}
             for ds in dsl:
                 # ds._clean_data()
                 dsd[(ds.funcId, ds.dim)] = ds
             self.reference_data = dsd
         elif isinstance(self.reference_data, list):
-            if not isinstance(self.reference_data[0], string_types):
+            if not isinstance(self.reference_data[0], basestring):
                 raise ValueError("RunlengthBasedTargetValues() expected a string, dict, or list of strings as second argument,"
                 + (" got a list of %s" % str(type(self.reference_data[0]))))
             # dsList, sortedAlgs, dictAlg = processInputArgs(self.reference_data)
             self.reference_data = processInputArgs(self.reference_data)[2]
-            self.reference_algorithm = self.reference_data[list(self.reference_data.keys())[0]].algId
+            self.reference_algorithm = self.reference_data[self.reference_data.keys()[0]].algId
         else:
             # assert len(byalg) == 1
             # we assume here that self.reference_data is a dictionary
             # of reference data sets
-            self.reference_algorithm = self.reference_data[list(self.reference_data.keys())[0]].algId
+            self.reference_algorithm = self.reference_data[self.reference_data.keys()[0]].algId
         self.initialized = True
         return self
 
@@ -384,7 +370,7 @@ class RunlengthBasedTargetValues(TargetValues):
                 print(fun_dim, ds.ert[0], 'ert[0] != 1 in TargetValues.__call__')
             try: 
                 # check whether there are gaps between the targets 
-                assert all(toolsdivers.equals_approximately(10**0.2, ds.target[i] / ds.target[i+1]) for i in range(end-1))
+                assert all(toolsdivers.equals_approximately(10**0.2, ds.target[i] / ds.target[i+1]) for i in xrange(end-1))
                 # if this fails, we need to insert the missing target values 
             except AssertionError:
                 if 1 < 3:
@@ -552,17 +538,20 @@ class DataSet(object):
         >>> import os
         >>> import urllib
         >>> import tarfile
-        >>> import cocopp
-        >>> cocopp.genericsettings.verbose = False # ensure to make doctests work
-        >>> def setup(infoFile):
-        ...     if not os.path.exists(infoFile):
-        ...         filename = cocopp.archives.bbob.get_one('2009/BIPOP-CMA-ES_hansen')
-        ...         tarfile.open(filename).extractall(cocopp.archives.bbob.local_data_path)
-        >>> infoFile = os.path.join(cocopp.archives.bbob.local_data_path, 'BIPOP-CMA-ES', 'bbobexp_f2.info')
-        >>> print('get'); setup(infoFile) # doctest:+ELLIPSIS
-        get...
-        >>> dslist = cocopp.load(infoFile)
-          Data consistent according to consistency_check() in pproc.DataSet
+        >>> path = os.path.abspath(os.path.dirname(os.path.dirname('__file__')))
+        >>> os.chdir(path)
+        >>> import cocopp as bb
+        >>> bb.genericsettings.verbose = False # ensure to make doctests work        
+        >>> infoFile = 'data/BIPOP-CMA-ES/bbobexp_f2.info'
+        >>> if not os.path.exists(infoFile):
+        ...   os.chdir(os.path.join(path, 'data'))
+        ...   dataurl = 'http://coco.gforge.inria.fr/data-archive/2009/BIPOP-CMA-ES_hansen_noiseless.tgz'
+        ...   filename, headers = urllib.urlretrieve(dataurl)
+        ...   archivefile = tarfile.open(filename)
+        ...   archivefile.extractall()
+        ...   os.chdir(path)
+        >>> dslist = bb.load(infoFile)
+          Data consistent according to test in consistency_check() in pproc.DataSet
         >>> print(dslist)  # doctest:+ELLIPSIS
         [DataSet(BIPOP-CMA-ES on f2 2-D), ..., DataSet(BIPOP-CMA-ES on f2 40-D)]
         >>> type(dslist)
@@ -572,14 +561,17 @@ class DataSet(object):
         >>> ds = dslist[3]  # a single data set of type DataSet
         >>> ds
         DataSet(BIPOP-CMA-ES on f2 10-D)
-        >>> for d in dir(ds): print(d)  # doctest:+ELLIPSIS
+        >>> for d in dir(ds): print(d)  # dir(ds) shows attributes and methods of ds
         _DataSet__parseHeader
         __class__
         __delattr__
         __dict__
-        ...
+        __doc__
+        __eq__
+        __format__
         __getattribute__
-        ...
+        __hash__
+        __init__
         __module__
         __ne__
         __new__
@@ -615,13 +607,11 @@ class DataSet(object):
         ert
         evals
         evals_
-        evals_with_simulated_restarts
+        evals_with_restarts
         finalfunvals
         funcId
         funvals
         generateRLData
-        get_data_format
-        get_suite
         get_testbed_name
         indexFiles
         info
@@ -645,16 +635,18 @@ class DataSet(object):
         testbed_name
         >>> all(ds.evals[:, 0] == ds.target)  # first column of ds.evals is the "target" f-value
         True
-        >>> # investigate row 0,10,20,... and of the result columns 0,5,6, index 0 is ftarget
-        >>> ev = ds.evals[0::10, (0,5,6)]  # doctest:+ELLIPSIS  
-        >>> assert 3.98107170e+07 <= ev[0][0] <= 3.98107171e+07 
-        >>> assert ev[0][1] == 1
-        >>> assert ev[0][2] == 1
-        >>> assert 6.07000000e+03 <= ev[-1][-1] <= 6.07000001e+03
-        >>> # show last row, same columns
-        >>> ev = ds.evals[-1,(0,5,6)]  # doctest:+ELLIPSIS
-        >>> assert ev[0] == 1e-8
-        >>> assert 5.67600000e+03 <= ev[1] <= 5.67600001e+03
+        >>> ds.evals[0::10, (0,5,6)]  # show row 0,10,20,... and of the result columns 0,5,6, index 0 is ftarget
+        array([[  3.98107171e+07,   1.00000000e+00,   1.00000000e+00],
+               [  3.98107171e+05,   2.00000000e+01,   8.40000000e+01],
+               [  3.98107171e+03,   1.61600000e+03,   1.04500000e+03],
+               [  3.98107171e+01,   3.04400000e+03,   3.21000000e+03],
+               [  3.98107171e-01,   4.42400000e+03,   5.11800000e+03],
+               [  3.98107171e-03,   4.73200000e+03,   5.41300000e+03],
+               [  3.98107171e-05,   5.04000000e+03,   5.74800000e+03],
+               [  3.98107171e-07,   5.36200000e+03,   6.07000000e+03]])
+
+        >>> ds.evals[-1,(0,5,6)]  # show last row, same columns
+        array([  1.00000000e-08,   5.67600000e+03,   6.26900000e+03])
         >>> ds.info()  # prints similar data more nicely formated 
         Algorithm: BIPOP-CMA-ES
         Function ID: 2
@@ -672,14 +664,15 @@ class DataSet(object):
           1.0e-08 |     568     594     611     628     635 |    609.6  15
 
         >>> import numpy as np
-        >>> idx = list(range(0, 50, 10)) + [-1]
-        >>> # get aRT average runtime for some targets
-        >>> t = np.array([idx, ds.target[idx], ds.ert[idx]]).T  # doctest:+ELLIPSIS  
-        >>> assert t[0][0] == 0
-        >>> assert t[0][2] == 1
-        >>> assert t[-1][-2] == 1e-8
-        >>> assert 6.09626666e+03 <= t[-1][-1] <= 6.09626667e+03
-
+        >>> idx = range(0, 50, 10) + [-1]
+        >>> np.array([idx, ds.target[idx], ds.ert[idx]]).T  # aRT average runtime for some targets
+        array([[  0.00000000e+00,   3.98107171e+07,   1.00000000e+00],
+               [  1.00000000e+01,   3.98107171e+05,   6.12666667e+01],
+               [  2.00000000e+01,   3.98107171e+03,   1.13626667e+03],
+               [  3.00000000e+01,   3.98107171e+01,   3.07186667e+03],
+               [  4.00000000e+01,   3.98107171e-01,   4.81333333e+03],
+               [ -1.00000000e+00,   1.00000000e-08,   6.09626667e+03]])
+        
         Note that the load of a data set depends on the set of instances
         specified in testbedsettings' TestBed class (or its children)
         (None means all instances are read in):
@@ -687,34 +680,43 @@ class DataSet(object):
         >>> import os
         >>> import urllib
         >>> import tarfile
-        >>> import cocopp
-        >>> cocopp.genericsettings.verbose = False # ensure to make doctests work
-        >>> infoFile = os.path.join(cocopp.archives.bbob.local_data_path, 'BIPOP-CMA-ES', 'bbobexp_f2.info')
+        >>> path = os.path.abspath(os.path.dirname(os.path.dirname('__file__')))
+        >>> os.chdir(path)
+        >>> import cocopp as bb
+        >>> bb.genericsettings.verbose = False # ensure to make doctests work
+        >>> infoFile = 'data/BIPOP-CMA-ES/bbobexp_f2.info'
         >>> if not os.path.exists(infoFile):
-        ...   filename = cocopp.archives.bbob.get_one('bbob/2009/BIPOP-CMA-ES_hansen')
-        ...   tarfile.open(filename).extractall(cocopp.archives.bbob.local_data_path)
-        >>> dslist = cocopp.load(infoFile)
-          Data consistent according to consistency_check() in pproc.DataSet
+        ...   os.chdir(os.path.join(path, 'data'))
+        ...   dataurl = 'http://coco.gforge.inria.fr/data-archive/2009/BIPOP-CMA-ES_hansen_noiseless.tgz'
+        ...   filename, headers = urllib.urlretrieve(dataurl)
+        ...   archivefile = tarfile.open(filename)
+        ...   archivefile.extractall()
+        ...   os.chdir(path)
+        >>> dslist = bb.load(infoFile)
+          Data consistent according to test in consistency_check() in pproc.DataSet
         >>> dslist[2].instancenumbers
         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5]
-        >>> dslist[2].evals[-1]  # doctest:+ELLIPSIS
-        array([...
-        >>> assert (dslist[2].evals[-1])[0] == 1.0e-8
-        >>> assert 2.01200000e+03 <= (dslist[2].evals[-1])[-1] <= 2.01200001e+03
+        >>> dslist[2].evals[-1]
+        array([  1.00000000e-08,   2.14200000e+03,   1.95800000e+03,
+                 2.31700000e+03,   2.22700000e+03,   2.26900000e+03,
+                 2.09000000e+03,   2.32400000e+03,   2.30500000e+03,
+                 2.20700000e+03,   1.96200000e+03,   2.42800000e+03,
+                 2.21400000e+03,   1.97000000e+03,   1.92400000e+03,
+                 2.01200000e+03])
         >>> # because testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] was None
-        >>> cocopp.testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] = [1, 3]
-        >>> cocopp.config.config('GECCOBBOBTestbed') # make sure that settings are used
-        >>> dslist2 = cocopp.load(infoFile)
-          Data consistent according to consistency_check() in pproc.DataSet
+        >>> bb.testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] = [1, 3]
+        >>> bb.config.config('GECCOBBOBTestbed') # make sure that settings are used
+        >>> dslist2 = bb.load(infoFile)
+          Data consistent according to test in consistency_check() in pproc.DataSet
         >>> dslist2[2].instancenumbers
         [1, 1, 1, 3, 3, 3]
-        >>> dslist2[2].evals[-1]  # doctest:+ELLIPSIS
-        array([...
-        >>> assert (dslist2[2].evals[-1])[0] == 1.0e-8
-        >>> assert 2.20700000e+03 <= (dslist2[2].evals[-1])[-1] <= 2.20700001e+03
+        >>> dslist2[2].evals[-1]
+        array([  1.00000000e-08,   2.14200000e+03,   1.95800000e+03,
+                 2.31700000e+03,   2.32400000e+03,   2.30500000e+03,
+                 2.20700000e+03])
         >>> # set things back to cause no troubles elsewhere:
-        >>> cocopp.testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] = None
-        >>> cocopp.config.config('GECCOBBOBTestbed') # make sure that settings are used
+        >>> bb.testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] = None
+        >>> bb.config.config('GECCOBBOBTestbed') # make sure that settings are used
 
     """
 
@@ -735,48 +737,35 @@ class DataSet(object):
                    'algId': ('algId', str),
                    'algorithm': ('algId', str),
                    'suite': ('suite', str),
-                   'logger': ('logger', str),
                    'coco_version': ('coco_version', str),
-                   'reference_values_hash': ('reference_values_hash', str),
-                   'data_format': ('data_format', str)}
+                   'reference_values_hash': ('reference_values_hash', str)}
 
     def isBiobjective(self):
         return hasattr(self, 'indicator')
 
     def get_testbed_name(self):
-        suite = self.get_suite()
-        return testbedsettings.get_testbed_from_suite(suite)
-
-    def get_data_format(self):
-        # TODO: data_format is a specification of the files written by the 
-        # experiment loggers. I believe it was never meant to be a specification
-        # for a data set.
-        if hasattr(self, 'data_format'):
-            return getattr(self, 'data_format')
-        return None
-
-    def get_suite(self):
-        suite = None
+        testbed = None
         if hasattr(self, 'suite'):
             suite = getattr(self, 'suite')
+            testbed = testbedsettings.get_testbed_from_suite(suite)
 
-        if not suite:
+        if not testbed:
             if self.isBiobjective():
-                suite = testbedsettings.default_suite_bi
+                testbed = testbedsettings.default_testbed_bi
             else:
                 # detect by hand whether we are in the noisy or the
                 # noiseless case (TODO: is there a better way?)
                 if self.funcId > 100:
                     genericsettings.isNoisy = True
                     genericsettings.isNoiseless = False
-                    suite = testbedsettings.default_suite_single_noisy
+                    testbed = testbedsettings.default_testbed_single_noisy
                 else:
                     genericsettings.isNoisy = False
                     genericsettings.isNoiseless = True
-                    suite = testbedsettings.default_suite_single
+                    testbed = testbedsettings.default_testbed_single
 
-        return suite
-
+        return testbed
+    
     def __init__(self, header, comment, data, indexfile):
         """Instantiate a DataSet.
 
@@ -825,13 +814,12 @@ class DataSet(object):
         self.testbed_name = self.get_testbed_name()
 
         if not testbedsettings.current_testbed:
-            testbedsettings.load_current_testbed(self.testbed_name, TargetValues, self.get_data_format())
+            testbedsettings.load_current_testbed(self.testbed_name, TargetValues)
 
         # Split line in data file name(s) and run time information.
         parts = data.split(', ')
         idx_of_instances_to_load = []
         for elem in parts:
-            elem = elem.strip()
             if elem.endswith('dat'):
                 #Windows data to Linux processing
                 filename = elem
@@ -903,31 +891,19 @@ class DataSet(object):
         dataFiles = list(os.path.join(filepath, os.path.splitext(i)[0] + '.dat')
                          for i in self.dataFiles)
         datasets, algorithms, reference_values, success_ratio = split(dataFiles, idx_to_load=idx_of_instances_to_load)
-        data = HMultiReader(datasets)
+        data = HMultiReader(datasets, self.isBiobjective())
         if genericsettings.verbose:
             print("Processing %s: %d/%d trials found." % (dataFiles, len(data), len(self.instancenumbers)))
        
         if data:
-            if 2 < 3:  # this takes different data formats into account:
-                # print(testbedsettings.current_testbed.data_format, dataformatsettings.current_data_format)
-                # this should call align_data_into_evals from dataformatsettings.current_data_format, but the latter isn't set correctly
-                maxevals, finalfunvals = testbedsettings.current_testbed.data_format.align_data_into_evals(
-                                                align_data, data, self)
-            else:  # was before Sep 2017:
-                adata, maxevals, finalfunvals = align_data(data,
-                    testbedsettings.current_testbed.data_format.evaluation_idx,
-                    testbedsettings.current_testbed.data_format.function_value_idx,
-                    # should be:
-                    # dataformatsettings.current_data_format.evaluation_idx,
-                    # dataformatsettings.current_data_format.function_value_idx,
-                )
-                self.evals = adata
+            (adata, maxevals, finalfunvals) = alignData(data, self.isBiobjective())
+            self.evals = adata
             self.reference_values = reference_values
             if len(algorithms) > 0:
-                algorithms = align_list(algorithms, [item[1] for item in self.evals])
+                algorithms = align_list(algorithms, [item[1] for item in adata])
             self.algs = algorithms
             if len(success_ratio) > 0:
-                success_ratio = align_list(success_ratio, [item[1] for item in self.evals])
+                success_ratio = align_list(success_ratio, [item[1] for item in adata])
             self.success_ratio = success_ratio
             try:
                 for i in range(len(maxevals)):
@@ -944,24 +920,13 @@ class DataSet(object):
             raise Usage("Missing tdat files in '{0}'. Please rerun the experiments." % filepath)
 
         datasets, algorithms, reference_values, success_ratio = split(dataFiles, idx_to_load=idx_of_instances_to_load)
-        data = VMultiReader(datasets)
+        data = VMultiReader(datasets, self.isBiobjective())
         if genericsettings.verbose:
             print("Processing %s: %d/%d trials found."
                    % (dataFiles, len(data), len(self.instancenumbers)))
         
         if data:
-            adata, maxevals, finalfunvals = align_data(
-                data, 
-                testbedsettings.current_testbed.data_format.evaluation_idx,
-                testbedsettings.current_testbed.data_format.function_value_idx,
-                # should be:
-                # dataformatsettings.current_data_format.evaluation_idx,
-                # dataformatsettings.current_data_format.function_value_idx,
-                )
-            # TODO: this depends implicitely on the global variable setting of
-            # testbedsettings.current_testbed.data_format which
-            # seems like code which is bug prone and hard to maintain
-            # (adata, maxevals, finalfunvals) = align_data(data)
+            (adata, maxevals, finalfunvals) = alignData(data, self.isBiobjective())
             self.funvals = adata
             try:
                 for i in range(len(maxevals)):
@@ -973,7 +938,7 @@ class DataSet(object):
             #TODO: take for maxevals the max for each trial, for finalfunvals the min...
     
             #extensions = {'.dat':(HMultiReader, 'evals'), '.tdat':(VMultiReader, 'funvals')}
-            #for ext, info in extensions.items(): # ext is defined as global
+            #for ext, info in extensions.iteritems(): # ext is defined as global
                 ## put into variable dataFiles the files where to look for data
                 ## basically append 
                 #dataFiles = list(i.rsplit('.', 1)[0] + ext for i in self.dataFiles)
@@ -1001,6 +966,7 @@ class DataSet(object):
             self._cut_data()
             # Compute aRT
             self.computeERTfromEvals()
+            assert all(self.evals[0][1:] == 1)
 
     @property
     def evals_(self):
@@ -1108,9 +1074,15 @@ class DataSet(object):
                                 str(self.instancenumbers)+ 
                                 ' (f' + str(self.funcId) + ', ' + 
                                 str(self.dim) + 'D)')
-        elif (instancedict not in genericsettings.instancesOfInterest):
+        elif ((instancedict != genericsettings.instancesOfInterest2009)
+                and (instancedict != genericsettings.instancesOfInterest2010)
+                and (instancedict != genericsettings.instancesOfInterest2012)
+                and (instancedict != genericsettings.instancesOfInterest2013)
+                and (instancedict != genericsettings.instancesOfInterest2015)
+                and (instancedict != genericsettings.instancesOfInterest2016)
+                and (instancedict != genericsettings.instancesOfInterestBiobj2016)):
             is_consistent = False
-            warnings.warn('  instance numbers not among the ones specified in 2009, 2010, 2012, 2013, and 2015-2018')
+            warnings.warn('  instance numbers not among the ones specified in 2009, 2010, 2012, 2013, 2015 or 2016')
         return is_consistent
             
     def computeERTfromEvals(self):
@@ -1129,83 +1101,27 @@ class DataSet(object):
         self.ert = numpy.array(self.ert)
         self.target = numpy.array(self.target)
 
-    def evals_with_simulated_restarts(self,
-            targets,
-            samplesize=genericsettings.simulated_runlength_bootstrap_sample_size,
-            randintfirst=toolsstats.randint_derandomized,
-            randintrest=toolsstats.randint_derandomized,
-            bootstrap=False):
-        """Return a len(targets) list of ``samplesize`` "simulated" run
-        lengths (#evaluations, sorted).
+    def evals_with_restarts(self, targets, sample_size_per_instance, sorted_runtimes=False):
+        """return runtimes (evals) where simulated restarts are used for unsuccessful runs.
 
-        ``np.sort(np.concatenate(return_value))`` provides the combined
-        sorted ECDF data over all targets which may be plotted with
-        `pyplot.step` (missing the last step).
+        The number of returned evals is ``self.nbRuns() * sample_size_per_instance``.
 
-        Unsuccessful data are represented as `np.nan`.
+        TODO: the return value is inconsistent between the code and the comment!
 
-        Simulated restarts are used for unsuccessful runs. The usage of
-        `detEvals` or `evals_with_simulated_restarts` should be largely
-        interchangeable, while the latter has a "success" rate of either
-        0 or 1.
+        TODO: attaching a count to each point would help to reduce the data size (and
+        probably the plotting spead) significantly.
 
-        TODO: change this: To get a bootstrap sample for estimating dispersion use
-        ``min_samplesize=0, randint=np.random.randint``.
-
-        Details:
-
-        - For targets where all runs were successful, samplesize=nbRuns()
-          is sufficient (and preferable) if `randint` is derandomized.
-        - A single successful running length is computed by adding
-          uniformly randomly chosen running lengths until the first time a
-          successful one is chosen. In case of no successful run the
-          result is `None`.
-
-        TODO: if `samplesize` >> `nbRuns` and nsuccesses is large,
-        the data representation becomes somewhat inefficient.
-
-        TODO: it may be useful to make the samplesize dependent on the
-        number of successes and supply the multipliers
-        max(samplesizes) / samplesizes.
         """
-        try: targets = targets([self.funcId, self.dim])
-        except TypeError: pass
-        res = []  # res[i] is a list of samplesize evals
-        for evals in self.detEvals(targets, bootstrap=bootstrap):
-            # prepare evals array
-            evals.sort()
-            indices = np.isfinite(evals)
-            if not sum(indices):  # no successes
-                res += [samplesize * [np.nan]]  # TODO: this is "many" data with little information
-                continue
-            nindices = ~indices
-            assert sum(indices) + sum(nindices) == len(evals)
-            evals[nindices] = self.maxevals[nindices]  # replace nan
-            # let the first nsucc data in evals be those from successful runs
-            evals = np.hstack([evals[indices], evals[nindices]])
-            assert sum(np.isfinite(evals)) == len(evals)
-            nsucc = sum(indices)
-
-            # do the job
-            indices = randintfirst(0, len(evals), samplesize)
-            sums = evals[indices]
-            if nsucc == len(evals):
-                res += [sorted(sums)]
-                continue
-            failing = np.where(indices >= nsucc)[0]
-            assert nsucc > 0  # prevent infinite loop
-            while len(failing):  # add "restarts"
-                indices = randintrest(0, len(evals), len(failing))
-                sums[failing] += evals[indices]
-                # keep failing indices
-                failing = [failing[i] for i in range(len(failing))
-                            if indices[i] >= nsucc]
-            res += [sorted(sums)]
-
-        assert set([len(evals) if evals is not None else samplesize
-                for evals in res]) == set([samplesize])
+        raise NotImplementedError()
+        data_rows = self.detEvals(targets)
+        for d in data_rows:
+            evals, counts = toolsstats.runtimes_with_restarts(d, sample_size_per_instance)
+            # this should become a runtimes class with a counts and an evals attribute
+            raise NotImplementedError()
+        if sorted_runtimes:
+            raise NotImplementedError()
         return res
-
+    
     def __eq__(self, other):
         """Compare indexEntry instances."""
         res = (self.__class__ is other.__class__ and
@@ -1261,7 +1177,7 @@ class DataSet(object):
             for val in toolsstats.prctile(evals[i], (0, 15, 50, 85, 100)):
                 val = float(val)
                 line += ' %7d' % int(np.round(val / self.dim)) if not np.isnan(val) else '     .  '
-            line += ' |' + ('%9.1f' % (ert[i] / self.dim) if np.isfinite(ert[i]) else '    nan  ') 
+            line += ' |' + ('%9.1f' % (ert[i] / self.dim) if np.isfinite(ert[i]) else '    inf  ') 
             # line += '  %4.2f' % (nsucc[i] / float(Nruns)) if nsucc[i] < Nruns else '  1.0 '
             line += '  %2d' % nsucc[i]
             sinfo += '\n' + line
@@ -1365,8 +1281,8 @@ class DataSet(object):
                 f.close()
                 if genericsettings.verbose:
                     print('Saved pickle in %s.' %(self.pickleFile))
-            except IOError as e:
-                print("I/O error(%s): %s" % (e.errno, e.strerror))
+            except IOError, (errno, strerror):
+                print("I/O error(%s): %s" % (errno, strerror))
             except pickle.PicklingError:
                 print("Could not pickle %s" %(self))
                 
@@ -1414,7 +1330,7 @@ class DataSet(object):
         evals = {}
         funvals = {}
 
-        for instanceid, idx in dictinstance.items():
+        for instanceid, idx in dictinstance.iteritems():
             evals[instanceid] = self.evals[:,
                                            numpy.ix_(list(i + 1 for i in idx))]
             funvals[instanceid] = self.funvals[:,
@@ -1447,7 +1363,7 @@ class DataSet(object):
         it = reversed(self.evals)
         prevline = numpy.array([-numpy.inf] + [numpy.nan] * self.nbRuns())
         try:
-            line = advance_iterator(it)
+            line = it.next()
         except StopIteration:
             # evals is an empty array
             return res #list()
@@ -1456,7 +1372,7 @@ class DataSet(object):
             while line[0] <= t:
                 prevline = line
                 try:
-                    line = advance_iterator(it)
+                    line = it.next()
                 except StopIteration:
                     break
             res[t] = prevline.copy()
@@ -1529,7 +1445,7 @@ class DataSet(object):
 
         prevline = numpy.array([-numpy.inf, numpy.inf])
         try:
-            line = advance_iterator(it)
+            line = it.next()
         except StopIteration:
             # evals is an empty array
             return list()
@@ -1538,7 +1454,7 @@ class DataSet(object):
             while line[0] <= t:
                 prevline = line
                 try:
-                    line = advance_iterator(it)
+                    line = it.next()
                 except StopIteration:
                     break
             res[t] = prevline.copy() # is copy necessary? Yes. 
@@ -1547,7 +1463,7 @@ class DataSet(object):
         # targets, sorted along targets
         return list(res[i][1] for i in targets)
 
-    def detEvals(self, targets, copy=True, bootstrap=False):
+    def detEvals(self, targets, copy=True):
         """returns len(targets) data rows self.evals[idata, 1:] each row with 
         the closest but not larger target such that self.evals[idata, 0] <= target, 
         and self.evals[idata-1, 0] > target or in the "limit" cases the
@@ -1569,13 +1485,8 @@ class DataSet(object):
             evalsrows[target] = self.evals[idata, 1:].copy() if copy else self.evals[idata, 1:]
             
         if do_assertion:
-            assert all([all((np.isnan(evalsrows[target]) + (evalsrows[target] == self._detEvals2(targets)[i])))
-                        for i, target in enumerate(targets)])
-
-        if bootstrap:
-            return [np.asarray(evalsrows[t])[np.random.randint(0,
-                                len(evalsrows[t]), len(evalsrows[t]))]
-                    for t in targets]
+            assert all([all((np.isnan(evalsrows[target]) + (evalsrows[target] == self._detEvals2(targets)[i]))) for i, target in enumerate(targets)])
+    
         return [evalsrows[t] for t in targets]
         
     def _detEvals2(self, targets):
@@ -1590,7 +1501,7 @@ class DataSet(object):
         it = reversed(self.evals)
         prevline = numpy.array([-numpy.inf] + [numpy.nan] * self.nbRuns())
         try:
-            line = advance_iterator(it)
+            line = it.next()
         except StopIteration:
             # evals is an empty array
             return tmp #list()
@@ -1599,7 +1510,7 @@ class DataSet(object):
             while line[0] <= t:
                 prevline = line
                 try:
-                    line = advance_iterator(it)
+                    line = it.next()
                 except StopIteration:
                     break
             tmp[t] = prevline.copy()
@@ -1610,8 +1521,7 @@ class DataSet(object):
         """plot data of `funvals` attribute, versatile
 
         TODO: seems outdated on 19/8/2016
-              (using "isfinite" instead of "np.isfinite" and not called
-              from anywhere)
+              ("isfinite" instead of "np.isfinite" and not called from anywhere)
         """
         kwargs.setdefault('clip_on', False)
         for funvals in self.funvals.T[1:]:  # loop over the rows of the transposed array
@@ -1645,6 +1555,7 @@ class DataSet(object):
                 plt.ylabel('number of function evaluations')
         return plt.gca()
 
+
 class DataSetList(list):
     """List of instances of :py:class:`DataSet`.
 
@@ -1676,7 +1587,7 @@ class DataSetList(list):
             super(DataSetList, self).__init__()
             return
 
-        if isinstance(args, string_types):
+        if isinstance(args, basestring):
             args = [args]
 
         if len(args) and (isinstance(args[0], DataSet) or
@@ -1693,7 +1604,7 @@ class DataSetList(list):
                   '``check_data_type=False``')
         fnames = []
         for name in args:
-            if isinstance(name, string_types) and findfiles.is_recognized_repository_filetype(name):
+            if isinstance(name, basestring) and findfiles.is_recognized_repository_filetype(name):
                 fnames.extend(findfiles.main(name))
             else:
                 fnames.append(name)
@@ -1724,8 +1635,8 @@ class DataSetList(list):
                     # if not hasattr(entry, 'detAverageEvals')
                     self.append(entry)
                     #set_trace()
-                except IOError as e:
-                    print("I/O error(%s): %s" % (e.errno, e.strerror))
+                except IOError, (errno, strerror):
+                    print("I/O error(%s): %s" % (errno, strerror))
             else:
                 s = ('File or folder ' + name + ' not found. ' +
                               'Expecting as input argument either .info ' +
@@ -1739,7 +1650,7 @@ class DataSetList(list):
         for ds in self:
             data_consistent = data_consistent and ds.consistency_check()
         if len(self) and data_consistent:
-            print("  Data consistent according to consistency_check() in pproc.DataSet")
+            print("  Data consistent according to test in consistency_check() in pproc.DataSet")
             
     def processIndexFile(self, indexFile):
         """Reads in an index (.info?) file information on the different runs."""
@@ -1756,11 +1667,11 @@ class DataSetList(list):
             while True:
                 try:
                     if 'indicator' not in header:
-                        header = advance_iterator(f)
+                        header = f.next()
                         while not header.strip(): # remove blank lines
-                            header = advance_iterator(f)
+                            header = f.next()
                             nbLine += 1
-                        comment = advance_iterator(f)
+                        comment = f.next()
                         if not comment.startswith('%'):
                             warnings.warn('Entry in file %s at line %d is faulty: '
                                           % (indexFile, nbLine) +
@@ -1768,7 +1679,7 @@ class DataSetList(list):
                             nbLine += 2
                             continue
 
-                    data = advance_iterator(f)  # this is the filename of the data file!?
+                    data = f.next()  # this is the filename of the data file!?
                     data_file_names.append(data)
                     nbLine += 3
                     #TODO: check that something is not wrong with the 3 lines.
@@ -1783,14 +1694,14 @@ class DataSetList(list):
                 warnings.warn("WARNING: a data file has been referenced" +
                     " several times in file %s:" % indexFile)
                 data_file_names = sorted(data_file_names)
-                for i in range(1, len(data_file_names)):
+                for i in range(1, data_file_names):
                     if data_file_names[i-1] == data_file_names[i]:
                         warnings.warn("    data file " + data_file_names[i])
                 warnings.warn("  This is likely to produce spurious results.")
 
-        except IOError as e:
+        except IOError, (errno, strerror):
             print('Could not load "%s".' % indexFile)
-            print('I/O error(%s): %s' % (e.errno, e.strerror))
+            print('I/O error(%s): %s' % (errno, strerror))
 
     def append(self, o, check_data_type=False):
         """Redefines the append method to check for unicity."""
@@ -1811,12 +1722,10 @@ class DataSetList(list):
                     break
                 if set(i.instancenumbers).intersection(o.instancenumbers) \
                         and any([_i > 5 for _i in set(i.instancenumbers).intersection(o.instancenumbers)]):
-                    warn_message = ('in DataSetList.processIndexFile: instances '
-                                    + str(set(i.instancenumbers).intersection(o.instancenumbers))
-                                    + ' found several times.'
-                                    + ' Read data for F%d in %d-D might be inconsistent' % (i.funcId, i.dim))
-                    warnings.warn(warn_message)
+                    warnings.warn('instances ' + str(set(i.instancenumbers).intersection(o.instancenumbers))
+                                  + (' found several times. Read data for F%d in %d-D' % (i.funcId, i.dim)) 
                                   # + ' found several times. Read data for F%(argone)d in %(argtwo)d-D ' % {'argone':i.funcId, 'argtwo':i.dim}
+                                  + 'might be inconsistent. ')
                 # tmp = set(i.dataFiles).symmetric_difference(set(o.dataFiles))
                 #Check if there are new data considered.
                 if 1 < 3:
@@ -1824,7 +1733,7 @@ class DataSetList(list):
                     i.indexFiles.extend(o.indexFiles)
                     i.funvals = alignArrayData(VArrayMultiReader([i.funvals, o.funvals]))
                     i.finalfunvals = numpy.r_[i.finalfunvals, o.finalfunvals]
-                    i.evals = alignArrayData(HArrayMultiReader([i.evals, o.evals]))
+                    i.evals = alignArrayData(HArrayMultiReader([i.evals, o.evals], self.isBiobjective()))
                     i.maxevals = numpy.r_[i.maxevals, o.maxevals]
                     i.computeERTfromEvals()
                     i.reference_values.update(o.reference_values)
@@ -1956,39 +1865,26 @@ class DataSetList(list):
 
         """
         sorted = {} 
+        for i in self:
+            if i.funcId in range(1, 6):
+                sorted.setdefault('separ', DataSetList()).append(i)
+            elif i.funcId in range(6, 10):
+                sorted.setdefault('lcond', DataSetList()).append(i)
+            elif i.funcId in range(10, 15):
+                sorted.setdefault('hcond', DataSetList()).append(i)
+            elif i.funcId in range(15, 20):
+                sorted.setdefault('multi', DataSetList()).append(i)
+            elif i.funcId in range(20, 25):
+                sorted.setdefault('mult2', DataSetList()).append(i)
+            elif i.funcId in range(101, 107):
+                sorted.setdefault('nzmod', DataSetList()).append(i)
+            elif i.funcId in range(107, 122):
+                sorted.setdefault('nzsev', DataSetList()).append(i)
+            elif i.funcId in range(122, 131):
+                sorted.setdefault('nzsmm', DataSetList()).append(i)
+            else:
+                warnings.warn('Unknown function id.')
 
-        # TODO: this should be done in the testbed, not here
-        if testbedsettings.current_testbed.name == 'bbob-constrained':
-            for i in self:
-                if i.funcId in range(1, 19):
-                    sorted.setdefault('separ', DataSetList()).append(i)
-                elif i.funcId in range(19, 43):
-                    sorted.setdefault('hcond', DataSetList()).append(i)
-                elif i.funcId in range(43, 49):
-                    sorted.setdefault('multi', DataSetList()).append(i)
-                else:
-                    warnings.warn('Unknown function id.')
-        else:
-            for i in self:
-                if i.funcId in range(1, 6):
-                    sorted.setdefault('separ', DataSetList()).append(i)
-                elif i.funcId in range(6, 10):
-                    sorted.setdefault('lcond', DataSetList()).append(i)
-                elif i.funcId in range(10, 15):
-                    sorted.setdefault('hcond', DataSetList()).append(i)
-                elif i.funcId in range(15, 20):
-                    sorted.setdefault('multi', DataSetList()).append(i)
-                elif i.funcId in range(20, 25):
-                    sorted.setdefault('mult2', DataSetList()).append(i)
-                elif i.funcId in range(101, 107):
-                    sorted.setdefault('nzmod', DataSetList()).append(i)
-                elif i.funcId in range(107, 122):
-                    sorted.setdefault('nzsev', DataSetList()).append(i)
-                elif i.funcId in range(122, 131):
-                    sorted.setdefault('nzsmm', DataSetList()).append(i)
-                else:
-                    warnings.warn('Unknown function id.')
-                    
         return sorted
 
     def dictByFuncGroup(self):
@@ -2013,16 +1909,6 @@ class DataSetList(list):
             dictByFuncGroup = self.dictByFuncGroupBiobjective()
             groups = OrderedDict(sorted((key, key.replace('_', ' ')) for key in dictByFuncGroup.keys()))
             return groups
-        elif testbedsettings.current_testbed.name == 'bbob-constrained':
-            groups = []
-            if any(i.funcId in range(1, 19) for i in self):
-                groups.append(('separ', 'Separable functions'))
-            if any(i.funcId in range(19, 43) for i in self):
-                groups.append(('hcond', 'Ill-conditioned functions'))
-            if any(i.funcId in range(43, 49) for i in self):
-                groups.append(('multi', 'Multi-modal functions'))
-
-            return OrderedDict(groups)
         else:
             groups = []
             if any(i.funcId in range(1, 6) for i in self):
@@ -2070,27 +1956,30 @@ class DataSetList(list):
         if len(self) > 0:
             print('%d data set(s)' % (len(self)))
             dictAlg = self.dictByAlg()
-            algs = sorted(dictAlg.keys())
+            algs = dictAlg.keys()
+            algs.sort()
             sys.stdout.write('Algorithm(s): %s' % (algs[0][0]))
             for i in range(1, len(algs)):
                 sys.stdout.write(', %s' % (algs[0][0]))
             sys.stdout.write('\n')
 
             dictFun = self.dictByFunc()
-            functions = sorted(dictFun.keys())
+            functions = dictFun.keys()
+            functions.sort()
             nbfuns = len(set(functions))
             splural = 's' if nbfuns > 1 else ''
             print('%d Function%s with ID%s %s' % (nbfuns, splural, splural, consecutiveNumbers(functions)))
 
             dictDim = self.dictByDim()
-            dimensions = sorted(dictDim.keys())
+            dimensions = dictDim.keys()
+            dimensions.sort()
             sys.stdout.write('Dimension(s): %d' % (dimensions[0]))
             for i in range(1, len(dimensions)):
                 sys.stdout.write(', %d' % (dimensions[i]))
             sys.stdout.write('\n')
 
             maxevals = []
-            for i in range(len(dimensions)):
+            for i in xrange(len(dimensions)):
                 maxeval = []
                 for d in dictDim[dimensions[i]]:
                     maxeval = int(max((d.mMaxEvals(), maxeval)))
@@ -2127,7 +2016,7 @@ class DataSetList(list):
                 return 1 if getattr(a, key2) > getattr(b, key2) else -1                
             else:
                 return 1 if getattr(a, key1) > getattr(b, key1) else -1
-        sorted_self = list(sorted(self, key=functools.cmp_to_key(cmp_fun)))
+        sorted_self = list(sorted(self, cmp=cmp_fun))
         for i, ds in enumerate(sorted_self):
             self[i] = ds
         return self
@@ -2137,59 +2026,34 @@ class DataSetList(list):
 
 
     def run_length_distributions(self, dimension, target_values,
-                                 fun_list=None,  # all functions
+                                 fun_list=None,
                                  reference_data_set_list=None,
-                                 reference_scoring_function=lambda x:
-                                        toolsstats.prctile(x, [5])[0],
+                                 reference_scoring_function=lambda x: toolsstats.prctile(x, [5])[0],
                                  data_per_target=15,
-                                 flatten_output_dict=True,
-                                 simulated_restarts=False,
-                                 bootstrap=False):
-        """return a dictionary with an entry for each algorithm, or for
-        only one algorithm the dictionary value if
-        ``flatten_output_dict is True``, and the left envelope
-        rld-array.
-
-        For each algorithm the entry contains a sorted rld-array of
-        evaluations to reach the targets on all functions in
-        ``func_list`` or all functions in `self`, the list of solved
-        functions, the list of processed functions. If the sorted
-        rld-array is normalized by the reference score (after sorting),
-        the last entry is the original rld.
-
-        Example::
-
-            %pylab
-            dsl = cocopp.load(...)  # a single algorithm
-            rld = dsl.run_length_distributions(10, [1e-1, 1e-3, 1e-5])
-            step(rld[0][0], np.linspace(0, 1, len(rld[0][0]),
-                 endpoint=True)
+                                 flatten_output_dict=True):
+        """return a dictionary with an entry for each algorithm (or
+        the dictionary value for only one algorithm if
+        ``flatten_output_dict is True``) and
+        the left envelope rld-array. For each algorithm the entry contains
+        a sorted rld-array of evaluations to reach the targets on all
+        functions in ``func_list`` or all available functions, the
+        list of solved functions, the list of processed functions. If
+        the sorted rld-array is normalized by the reference score (after
+        sorting), the last entry is the original rld.
 
         TODO: change interface to return always rld_original and optional
-        the scores to compare with such that we need to compute
-        ``rld[0][0] / rld[0][-1]`` to get the current output?
+        the scores to compare with. Example::
+
+            rld = dsl.run_length_distributions(...)
+            semilogy([x if np.isfinite(x) else np.inf
+                      for x in rld[0][0] / rld[0][-1]])
 
         If ``reference_data_set_list is not None`` evaluations
         are normalized by the reference data, however
         the data remain to be sorted without normalization.
-
-        :param simulated_restarts: use simulated trials instead of
-            "raw" evaluations from calling `DataSet.detEvals`.
-            `simulated_restarts` may be a `bool`, or a kwargs `dict`
-            passed like ``**simulated_restarts`` to the method
-            `DataSet.evals_with_simulated_restarts`, or it may indicate
-            the number of simulated trials. By default, the first trial
-            is chosen without replacement. That means, if the number of
-            simulated trials equals to ``nbRuns()``, the result is the
-            same as from `DataSet.detEvals`, bar the ordering of the
-            data. If `bootstrap` is active, the number is set to
-            ``nbRuns()`` and the first trial is chosen *with* replacement.
-        :param bootstrap: ``if bootstrap``, the number of evaluations is
-            bootstrapped within the instances/trials or via simulated
-            restarts.
+        TODO:
 
         """
-        target_values = asTargetValues(target_values)
         dsl_dict = self.dictByDim()[dimension].dictByAlg()
         # selected dimension and go by algorithm
         rld_dict = {}  # result for each algorithm
@@ -2200,50 +2064,16 @@ class DataSetList(list):
             ref_scores = []  # to compute rld_data / ref_scores element-wise
             funcs_processed = []
             funcs_solved = []
-            for ds in dsl_dict[alg]:  # ds is a DataSet containing typically 15 trials
+            for ds in dsl_dict[alg]:  # ds is a DataSet, i.e. typically 15 trials
                 if fun_list and ds.funcId not in fun_list:
                     continue
                 assert dimension == ds.dim
                 funcs_processed.append(ds.funcId)
-                if not simulated_restarts:
-                    evals = ds.detEvals(target_values((ds.funcId, ds.dim)),
-                                        bootstrap=bootstrap)
-                    if data_per_target is not None:
-                        # make sure to get 15 numbers for each target
-                        if 1 < 3:
-                            evals = [np.sort(np.asarray(d)[toolsstats.randint_derandomized(0, len(d), data_per_target)])
-                                         for d in evals]
-                        else:  # this assumes that data_per_target is not smaller than nbRuns
-                            evals = [np.sort(toolsstats.fix_data_number(d, data_per_target))
-                                        for d in evals]
-                else:
-                    if isinstance(simulated_restarts, dict):
-                        evals = ds.evals_with_simulated_restarts(
-                                    target_values((ds.funcId, ds.dim)),
-                                    bootstrap=bootstrap,
-                                    **simulated_restarts)
-                    elif 11 < 3 and bootstrap:  # TODO: to be removed, produce the bootstrap graph for dispersion estimate
-                        n = ds.nbRuns()
-                        evals = ds.evals_with_simulated_restarts(target_values((ds.funcId, ds.dim)),
-                                                   samplesize=n,
-                                                   randint=np.random.randint)
-                    else:  # manage number of samples
-                        # TODO: shouldn't number of samples be set to data_per_target?
-                        if simulated_restarts is not True and simulated_restarts > 0:
-                            n = simulated_restarts
-                        else:
-                            n = (data_per_target or 0) + 2 * ds.nbRuns() + genericsettings.simulated_runlength_bootstrap_sample_size
-                        evals = ds.evals_with_simulated_restarts(
-                                    target_values((ds.funcId, ds.dim)),
-                                    bootstrap=bootstrap,
-                                    samplesize=n)
-                    if data_per_target is not None:
-                        index = np.array(0.5 + np.linspace(0, n - 1, data_per_target, endpoint=True),
-                                         dtype=int)
-                        for i in range(len(evals)):
-                            evals[i] = np.asarray(evals[i])[index]
-                    # evals.complement_missing(data_per_target)  # add fully unsuccessful sample data
-
+                evals = ds.detEvals(target_values((ds.funcId, ds.dim)))
+                if data_per_target is not None:
+                    evals = [np.sort(toolsstats.fix_data_number(d, data_per_target))
+                                for d in evals]
+                    # make sure to get 15 numbers for each target
                 if reference_data_set_list is not None:
                     if ds.funcId not in reference_scores:
                         if reference_scoring_function is None:
@@ -2267,11 +2097,9 @@ class DataSetList(list):
                                          copy=False)
                         for i, line in enumerate(reference_scores[ds.funcId]):
                             reference_scores[ds.funcId][i] = \
-                                np.sort(np.asarray(line)[toolsstats.randint_derandomized(0, len(line), data_per_target)])
-                                # np.sort(toolsstats.fix_data_number(line, data_per_target))
+                                np.sort(toolsstats.fix_data_number(line, data_per_target))
                     ref_scores.append(np.hstack(reference_scores[ds.funcId]))
                     # 'needs to be checked', qqq
-
                 evals = np.hstack(evals)  # "stack" len(targets) * 15 values
                 if any(np.isfinite(evals)):
                     funcs_solved.append(ds.funcId)
@@ -2279,23 +2107,17 @@ class DataSetList(list):
 
             funcs_processed.sort()
             funcs_solved.sort()
-            assert map(int, np.__version__.split('.')) > [1, 4, 0], \
-    """for older versions of numpy, replacing `nan` with `inf` might work
-    for sorting here"""
+            assert np.__version__ >= '1.4.0'
+            # if this fails, replacing nan with inf might work for sorting
             rld_data = np.hstack(rld_data)
             if reference_data_set_list is not None:
                 ref_scores = np.hstack(ref_scores)
                 idx = np.argsort(rld_data)
-                if 11 < 3:  # original version to return normalized data
-                    rld_original = rld_data[idx]
-                    rld_data = rld_original / ref_scores[idx]
-                else:
-                    rld_data = rld_data[idx]
-                    ref_scores = ref_scores[idx]
-                    print("""interface of return values changed! Also: left_envelope is now computed w.r.t. original data""")
+                rld_original = rld_data[idx]
+                rld_data = rld_original / ref_scores[idx]
             else:
                 rld_data.sort()  # returns None
-                # nan are at the end now (since numpy 1.4.0)
+            # nan are at the end now (since numpy 1.4.0)
 
             # check consistency
             if len(funcs_processed) > len(set(funcs_processed)):
@@ -2307,7 +2129,7 @@ class DataSetList(list):
                     + " and computations disregarded " + str(ds.algId))
                 continue
 
-            left_envelope = np.fmin(left_envelope, rld_data)  # TODO: needs to be rld_data / ref_scores after interface change
+            left_envelope = np.fmin(left_envelope, rld_data)
             # fails if number of computed data are different
             rld_dict[alg] = [rld_data,
                              sorted(funcs_solved),
@@ -2361,8 +2183,6 @@ class DataSetList(list):
 
         Detail: currently, the minimal observed evaluation is computed
         instance-wise and the ``number`` "easiest" instances are returned.
-        That is, if `number` is the number of instances, the best eval
-        for each instance is returned.
         Also the smallest ``number`` evaluations regardless of instance
         are computed, but not returned.
 
@@ -2372,13 +2192,13 @@ class DataSetList(list):
         except TypeError:
             target_values = target_values
         best_lines = len(target_values) * [[]]  # caveat: this is (can be?) the same instance of []
-        best_dicts = [{} for i in range(len(target_values))]
+        best_dicts = [{} for i in xrange(len(target_values))]
         for ds in self:
             if ds.funcId != fct or ds.dim != dim:
                 continue
             current_lines = ds.detEvals(target_values)
             assert len(current_lines) == len(best_lines) == len(target_values)
-            for i in range(len(current_lines)):
+            for i in xrange(len(current_lines)):
                 for j, instance in enumerate(ds.instancenumbers):
                     previous_val = best_dicts[i].setdefault(instance, np.inf)
                     best_dicts[i][instance] = min((previous_val, current_lines[i][j]))
@@ -2388,7 +2208,7 @@ class DataSetList(list):
                                                     len(best_lines[i])))]
         # construct another best line instance-wise
         best_instances_lines = []
-        for i in range(len(best_dicts)):
+        for i in xrange(len(best_dicts)):
             vals = best_dicts[i].values()
             best_instances_lines.append(
                 np.sort(vals)[:np.min((number, len(vals)))])
@@ -2409,10 +2229,6 @@ class DataSetList(list):
         """return a list of the respective best data lines over all data
         sets in ``self`` for each ``target in target_values`` and an
         array of the computed scores (ERT ``if scoring_function == 'ERT'``).
-
-        A data line is the set of evaluations from all (usually 15) runs
-        for a given target value. The score determines which data line is
-        "best".
 
         If ``scoring_function is None``, the best is determined with method
         ``detERT``. Using ``scoring_function=lambda x:
@@ -2505,7 +2321,7 @@ class DataSetList(list):
             return reference_values_hash
 
         reference_values_string = json.dumps(all_reference_values, sort_keys=True)
-        result = hashlib.sha1(reference_values_string.encode('utf-8')).hexdigest()
+        result = hashlib.sha1(reference_values_string).hexdigest()
         # The generated hash it's very long so we truncate it.
         return result[:16]
 
@@ -2534,10 +2350,10 @@ def parseinfoold(s):
     res = []
     while True:
         try:
-            elem = advance_iterator(it)
+            elem = it.next()
             tmp = p.match(elem)
             while not tmp:
-                elem = advance_iterator(it) + elem
+                elem = it.next() + elem
                 # add up elements of list_kv until we have a whole key = value
 
             elem0, elem1 = tmp.groups()
@@ -2607,8 +2423,7 @@ def set_unique_algId(ds_list, ds_list_reference, taken_ids=None):
                 i += 1
             ds.algId = algId + ' ' + str(i)
 
-
-def processInputArgs(args, process_background_algorithms=False):
+def processInputArgs(args):
     """Process command line arguments.
 
     Returns several instances of :py:class:`DataSetList`, and a list of 
@@ -2621,7 +2436,6 @@ def processInputArgs(args, process_background_algorithms=False):
     kept in different locations for efficiency reasons.
 
     :keyword list args: string arguments for folder names
-    :keyword bool process_background_algorithms: option to process also background algorithms
 
     :returns (all_datasets, pathnames, datasetlists_by_alg):
       all_datasets
@@ -2635,49 +2449,39 @@ def processInputArgs(args, process_background_algorithms=False):
         a dictionary which associates each algorithm via its input path
         name to a DataSetList
 
+
+
+
     """
     dsList = list()
     sortedAlgs = list()
     dictAlg = {}
     current_hash = None
-    process_arguments(args, current_hash, dictAlg, dsList, sortedAlgs)
-    if process_background_algorithms:
-        genericsettings.foreground_algorithm_list.extend(sortedAlgs)
-        for value in genericsettings.background.values():
-            assert isinstance(value, (list, tuple, set))
-            process_arguments(value, current_hash, dictAlg, dsList, sortedAlgs)
-
-    store_reference_values(DataSetList(dsList))
-
-    return dsList, sortedAlgs, dictAlg
-
-
-def process_arguments(args, current_hash, dictAlg, dsList, sortedAlgs):
     for i in args:
         i = i.strip()
-        if i == '':  # might cure an lf+cr problem when using cywin under Windows
+        if i == '': # might cure an lf+cr problem when using cywin under Windows
             continue
         if findfiles.is_recognized_repository_filetype(i):
             filelist = findfiles.main(i)
-            # Do here any sorting or filtering necessary.
-            # filelist = list(i for i in filelist if i.count('ppdata_f005'))
+            #Do here any sorting or filtering necessary.
+            #filelist = list(i for i in filelist if i.count('ppdata_f005'))
             tmpDsList = DataSetList(filelist)
             for ds in tmpDsList:
                 ds._data_folder = i
-            # Nota: findfiles will find all info AND pickle files in folder i.
-            # No problem should arise if the info and pickle files have
-            # redundant information. Only, the process could be more efficient
-            # if pickle files were in a whole other location.
+            #Nota: findfiles will find all info AND pickle files in folder i.
+            #No problem should arise if the info and pickle files have
+            #redundant information. Only, the process could be more efficient
+            #if pickle files were in a whole other location.
 
             alg = i.rstrip(os.path.sep)
-            if current_hash is not None and current_hash != tmpDsList.get_reference_values_hash():
+            if current_hash is not None and current_hash <> tmpDsList.get_reference_values_hash():
                 warnings.warn(" Reference values for the algorithm '%s' are different!" % alg)
 
             set_unique_algId(tmpDsList, dsList)
             dsList.extend(tmpDsList)
             current_hash = tmpDsList.get_reference_values_hash()
-            # alg = os.path.split(i.rstrip(os.sep))[1]  # trailing slash or backslash
-            # if alg == '':
+            #alg = os.path.split(i.rstrip(os.sep))[1]  # trailing slash or backslash
+            #if alg == '':
             #    alg = os.path.split(os.path.split(i)[0])[1]
             print('  using:', alg)
 
@@ -2686,7 +2490,7 @@ def process_arguments(args, current_hash, dictAlg, dsList, sortedAlgs):
                 sortedAlgs.append(alg)
                 dictAlg[alg] = tmpDsList
         elif os.path.isfile(i):
-            # TODO: a zipped tar file should be unzipped here, see findfiles.py
+            # TODO: a zipped tar file should be unzipped here, see findfiles.py 
             txt = 'The post-processing cannot operate on the single file ' + str(i)
             warnings.warn(txt)
             continue
@@ -2694,11 +2498,15 @@ def process_arguments(args, current_hash, dictAlg, dsList, sortedAlgs):
             txt = "Input folder '" + str(i) + "' could not be found."
             raise Exception(txt)
 
+    store_reference_values(DataSetList(dsList))
+
+    return dsList, sortedAlgs, dictAlg
+    
 
 def store_reference_values(ds_list):
 
     dict_alg = ds_list.dictByAlg()
-    for key, value in dict_alg.items():
+    for key, value in dict_alg.iteritems():
         testbedsettings.update_reference_values(key[0], value.get_reference_values_hash())
 
 
@@ -2727,7 +2535,7 @@ def dictAlgByDim(dictAlg):
     # get the set of problem dimensions
     dims = set()
     tmpdictAlg = {} # will store DataSet by alg and dim
-    for alg, dsList in dictAlg.items():
+    for alg, dsList in dictAlg.iteritems():
         tmp = dsList.dictByDim()
         tmpdictAlg[alg] = tmp
         dims |= set(tmp.keys())
@@ -2742,7 +2550,7 @@ def dictAlgByDim(dictAlg):
                        % (alg, d))
                 warnings.warn(txt)
 
-            if alg in res.setdefault(d, {}):
+            if res.setdefault(d, {}).has_key(alg):
                 txt = ('Duplicate data for algorithm %s in %d-D.'
                        % (alg, d))
                 warnings.warn(txt)
@@ -2750,7 +2558,7 @@ def dictAlgByDim(dictAlg):
             res.setdefault(d, {}).setdefault(alg, tmp)
             # Only the first data for a given algorithm in a given dimension
 
-    #for alg, dsList in dictAlg.items():
+    #for alg, dsList in dictAlg.iteritems():
         #for i in dsList:
             #res.setdefault(i.dim, {}).setdefault(alg, DataSetList()).append(i)
 
@@ -2772,14 +2580,14 @@ def dictAlgByDim2(dictAlg, remove_empty=False):
     """
     res = {}
 
-    for alg, dsList in dictAlg.items():
+    for alg, dsList in dictAlg.iteritems():
         for i in dsList:
             res.setdefault(i.dim, {}).setdefault(alg, DataSetList()).append(i)
 
     if remove_empty:
         raise NotImplementedError
-        for dim, ds_dict in res.items():
-            for alg, ds_dict2 in ds_dict.items():
+        for dim, ds_dict in res.iteritems():
+            for alg, ds_dict2 in ds_dict.iteritems():
                 if not len(ds_dict2):
                     pass
             if not len(ds_dict):
@@ -2800,7 +2608,7 @@ def dictAlgByFun(dictAlg):
     res = {}
     funcs = set()
     tmpdictAlg = {}
-    for alg, dsList in dictAlg.items():
+    for alg, dsList in dictAlg.iteritems():
         tmp = dsList.dictByFunc()
         tmpdictAlg[alg] = tmp
         funcs |= set(tmp.keys())
@@ -2815,7 +2623,7 @@ def dictAlgByFun(dictAlg):
                        % (alg, f)) # This message is misleading.
                 warnings.warn(txt)
 
-            if alg in res.setdefault(f, {}):
+            if res.setdefault(f, {}).has_key(alg):
                 txt = ('Duplicate data for algorithm %s on function %d-D.'
                        % (alg, f))
                 warnings.warn(txt)
@@ -2839,7 +2647,7 @@ def dictAlgByNoi(dictAlg):
     res = {}
     ng = set()
     tmpdictAlg = {}
-    for alg, dsList in dictAlg.items():
+    for alg, dsList in dictAlg.iteritems():
         tmp = dsList.dictByNoise()
         tmpdictAlg[alg] = tmp
         ng |= set(tmp.keys())
@@ -2860,7 +2668,7 @@ def dictAlgByNoi(dictAlg):
                        % (alg, stmp))
                 warnings.warn(txt)
 
-            if alg in res.setdefault(n, {}):
+            if res.setdefault(n, {}).has_key(alg):
                 txt = ('Duplicate data for algorithm %s on %s functions.'
                        % (alg, stmp))
                 warnings.warn(txt)
@@ -2883,7 +2691,7 @@ def dictAlgByFuncGroup(dictAlg):
     res = {}
     fg = set()
     tmpdictAlg = {}
-    for alg, dsList in dictAlg.items():
+    for alg, dsList in dictAlg.iteritems():
         tmp = dsList.dictByFuncGroup()
         tmpdictAlg[alg] = tmp
         fg |= set(tmp.keys())  # | is bitwise OR
@@ -2898,7 +2706,7 @@ def dictAlgByFuncGroup(dictAlg):
                        % (alg, g))
                 warnings.warn(txt)
 
-            if alg in res.setdefault(g, {}):
+            if res.setdefault(g, {}).has_key(alg):
                 txt = ('Duplicate data for algorithm %s on %s functions.'
                        % (alg, g))
                 warnings.warn(txt)

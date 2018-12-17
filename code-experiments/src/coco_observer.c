@@ -93,6 +93,7 @@ static int coco_observer_targets_trigger(coco_observer_targets_t *targets, const
   const double number_of_targets_double = (double) (long) targets->number_of_triggers;
 
   double verified_value = 0;
+  int last_exponent = 0;
   int current_exponent = 0;
   int adjusted_exponent = 0;
 
@@ -113,7 +114,15 @@ static int coco_observer_targets_trigger(coco_observer_targets_t *targets, const
 
     current_exponent = (int) (ceil(log10(verified_value) * number_of_targets_double));
 
-    if (current_exponent < targets->exponent) {
+    /* If this is the first time the update was called, set the last_exponent to some value greater than the
+     * current exponent */
+    if (last_exponent == INT_MAX) {
+      last_exponent = current_exponent + 1;
+    } else {
+      last_exponent = targets->exponent;
+    }
+
+    if (current_exponent < last_exponent) {
       /* Update the target information */
       targets->exponent = current_exponent;
       if (given_value == 0)
@@ -136,13 +145,21 @@ static int coco_observer_targets_trigger(coco_observer_targets_t *targets, const
     /* Adjustment: use floor instead of ceil! */
     current_exponent = (int) (floor(log10(verified_value) * number_of_targets_double));
 
+    /* If this is the first time the update was called, set the last_exponent to some value greater than the
+     * current exponent */
+    if (last_exponent == INT_MAX) {
+      last_exponent = current_exponent + 1;
+    } else {
+      last_exponent = targets->exponent;
+    }
+
     /* Compute the adjusted_exponent in such a way, that it is always diminishing in value. The adjusted
      * exponent can only be used to verify if a new target has been hit. To compute the actual target
      * value, the current_exponent needs to be used. */
     adjusted_exponent = 2 * (int) (ceil(log10(targets->precision / 10.0) * number_of_targets_double))
         - current_exponent - 1;
 
-    if (adjusted_exponent < targets->exponent) {
+    if (adjusted_exponent < last_exponent) {
       /* Update the target information */
       targets->exponent = adjusted_exponent;
       targets->value = - pow(10, (double) current_exponent / number_of_targets_double);
@@ -212,7 +229,7 @@ static int coco_observer_evaluations_trigger_first(coco_observer_evaluations_t *
 
   assert(evaluations != NULL);
 
-  if (evaluation_number >= evaluations->value1) {
+  if (evaluation_number == evaluations->value1) {
     /* Compute the next value for the first trigger */
     while (coco_double_to_size_t(floor(pow(10, (double) evaluations->exponent1 / (double) evaluations->number_of_triggers)) <= evaluations->value1)) {
       evaluations->exponent1++;
@@ -235,7 +252,7 @@ static int coco_observer_evaluations_trigger_second(coco_observer_evaluations_t 
 
   assert(evaluations != NULL);
 
-  if (evaluation_number >= evaluations->value2) {
+  if (evaluation_number == evaluations->value2) {
     /* Compute the next value for the second trigger */
     if (evaluations->base_index < evaluations->base_count - 1) {
       evaluations->base_index++;
@@ -294,8 +311,7 @@ static coco_observer_t *coco_observer_allocate(const char *result_folder,
                                                const size_t number_evaluation_triggers,
                                                const char *base_evaluation_triggers,
                                                const int precision_x,
-                                               const int precision_f,
-                                               const int precision_g) {
+                                               const int precision_f) {
 
   coco_observer_t *observer;
   observer = (coco_observer_t *) coco_allocate_memory(sizeof(*observer));
@@ -310,7 +326,6 @@ static coco_observer_t *coco_observer_allocate(const char *result_folder,
   observer->base_evaluation_triggers = coco_strdup(base_evaluation_triggers);
   observer->precision_x = precision_x;
   observer->precision_f = precision_f;
-  observer->precision_g = precision_g;
   observer->data = NULL;
   observer->data_free_function = NULL;
   observer->logger_allocate_function = NULL;
@@ -354,7 +369,6 @@ void coco_observer_free(coco_observer_t *observer) {
 #include "logger_bbob.c"
 #include "logger_biobj.c"
 #include "logger_toy.c"
-#include "logger_rw.c"
 
 /**
  * Currently, three observers are supported:
@@ -391,8 +405,6 @@ void coco_observer_free(coco_observer_t *observer) {
  * of digits to be printed after the decimal point. The default value is 8.
  * - "precision_f: VALUE" defines the precision used when outputting f values and corresponds to the number of
  * digits to be printed after the decimal point. The default value is 15.
- * - "precision_g: VALUE" defines the precision used when outputting constraints and corresponds to the number
- * of digits to be printed after the decimal point. The default value is 3.
  *
  * @return The constructed observer object or NULL if observer_name equals NULL, "" or "no_observer".
  */
@@ -401,7 +413,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
   coco_observer_t *observer;
   char *path, *result_folder, *algorithm_name, *algorithm_info;
   const char *outer_folder_name = "exdata";
-  int precision_x, precision_f, precision_g;
+  int precision_x, precision_f;
 
   size_t number_target_triggers;
   size_t number_evaluation_triggers;
@@ -414,7 +426,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
    * IMPORTANT: This list should be up-to-date with the code and the documentation */
   const char *known_keys[] = { "result_folder", "algorithm_name", "algorithm_info",
       "number_target_triggers", "target_precision", "number_evaluation_triggers", "base_evaluation_triggers",
-      "precision_x", "precision_f", "precision_g" };
+      "precision_x", "precision_f" };
   additional_option_keys = NULL; /* To be set by the chosen observer */
 
   if (0 == strcmp(observer_name, "no_observer")) {
@@ -424,8 +436,8 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
     return NULL;
   }
 
-  result_folder = coco_allocate_string(COCO_PATH_MAX + 1);
-  algorithm_name = coco_allocate_string(COCO_PATH_MAX + 1);
+  result_folder = coco_allocate_string(COCO_PATH_MAX);
+  algorithm_name = coco_allocate_string(COCO_PATH_MAX);
   algorithm_info = coco_allocate_string(5 * COCO_PATH_MAX);
   /* Read result_folder, algorithm_name and algorithm_info from the observer_options and use
    * them to initialize the observer */
@@ -433,7 +445,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
     strcpy(result_folder, "default");
   }
   /* Create the result_folder inside the "exdata" folder */
-  path = coco_allocate_string(COCO_PATH_MAX + 1);
+  path = coco_allocate_string(COCO_PATH_MAX);
   memcpy(path, outer_folder_name, strlen(outer_folder_name) + 1);
   coco_join_path(path, COCO_PATH_MAX, result_folder, NULL);
   coco_create_unique_directory(&path);
@@ -482,15 +494,9 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
       precision_f = 15;
   }
 
-  precision_g = 3;
-  if (coco_options_read_int(observer_options, "precision_g", &precision_g) != 0) {
-    if ((precision_g < 1) || (precision_g > 32))
-      precision_g = 3;
-  }
-
   observer = coco_observer_allocate(path, observer_name, algorithm_name, algorithm_info,
       number_target_triggers, target_precision, number_evaluation_triggers, base_evaluation_triggers,
-      precision_x, precision_f, precision_g);
+      precision_x, precision_f);
 
   coco_free_memory(path);
   coco_free_memory(result_folder);
@@ -514,10 +520,6 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
     observer_biobj(observer, observer_options, &additional_option_keys);
   } else if (0 == strcmp(observer_name, "bbob-largescale")) {
     observer_bbob(observer, observer_options, &additional_option_keys);
-  } else if (0 == strcmp(observer_name, "bbob-constrained")) {
-    observer_bbob(observer, observer_options, &additional_option_keys);
-  } else if (0 == strcmp(observer_name, "rw")) {
-    observer_rw(observer, observer_options, &additional_option_keys);
   } else {
     coco_warning("Unknown observer!");
     return NULL;
@@ -558,7 +560,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
  * @param problem The given COCO problem.
  * @param observer The COCO observer, whose logger will wrap the problem.
  *
- * @return The observed problem in the form of a new COCO problem instance or the same problem if the
+ * @returns The observed problem in the form of a new COCO problem instance or the same problem if the
  * observer is NULL.
  */
 coco_problem_t *coco_problem_add_observer(coco_problem_t *problem, coco_observer_t *observer) {
@@ -582,7 +584,7 @@ coco_problem_t *coco_problem_add_observer(coco_problem_t *problem, coco_observer
  * @param problem The observed COCO problem.
  * @param observer The COCO observer, whose logger was wrapping the problem.
  *
- * @return The unobserved problem as a pointer to the inner problem or the same problem if the problem
+ * @returns The unobserved problem as a pointer to the inner problem or the same problem if the problem
  * was not observed.
  */
 coco_problem_t *coco_problem_remove_observer(coco_problem_t *problem, coco_observer_t *observer) {
@@ -614,24 +616,3 @@ coco_problem_t *coco_problem_remove_observer(coco_problem_t *problem, coco_obser
 
   return problem_unobserved;
 }
-
-/**
- * Get the result folder name, which is a unique folder name constructed
- * from the result_folder option.
- *
- * @param observer The COCO observer, whose logger may be wrapping a problem.
- *
- * @return The result folder name, where the logger writes its output.
- */
-const char *coco_observer_get_result_folder(const coco_observer_t *observer) {
-  if (observer == NULL) {
-    coco_warning("coco_observer_get_result_folder: no observer to get result_folder from");
-    return "";
-  }
-  else if (observer->is_active == 0) {
-    coco_warning("coco_observer_get_result_folder: observer is not active, returning empty string");
-    return "";
-  }
-  return observer->result_folder;
-}
-

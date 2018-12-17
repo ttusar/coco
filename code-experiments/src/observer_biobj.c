@@ -14,7 +14,7 @@ typedef enum {
   LOG_NONDOM_NONE, LOG_NONDOM_FINAL, LOG_NONDOM_ALL, LOG_NONDOM_READ
 } observer_biobj_log_nondom_e;
 
-/** @brief Enum for denoting when the decision variables are logged. */
+/** @brief Enum for denoting the when the decision variables are logged. */
 typedef enum {
   LOG_VARS_NEVER, LOG_VARS_LOW_DIM, LOG_VARS_ALWAYS
 } observer_biobj_log_vars_e;
@@ -63,8 +63,8 @@ static void logger_biobj_free(void *logger);
  */
 static void observer_biobj(coco_observer_t *observer, const char *options, coco_option_keys_t **option_keys) {
 
-  observer_biobj_data_t *observer_data;
-  char string_value[COCO_PATH_MAX + 1];
+  observer_biobj_data_t *observer_biobj;
+  char string_value[COCO_PATH_MAX];
 
   /* Sets the valid keys for bbob-biobj observer options
    * IMPORTANT: This list should be up-to-date with the code and the documentation */
@@ -72,53 +72,53 @@ static void observer_biobj(coco_observer_t *observer, const char *options, coco_
       "produce_all_data" };
   *option_keys = coco_option_keys_allocate(sizeof(known_keys) / sizeof(char *), known_keys);
 
-  observer_data = (observer_biobj_data_t *) coco_allocate_memory(sizeof(*observer_data));
+  observer_biobj = (observer_biobj_data_t *) coco_allocate_memory(sizeof(*observer_biobj));
 
-  observer_data->log_nondom_mode = LOG_NONDOM_ALL;
+  observer_biobj->log_nondom_mode = LOG_NONDOM_ALL;
   if (coco_options_read_string(options, "log_nondominated", string_value) > 0) {
     if (strcmp(string_value, "none") == 0)
-      observer_data->log_nondom_mode = LOG_NONDOM_NONE;
+      observer_biobj->log_nondom_mode = LOG_NONDOM_NONE;
     else if (strcmp(string_value, "final") == 0)
-      observer_data->log_nondom_mode = LOG_NONDOM_FINAL;
+      observer_biobj->log_nondom_mode = LOG_NONDOM_FINAL;
     else if (strcmp(string_value, "all") == 0)
-      observer_data->log_nondom_mode = LOG_NONDOM_ALL;
+      observer_biobj->log_nondom_mode = LOG_NONDOM_ALL;
     else if (strcmp(string_value, "read") == 0)
-      observer_data->log_nondom_mode = LOG_NONDOM_READ;
+      observer_biobj->log_nondom_mode = LOG_NONDOM_READ;
   }
 
-  observer_data->log_vars_mode = LOG_VARS_LOW_DIM;
+  observer_biobj->log_vars_mode = LOG_VARS_LOW_DIM;
   if (coco_options_read_string(options, "log_decision_variables", string_value) > 0) {
     if (strcmp(string_value, "none") == 0)
-      observer_data->log_vars_mode = LOG_VARS_NEVER;
+      observer_biobj->log_vars_mode = LOG_VARS_NEVER;
     else if (strcmp(string_value, "all") == 0)
-      observer_data->log_vars_mode = LOG_VARS_ALWAYS;
+      observer_biobj->log_vars_mode = LOG_VARS_ALWAYS;
     else if (strcmp(string_value, "low_dim") == 0)
-      observer_data->log_vars_mode = LOG_VARS_LOW_DIM;
+      observer_biobj->log_vars_mode = LOG_VARS_LOW_DIM;
   }
 
-  if (coco_options_read_int(options, "compute_indicators", &(observer_data->compute_indicators)) == 0)
-    observer_data->compute_indicators = 1;
+  if (coco_options_read_int(options, "compute_indicators", &(observer_biobj->compute_indicators)) == 0)
+    observer_biobj->compute_indicators = 1;
 
-  if (coco_options_read_int(options, "produce_all_data", &(observer_data->produce_all_data)) == 0)
-    observer_data->produce_all_data = 0;
+  if (coco_options_read_int(options, "produce_all_data", &(observer_biobj->produce_all_data)) == 0)
+    observer_biobj->produce_all_data = 0;
 
-  if (observer_data->produce_all_data) {
-    observer_data->compute_indicators = 1;
-    observer_data->log_nondom_mode = LOG_NONDOM_ALL;
-    observer_data->log_vars_mode = LOG_VARS_LOW_DIM;
+  if (observer_biobj->produce_all_data) {
+    observer_biobj->compute_indicators = 1;
+    observer_biobj->log_nondom_mode = LOG_NONDOM_ALL;
+    observer_biobj->log_vars_mode = LOG_VARS_LOW_DIM;
   }
 
-  if (observer_data->compute_indicators) {
-    observer_data->previous_function = -1;
-    observer_data->previous_dimension = -1;
+  if (observer_biobj->compute_indicators) {
+    observer_biobj->previous_function = -1;
+    observer_biobj->previous_dimension = -1;
   }
 
   observer->logger_allocate_function = logger_biobj;
   observer->logger_free_function = logger_biobj_free;
   observer->data_free_function = NULL;
-  observer->data = observer_data;
+  observer->data = observer_biobj;
 
-  if ((observer_data->log_nondom_mode == LOG_NONDOM_NONE) && (!observer_data->compute_indicators)) {
+  if ((observer_biobj->log_nondom_mode == LOG_NONDOM_NONE) && (!observer_biobj->compute_indicators)) {
     /* No logging required */
     observer->is_active = 0;
   }

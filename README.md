@@ -1,13 +1,10 @@
 numbbo/coco: Comparing Continuous Optimizers
 ============================================
 
-[![CircleCI](https://circleci.com/gh/numbbo/coco/tree/master.svg?style=shield)](https://circleci.com/gh/numbbo/coco/tree/master)
-
-[This code](https://github.com/numbbo/coco) reimplements the original Comparing
-Continous Optimizer platform, now rewritten fully in `ANSI C` and `Python` with
-other languages calling the `C` code. As the name suggests, the code provides a
-platform to benchmark and compare continuous optimizers, AKA non-linear solvers
-for numerical optimization. Languages currently available are
+[This code](https://github.com/numbbo/coco) reimplements the original Comparing Continous Optimizer platform, 
+now rewritten fully in `ANSI C` with other languages calling the `C` code. As the name suggests,
+the code provides a platform to benchmark and compare continuous optimizers, AKA non-linear 
+solvers for numerical optimization. Languages currently available are 
 
   - `C/C++`
   - `Java`
@@ -17,7 +14,7 @@ for numerical optimization. Languages currently available are
 Contributions to link further languages (including a better
 example in `C++`) are more than welcome.
 
-For more general information,
+For more information, 
 - read our [benchmarking guidelines introduction](http://numbbo.github.io/coco-doc/)
 - read the [COCO experimental setup](http://numbbo.github.io/coco-doc/experimental-setup) description
 - see the [`bbob-biobj` and `bbob-biobj-ext` COCO multi-objective functions testbed](http://numbbo.github.io/coco-doc/bbob-biobj/functions) documentation and the [specificities of the performance assessment for the bi-objective testbeds](http://numbbo.github.io/coco-doc/bbob-biobj/perf-assessment).
@@ -26,7 +23,6 @@ For more general information,
 - see the [previous COCO home page here](http://coco.gforge.inria.fr/) and 
 - see the [links below](#Links) to learn more about the ideas behind CoCO.
 
-
 Requirements  <a name="Requirements"></a>
 ------------
 1. For a machine running experiments 
@@ -34,14 +30,9 @@ Requirements  <a name="Requirements"></a>
   - Python >=2.6 with `setuptools` installed
   - optional: `git`
 2. For a machine running the post-processing
-  - Python >=2.6 with `setuptools`, `numpy`, `scipy`, `matplotlib`, and `six` installed.
+  - Python 2.6 or 2.7 with `numpy` (preferably >=1.7) and `matplotlib` installed. 
     We recommend to install the [Anaconda Python 2.7 library](https://www.continuum.io/downloads). 
-
-For Ubuntu 16.04+, all the requirements can be installed using the following command:
-```
-apt-get install build-essential python-dev python-numpy python-matplotlib \
-                python-scipy python-six python-setuptools
-```
+    Python 3 is not yet supported with the post-processing part of NumBBO/CoCO!
 
 ### Windows Specifics
 Under Windows, two alternative compile toolchains can be used: 
@@ -54,7 +45,7 @@ For using `git` under Windows (optional), we recommend installing [TortoiseGit](
 ### Programming Language Specifics  <a name="Language-Specifics"></a>
 _Additional_ requirements for running an algorithm in a specific language.
 
-* **C**: `make`, such as GNU make (when using [GNU make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm), make sure that your ``CC`` environment variable is set to `gcc` by potentially typing `set CC=gcc` if you see an error). 
+* **C**: `make`, such as GNU make ([GNU make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)). 
 * **Java**: `gcc` and any Java Development Kit (JDK), such that `javac` and `javah` are accessible 
   (i.e. in the system path). 
 * **MATLAB**: at least MATLAB 2008, for details, see [here](./code-experiments/build/matlab/README.md)
@@ -107,7 +98,6 @@ Getting Started <a name="Getting-Started"></a>
   for Octave). `python do.py` lists all available commands. 
   
 3. On the computer where experiment data shall be post-processed, run
-
   ```
     python do.py install-postprocessing
   ```
@@ -117,10 +107,9 @@ Getting Started <a name="Getting-Started"></a>
   
 4. **Copy** the folder `code-experiments/build/YOUR-FAVORITE-LANGUAGE` and
   its content to another location. In Python it is sufficient to copy the 
-  file [`example_experiment_for_beginners.py`](./code-experiments/build/python/example_experiment_for_beginners.py)
-  or `example_experiment.py`.
-  Run the example experiment (it already is compiled). As the details vary, see
-  the respective read-me's and/or example experiment files:
+  file `example_experiment.py`. Run the example experiment (it already is
+  compiled). As the details vary, see the respective read-me's 
+  and/or example experiment files:
 
   - `C` [read me](./code-experiments/build/c/README.md) 
     and [example experiment](./code-experiments/build/c/example_experiment.c)
@@ -148,49 +137,20 @@ Getting Started <a name="Getting-Started"></a>
   <a name="Getting-Started-pp"></a>
 6.  **Postprocess** the data from the results folder by typing
 
-  ```
+    ```
     python -m cocopp [-o OUTPUT_FOLDERNAME] YOURDATAFOLDER [MORE_DATAFOLDERS]
-  ```
+    ```
 
   Any subfolder in the folder arguments will be searched for logged data. That is, 
   experiments from different batches can be in different folders collected under a 
   single "root"  `YOURDATAFOLDER` folder. We can also compare more than one algorithm 
   by specifying several data result folders generated by different algorithms.
-
-  We also provide many archived algorithm data sets. For example
-
-  ```
-    python -m cocopp 'bbob/2009/BFGS_ros'
-  ```
-
-  processes the referenced archived BFGS data set. The given substring must
-  have a unique match in the archive. Otherwise, all matches are listed but none
-  is processed with this call. For more information in how to obtain and
-  display specific archived data, see
-  [`help(cocopp)`](http://coco.gforge.inria.fr/apidocs-cocopp/cocopp.html) or
-  [`help(cocopp.archives`)](http://coco.gforge.inria.fr/apidocs-cocopp/cocopp.
-  archiving.KnownArchives.html) or the class
-  [`COCODataArchive`](http://coco.gforge.inria.fr/apidocs-cocopp/cocopp.
-  archiving.COCODataArchive.html).
   
-  For the `bbob` test suite, the data descriptions can be found at
-  http://coco.gforge.inria.fr/doku.php?id=algorithms and for the `bbob-biobj`
-  test suite at http://coco.gforge.inria.fr/doku.php?id=algorithms-biobj.
-
-  Local and archived data can be freely mixed like
-
-  ```
-    python -m cocopp YOURDATAFOLDER 'bbob/2010/IPOP-ACT'
-  ```
-
-  which processes the data from `YOURDATAFOLDER` and the archived IPOP-ACT data
-  set in comparison.
-
-  The output folder, `ppdata` by default, contains all output from 
-  the post-processing. The `index.html` file is the main entry point to 
-  explore the result with a browser. Data from the same foldername as
-  previously processed may be overwritten. If this is not desired, a different
-  output folder name can be chosen with the `-o OUTPUT_FOLDERNAME` option.
+  A folder, `ppdata` by default, will be generated, which contains all output from 
+  the post-processing, including an `index.html` file, useful as main entry point to 
+  explore the result with a browser. Data might be overwritten, it is therefore 
+  useful to change the output folder name with the `-o OUTPUT_FOLDERNAME` 
+  option.
 
   A summary pdf can be produced via LaTeX. The corresponding templates can be found 
   in the `code-postprocessing/latex-templates` folder.  Basic html output is also 
@@ -278,9 +238,6 @@ our issue tracker at https://github.com/numbbo/coco/issues.
   the algorithms can be displayed in terms of data profiles, aRT vs. dimension
   plots, or simple tables.
 
-* code-postprocessing/helper-scripts contains additional, independent python scripts 
-  that are not part of the cocopp module but that might use it.
-  
 * code-postprocessing/latex-templates contains LaTeX templates for displaying
   algorithm performances in publisher-conform PDFs for the GECCO
   conference.
@@ -488,8 +445,6 @@ effect. In this case it has been successful to remove all previously installed v
 see [here](https://github.com/numbbo/coco/issues/586) for a few more details. 
 
 
-### Post-Processing
-
 #### Too long paths for postprocessing
 It can happen that the postprocessing fails due to too long paths to the algorithm data.
 Unfortunately, the error you get in this case does not indicate directly to the problem
@@ -501,37 +456,6 @@ folder names in such a case.
 We have occasionally observed some font issues in the pdfs, produced by the postprocessing
 of COCO (see also issue [#1335](https://github.com/numbbo/coco/issues/1335)). Changing to 
 another `matplotlib` version solved the issue at least temporarily.
-
-#### BibTeX under Mac
-Under the Mac operating system, `bibtex` seems to be messed up a bit with respect to
-absolute and relative paths which causes problems with the test of the postprocessing
-via `python do.py test-postprocessing`. Note that there is typically nothing to fix if 
-you compile the LaTeX templates "by hand" or via your LaTeX IDE. But to make the  
-`python do.py test-postprocessing` work, you will have to add a line with
-`openout_any = a` to your `texmf.cnf` file in the local TeX path. Type 
-`kpsewhich texmf.cnf` to find out where this file actually is.
-
-#### Postprocessing not installable
-If for some reason, your python installation is corrupted and running
-`python do.py install-postprocessing` crashes with an error message like
-```
-[...]
-    safe = scan_module(egg_dir, base, name, stubs) and safe
-  File "C:\Users\dimo\Anaconda2\lib\site-packages\setuptools\command\bdist_egg.py", line 392, in sca
-n_module
-    code = marshal.load(f)
-EOFError: EOF read where object expected
-[...]
-```
-try adding `zip_safe=False` to the `setup.py.in` file in the `code-postprocessing`
-folder. More details can be found in the issue [#1373](https://github.com/numbbo/coco/issues/1373).
-
-#### Algorithm appears twice in the figures
-Earlier versions of `cocopp` have written extracted data to a folder named `_extracted_...`. 
-If the post-processing is invoked with a `*` argument, these folders become an argument and 
-are displayed (most likely additionally to the original algorithm data folder). Solution: 
-remove the `_extracted_...` folders _and_ use the latest version of the post-processing
-module `cocopp` (since release 2.1.1).
 
 
 Details
@@ -582,13 +506,6 @@ Links and Documentation <a name="Links"></a>
 * The [_BBOB workshop series_](http://numbbo.github.io/workshops), which uses the
   NumBBO/Coco framework extensively, can be tracked
   [here](http://numbbo.github.io/workshops "BBOB Workshops")
-* Data sets from previous experiments for many algorithms are available
-  at http://coco.gforge.inria.fr/doku.php?id=algorithms-bbob for the `bbob` test suite, 
-  at http://coco.gforge.inria.fr/doku.php?id=algorithms-bbob-noisy for the `bbob-noisy`
-  test suite and at http://coco.gforge.inria.fr/doku.php?id=algorithms-bbob-biobj
-  for the `bbob-biobj` test suite.
-* Postprocessed data for each year in which a BBOB workshop was taking place can be
-  found at http://coco.gforge.inria.fr/ppdata-archive
 * Stay informed about the BBOB workshop series and releases of the NumBBO/Coco software 
   by registering at http://coco.gforge.inria.fr/register
 * Read about the basic principles behind the Coco platform at http://numbbo.github.io/coco-doc/.
@@ -626,7 +543,6 @@ Comprehensive List of Documentations <a name="Documentations"></a>
 * APIs
   - ``C`` experiments code: http://numbbo.github.io/coco-doc/C
   - Python experiments code `cocoex`: http://coco.gforge.inria.fr/apidocs-cocoex/cocoex.html
-  - Python short [beginners example experiment](code-experiments/build/python/example_experiment_for_beginners.py)
   - Python `example_experiment.py`: http://coco.gforge.inria.fr/apidocs-example_experiment/example_experiment.html
   - Postprocessing code: http://coco.gforge.inria.fr/apidocs-cocopp/cocopp.html
 
@@ -634,8 +550,6 @@ Comprehensive List of Documentations <a name="Documentations"></a>
   - Full description of the platform: http://coco.lri.fr/COCOdoc/
   - Experimental setup before 2016: http://coco.lri.fr/downloads/download15.03/bbobdocexperiment.pdf
  - Old framework software documentation: http://coco.lri.fr/downloads/download15.03/bbobdocsoftware.pdf
- 
- * Some examples of [results](https://github.com/numbbo/coco/wiki/COCO-Wiki-Home).
 
 ^1: see [#837](https://github.com/numbbo/coco/issues/837) and [#1266](https://github.com/numbbo/coco/issues/1266) for two pending errata
 

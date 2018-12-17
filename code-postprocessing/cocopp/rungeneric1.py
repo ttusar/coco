@@ -22,6 +22,16 @@ import os, sys
 from pdb import set_trace
 import matplotlib
 
+if __name__ == "__main__":
+    matplotlib.use('Agg')  # To avoid window popup and use without X forwarding
+    filepath = os.path.split(sys.argv[0])[0]
+    # Add the path to cocopp/.. folder
+    sys.path.append(os.path.join(filepath, os.path.pardir))
+
+    import cocopp
+    res = cocopp.rungeneric1.main(sys.argv[1:])
+    sys.exit(res)
+
 import warnings, getopt, numpy as np
 
 from . import genericsettings, testbedsettings, ppfig, pptable, pprldistr, ppfigdim, pplogloss, findfiles
@@ -135,8 +145,8 @@ def main(argv=None):
       package is in python search path; most simply achieved by running
       `python do.py install-postprocessing`)::
 
-        >> import cocopp
-        >> cocopp.rungeneric1.main('-o outputfolder folder1'.split())
+        >> import cocopp as pp
+        >> pp.rungeneric1.main('-o outputfolder folder1'.split())
 
       This will execute the post-processing on the index files found in
       :file:`folder1`. The ``-o`` option changes the output folder from
@@ -154,7 +164,7 @@ def main(argv=None):
         if 11 < 3:
             try:
                 opts, args = getopt.getopt(argv, genericsettings.shortoptlist, genericsettings.longoptlist)
-            except getopt.error as msg:
+            except getopt.error, msg:
                 raise Usage(msg)
 
         if not (args) and not '--help' in argv and not '-h' in argv:
@@ -168,11 +178,6 @@ def main(argv=None):
 
         # Process options
         outputdir = genericsettings.outputdir
-        prepare_RLDistr = genericsettings.isRLDistr
-        prepare_figures = genericsettings.isFig
-        prepare_tables = genericsettings.isTab
-        prepare_log_loss = genericsettings.isLogLoss
-
         for o, a in opts:
             if o in ("-v", "--verbose"):
                 genericsettings.verbose = True
@@ -189,21 +194,21 @@ def main(argv=None):
                 genericsettings.isNoiseFree = True
             # The next 4 are for testing purpose
             elif o == "--tab-only":
-                prepare_figures = False
-                prepare_RLDistr = False
-                prepare_log_loss = False
+                genericsettings.isFig = False
+                genericsettings.isRLDistr = False
+                genericsettings.isLogLoss = False
             elif o == "--fig-only":
-                prepare_tables = False
-                prepare_RLDistr = False
-                prepare_log_loss = False
+                genericsettings.isTab = False
+                genericsettings.isRLDistr = False
+                genericsettings.isLogLoss = False
             elif o == "--rld-only":
-                prepare_tables = False
-                prepare_figures = False
-                prepare_log_loss = False
+                genericsettings.isTab = False
+                genericsettings.isFig = False
+                genericsettings.isLogLoss = False
             elif o == "--los-only":
-                prepare_tables = False
-                prepare_figures = False
-                prepare_RLDistr = False
+                genericsettings.isTab = False
+                genericsettings.isFig = False
+                genericsettings.isRLDistr = False
             elif o == "--crafting-effort":
                 try:
                     genericsettings.inputCrE = float(a)
@@ -227,13 +232,12 @@ def main(argv=None):
                 assert False, "unhandled option"
 
         # from cocopp import bbob2010 as inset # input settings
-        from . import genericsettings as inset  # input settings
         if genericsettings.inputsettings == "color":
             from . import genericsettings as inset  # input settings
         elif genericsettings.inputsettings == "grayscale":
-            warnings.warn("grayscalesettings disregarded")
+            from . import grayscalesettings as inset  # input settings
         elif genericsettings.inputsettings == "black-white":
-            warnings.warn("black-white bwsettings disregarded")
+            from . import bwsettings as inset  # input settings
         else:
             txt = ('Settings: %s is not an appropriate ' % genericsettings.inputsettings
                    + 'argument for input flag "--settings".')
@@ -254,11 +258,13 @@ def main(argv=None):
             warnings.simplefilter('module')
             # warnings.simplefilter('ignore')            
 
-        # Gets directory name if outputdir is a archive file.
-        algfolder = findfiles.get_output_directory_sub_folder(args[0])
+        #get directory name if outputdir is a archive file
+        algfolder = findfiles.get_output_directory_subfolder(args[0])
         algoutputdir = os.path.join(outputdir, algfolder)
         
-        print("\nPost-processing (1)")
+        print("\nPost-processing (1): will generate output " + 
+               "data in folder %s" % algoutputdir)
+        print("  this might take several minutes.")
 
         filelist = list()
         for i in args:
@@ -276,9 +282,6 @@ def main(argv=None):
         if not dsList:
             raise Usage("Nothing to do: post-processing stopped. For more information check the messages above.")
 
-        print("  Will generate output data in folder %s" % algoutputdir)
-        print("    this might take several minutes.")
-        
         if genericsettings.isNoisy and not genericsettings.isNoiseFree:
             dsList = dsList.dictByNoise().get('nzall', DataSetList())
         if genericsettings.isNoiseFree and not genericsettings.isNoisy:
@@ -292,9 +295,8 @@ def main(argv=None):
             dict_max_fun_evals[ds.dim] = np.max((dict_max_fun_evals.setdefault(ds.dim, 0), float(np.max(ds.maxevals))))
         
         from . import config
-        config.config_target_values_setting(genericsettings.isExpensive,
-                                            genericsettings.runlength_based_targets)
-        config.config(dsList[0].testbed_name, dsList[0].get_data_format())
+        config.target_values(genericsettings.isExpensive)
+        config.config(dsList[0].testbed_name)
         if genericsettings.verbose:
             for i in dsList:                
                 # check whether current set of instances correspond to correct
@@ -319,7 +321,7 @@ def main(argv=None):
             # DataSet associated. If there are more than one, the first one only
             # will be considered... which is probably not what one would expect.
 
-        if prepare_figures or prepare_tables or prepare_RLDistr or prepare_log_loss:
+        if genericsettings.isFig or genericsettings.isTab or genericsettings.isRLDistr or genericsettings.isLogLoss:
             if not os.path.exists(outputdir):
                 os.makedirs(outputdir)
                 if genericsettings.verbose:
@@ -334,20 +336,15 @@ def main(argv=None):
         if genericsettings.isPickled:
             dsList.pickle()
 
-        dictFunc = dsList.dictByFunc()
-        if dictFunc[list(dictFunc.keys())[0]][0].algId not in ("", "ALG"):
-            algorithm_string = " for Algorithm %s" % dictFunc[list(dictFunc.keys())[0]][0].algId
-        else:
-            algorithm_string = ""
-        page_title = 'Results%s on the <TT>%s</TT> Benchmark Suite' % \
-                     (algorithm_string, dictFunc[list(dictFunc.keys())[0]][0].get_suite())
-        ppfig.save_single_functions_html(os.path.join(algoutputdir, genericsettings.single_algorithm_file_name),
-                                         page_title,
-                                         htmlPage=ppfig.HtmlPage.ONE,
-                                         function_groups=dsList.getFuncGroups())
+        if genericsettings.isConv:
+            print("Generating convergence plots...")
+            ppconverrorbars.main(dictAlg,
+                                 algoutputdir, 
+                                 genericsettings.single_algorithm_file_name)
+            print_done()
 
         values_of_interest = testbedsettings.current_testbed.ppfigdim_target_values
-        if prepare_figures:
+        if genericsettings.isFig:
             print("Scaling figures...")
             # aRT/dim vs dim.
             plt.rc("axes", **inset.rcaxeslarger)
@@ -369,14 +366,7 @@ def main(argv=None):
         plt.rc("legend", **inset.rclegend)
         plt.rc('pdf', fonttype = 42)
 
-        if genericsettings.isConv:
-            print("Generating convergence plots...")
-            ppconverrorbars.main(dictAlg,
-                                 algoutputdir,
-                                 genericsettings.single_algorithm_file_name)
-            print_done()
-
-        if prepare_tables:
+        if genericsettings.isTab:
             print("Generating LaTeX tables...")
             dictNoise = dsList.dictByNoise()
             dict_dim_list = dictAlgByDim(dictAlg)
@@ -390,11 +380,11 @@ def main(argv=None):
             replace_in_file(os.path.join(algoutputdir, 'pptable.html'), '??COCOVERSION??',
                             '<br />Data produced with COCO %s' % (get_version_label(None)))
 
-            for noise, sliceNoise in dictNoise.items():
+            for noise, sliceNoise in dictNoise.iteritems():
                 pptable.main(sliceNoise, dims, algoutputdir, latex_commands_file)
             print_done()
 
-        if prepare_RLDistr:
+        if genericsettings.isRLDistr:
             print("ECDF graphs...")
             dictNoise = dsList.dictByNoise()
             if len(dictNoise) > 1:
@@ -415,11 +405,11 @@ def main(argv=None):
                 if len(dictNoise) > 1:
                     pprldistr.main(sliceDim, True, algoutputdir, 'all')
                     
-                for noise, sliceNoise in dictNoise.items():
+                for noise, sliceNoise in dictNoise.iteritems():
                     pprldistr.main(sliceNoise, True, algoutputdir, '%s' % noise)
 
                 dictFG = sliceDim.dictByFuncGroup()
-                for fGroup, sliceFuncGroup in sorted(dictFG.items()):
+                for fGroup, sliceFuncGroup in dictFG.items():
                     pprldistr.main(sliceFuncGroup, True,
                                    algoutputdir,
                                    '%s' % fGroup)
@@ -439,9 +429,9 @@ def main(argv=None):
                                                settings=inset)
                 print_done()
             
-        if prepare_log_loss:
+        if genericsettings.isLogLoss:
             print("aRT loss ratio figures and tables...")
-            for ng, sliceNoise in dsList.dictByNoise().items():
+            for ng, sliceNoise in dsList.dictByNoise().iteritems():
                 if ng == 'noiselessall':
                     testbed = 'noiseless'
                 elif ng == 'nzall':
@@ -463,12 +453,18 @@ def main(argv=None):
                     info = '%s' % ng
                     pplogloss.main(sliceDim, CrE, True, algoutputdir, info)
                     pplogloss.generateTable(sliceDim, CrE, algoutputdir, info)
-                    for fGroup, sliceFuncGroup in sliceDim.dictByFuncGroup().items():
+                    for fGroup, sliceFuncGroup in sliceDim.dictByFuncGroup().iteritems():
                         info = '%s' % fGroup
                         pplogloss.main(sliceFuncGroup, CrE, True,
                                        algoutputdir, info)
                     pplogloss.evalfmax = None  # Resetting the max #fevalsfactor
             print_done()
+
+        dictFunc = dsList.dictByFunc()
+        ppfig.save_single_functions_html(os.path.join(algoutputdir, genericsettings.single_algorithm_file_name),
+                                    dictFunc[dictFunc.keys()[0]][0].algId,
+                                    htmlPage = ppfig.HtmlPage.ONE,
+                                    functionGroups = dsList.getFuncGroups())
 
         prepend_to_file(latex_commands_file,
                         ['\\providecommand{\\bbobloglosstablecaption}[1]{',
@@ -502,9 +498,15 @@ def main(argv=None):
         prepend_to_file(latex_commands_file,
                         ['\\providecommand{\\algname}{' + 
                          (str_to_latex(strip_pathname1(args[0])) if len(args) == 1 else str_to_latex(dsList[0].algId)) + '{}}'])
-        print("Output data written to folder %s" %
-              os.path.join(os.getcwd(), algoutputdir))
+        if genericsettings.isFig or genericsettings.isTab or genericsettings.isRLDistr or genericsettings.isLogLoss:
+            print("Output data written to folder %s" % outputdir)
 
         plt.rcdefaults()
 
-        return dsList.dictByAlg()
+
+if __name__ == "__main__":
+    res = main()
+    if genericsettings.test: 
+        print(res)
+    sys.exit(res)
+

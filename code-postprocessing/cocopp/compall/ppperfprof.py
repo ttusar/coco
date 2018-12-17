@@ -13,26 +13,26 @@
    import glob
    from pylab import *
    import pickle
-   import cocopp
+   import cocopp as bb
    import cocopp.compall.ppperfprof
    import cocopp.bestalg
 
    # Collect and unarchive data
    dsets = {}
-   for alg in cocopp.compall.ppperfprof.best:
+   for alg in bb.compall.ppperfprof.best:
        for date in ('2010', '2009'):
            try:
                dataurl = 'http://coco.lri.fr/BBOB'+date+'/pythondata/' + alg + '.tar.gz'
                filename, headers = urllib.urlretrieve(dataurl)
                archivefile = tarfile.open(filename)
                archivefile.extractall()  # write to disc
-               dsets[alg] = cocopp.load(glob.glob('BBOB'+date+'pythondata/' + alg + '/ppdata_f0*_20.pickle'))
+               dsets[alg] = bb.load(glob.glob('BBOB'+date+'pythondata/' + alg + '/ppdata_f0*_20.pickle'))
            except:
                pass
 
    # plot the profiles
    figure()
-   # cocopp.compall.ppperfprof.plotmultiple(dsets, dsref=cocopp.bestalg.bestAlgorithmEntries)
+   # bb.compall.ppperfprof.plotmultiple(dsets, dsref=bb.bestalg.bestAlgorithmEntries)
 
 """
 from __future__ import absolute_import
@@ -210,8 +210,8 @@ def main(dictAlg, dsref=None, order=None, targets=defaulttargets, outputdir='',
     :param list order: sorted list of keys to dictAlg for plotting order
 
     """
-    for d, dictalgdim in dictAlg.dictAlgByDim().items():
+    for d, dictalgdim in dictAlg.dictAlgByDim().iteritems():
         plotmultiple(dictalgdim, dsref, targets)
         figureName = os.path.join(outputdir, 'ppperfprof_%02dD_%s' % (d, info))
-        save_figure(figureName)
+        save_figure(figureName, verbose=verbose)
         plt.close()

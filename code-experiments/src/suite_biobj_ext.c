@@ -83,7 +83,7 @@ static coco_suite_t *suite_biobj_ext_initialize(void) {
   const size_t dimensions[] = { 2, 3, 5, 10, 20, 40 };
 
   /* IMPORTANT: Make sure to change the default instance for every new workshop! */
-  suite = coco_suite_allocate("bbob-biobj-ext", 55+37, 6, dimensions, "year: 2018");
+  suite = coco_suite_allocate("bbob-biobj-ext", 55+37, 6, dimensions, "year: 2017");
 
   return suite;
 }
@@ -96,7 +96,7 @@ static const char *suite_biobj_ext_get_instances_by_year(const int year) {
   if (year == 0000) { /* default/test case */
     return "1-10";
   }
-  else if ((year == 2017) || (year == 2018)) {
+  else if (year == 2017) {
     return "1-15";
   }
   else {
@@ -324,7 +324,7 @@ static coco_problem_t *suite_biobj_ext_get_problem(coco_suite_t *suite,
           data->new_instances[i][j] = 0;
         }
       }
-      suite->data_free_function = suite_biobj_ext_free;
+      suite->data_free_function = suite_biobj_free;
       suite->data = data;
     }
 
@@ -343,8 +343,7 @@ static coco_problem_t *suite_biobj_ext_get_problem(coco_suite_t *suite,
     problem2 = coco_get_bbob_problem(all_bbob_functions[function2_idx], dimension, instance2);
   }
   
-  problem = coco_problem_stacked_allocate(problem1, problem2, smallest_values_of_interest,
-      largest_values_of_interest);
+  problem = coco_problem_stacked_allocate(problem1, problem2, smallest_values_of_interest, largest_values_of_interest);
     
   problem->suite_dep_function = function;
   problem->suite_dep_instance = instance;
@@ -353,7 +352,7 @@ static coco_problem_t *suite_biobj_ext_get_problem(coco_suite_t *suite,
   /* Use the standard stacked problem_id as problem_name and construct a new suite-specific problem_id */
   coco_problem_set_name(problem, problem->problem_id);
   coco_problem_set_id(problem, "bbob-biobj_f%02lu_i%02lu_d%02lu", (unsigned long) function,
-      (unsigned long) instance, (unsigned long) dimension);
+  		(unsigned long) instance, (unsigned long) dimension);
 
   /* Construct problem type */
   coco_problem_set_type(problem, "%s_%s", problem1->problem_type, problem2->problem_type);
@@ -398,7 +397,7 @@ static int check_consistency_of_instances(const size_t dimension,
   norm = mo_get_norm(problem->best_value, problem->nadir_value, 2);
   if (norm < 1e-1) { /* TODO How to set this value in a sensible manner? */
     coco_debug(
-        "check_consistency_of_instances(): The ideal and nadir points of %s are too close in the objective space",
+        "suite_biobj_ext_get_new_instance(): The ideal and nadir points of %s are too close in the objective space",
         problem->problem_id);
     coco_debug("norm = %e, ideal = %e\t%e, nadir = %e\t%e", norm, problem->best_value[0],
         problem->best_value[1], problem->nadir_value[0], problem->nadir_value[1]);
@@ -409,7 +408,7 @@ static int check_consistency_of_instances(const size_t dimension,
   norm = mo_get_norm(problem1->best_parameter, problem2->best_parameter, problem->number_of_variables);
   if (norm < apart_enough) {
     coco_debug(
-        "check_consistency_of_instances(): The extreme points of %s are too close in the decision space",
+        "suite_biobj_ext_get_new_instance(): The extreme points of %s are too close in the decision space",
         problem->problem_id);
     coco_debug("norm = %e", norm);
     break_search = 1;
@@ -508,7 +507,7 @@ static size_t suite_biobj_ext_get_new_instance(coco_suite_t *suite,
       /* An appropriate instance was found */
       appropriate_instance_found = 1;
       coco_info("suite_biobj_set_new_instance(): Instance %lu created from instances %lu and %lu",
-          (unsigned long) instance, (unsigned long) instance1, (unsigned long) instance2);
+      		(unsigned long) instance, (unsigned long) instance1, (unsigned long) instance2);
 
       /* Save the instance to new_instances */
       for (i = 0; i < data->max_new_instances; i++) {
@@ -524,7 +523,7 @@ static size_t suite_biobj_ext_get_new_instance(coco_suite_t *suite,
 
   if (!appropriate_instance_found) {
     coco_error("suite_biobj_ext_get_new_instance(): Could not find suitable instance %lu in %lu tries",
-        (unsigned long) instance, (unsigned long) num_tries);
+    		(unsigned long) instance, (unsigned long) num_tries);
     return 0; /* Never reached */
   }
 

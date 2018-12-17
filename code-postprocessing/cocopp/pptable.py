@@ -21,7 +21,7 @@ p = 0.05 or p = 1e-k where k > 1 is the number following the
 functions.
 
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 
 import os
 import warnings
@@ -32,6 +32,8 @@ from .pptex import tableLaTeX, writeFEvals2, writeFEvalsMaxPrec
 from .toolsstats import significancetest
 from .toolsdivers import prepend_to_file
 from . import captions
+
+from pdb import set_trace
 
 # def tablespec(targets):
 # 
@@ -56,8 +58,8 @@ def get_table_caption():
         
     table_caption_start = r"""%
         Average running time (\aRT\ in number of function 
-        evaluations) divided by the \aRT\ of !!THE-REF-ALG!! in #1. This \aRT\
-        ratio and, in braces as dispersion measure, the half difference between 90 and
+        evaluations) divided by the \aRT\ of !!THE-REF-ALG!! in #1. The \aRT\ 
+        and in braces, as dispersion measure, the half difference between 90 and 
         10\%-tile of bootstrapped run lengths appear in the second row of each cell,  
         the best \aRT\
         """
@@ -77,7 +79,7 @@ def get_table_caption():
         the rank-sum test) compared to !!THE-REF-ALG!!, with
         $p = 0.05$ or $p = 10^{-k}$ when the number $k > 1$ is following the
         $\downarrow$ symbol, with Bonferroni correction by the number of
-        functions (!!TOTAL-NUM-OF-FUNCTIONS!!).\cocoversion
+        functions.\cocoversion
         """
     table_caption_no_reference_algorithm = r"""%
         Average runtime (\aRT) to reach given targets, measured
@@ -91,13 +93,12 @@ def get_table_caption():
         \textit{italics}, if the target in the last column was never reached. 
         """        
         
-    table_caption = None
     if testbedsettings.current_testbed.name in ['bbob', 'bbob-noisy', 'bbob-biobj']:
         if genericsettings.runlength_based_targets:
             table_caption = table_caption_start + table_caption_rlbased + table_caption_rest
         else:
             table_caption = table_caption_start + table_caption_fixedtargets + table_caption_rest
-    elif testbedsettings.current_testbed.name in ['bbob-biobj-ext', testbedsettings.testbed_name_cons]:
+    elif testbedsettings.current_testbed.name == 'bbob-biobj-ext':
         # all testbeds without provided reference algorithm
         table_caption = table_caption_no_reference_algorithm
     else:
@@ -130,23 +131,23 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
     
     if isinstance(targetsOfInterest, pproc.RunlengthBasedTargetValues):
         header = [r'\#FEs/D']
-        header_html = ['<thead>\n<tr>\n<th>#FEs/D</th>\n']
+        headerHtml = ['<thead>\n<tr>\n<th>#FEs/D</th>\n']
         for i in targetsOfInterest.labels():
             header.append(r'\multicolumn{2}{c}{%s}' % i)
-            header_html.append('<td>%s</td>\n' % i)
+            headerHtml.append('<td>%s</td>\n' % i)
 
     else:
         header = [r'$\Delta f$']
-        header_html = ['<thead>\n<tr>\n<th>&#916; f</th>\n']
+        headerHtml = ['<thead>\n<tr>\n<th>&#916; f</th>\n']
         for i in targetsOfInterest.target_values:
             header.append(r'\multicolumn{2}{c}{1e%+d}' % (int(np.log10(i))))
-            header_html.append('<td>1e%+d</td>\n' % (int(np.log10(i))))
+            headerHtml.append('<td>1e%+d</td>\n' % (int(np.log10(i))))
                       
     header.append(r'\multicolumn{2}{|@{}r@{}}{\#succ}')
-    header_html.append('<td>#succ</td>\n</tr>\n</thead>\n')
+    headerHtml.append('<td>#succ</td>\n</tr>\n</thead>\n')
 
     for d in dims_of_interest:
-        tableHtml = header_html[:]
+        tableHtml = headerHtml[:]
         try:
             dictFunc = dictDim[d].dictByFunc()
         except KeyError:
@@ -173,7 +174,7 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                 refalgdata = refalgentry.detERT(targetsOfInterest((f,d)))
                 if isinstance(targetsOfInterest, pproc.RunlengthBasedTargetValues):
                     #write ftarget:fevals
-                    for i in range(len(refalgdata[:-1])):
+                    for i in xrange(len(refalgdata[:-1])):
                         temp = "%.1e" % targetsOfInterest((f,d))[i]
                         if temp[-2] == "0":
                             temp = temp[:-2] + temp[-1]
@@ -184,7 +185,7 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                     temp="%.1e" % targetsOfInterest((f,d))[-1]
                     if temp[-2] == "0":
                         temp = temp[:-2] + temp[-1]
-                    curline.append(r'\multicolumn{2}{@{}c|@{}}{\textit{%s}:%s \quad}'
+                    curline.append(r'\multicolumn{2}{@{}c@{}}{\textit{%s}:%s \quad}'
                                    % (temp, writeFEvalsMaxPrec(refalgdata[i], 2)))
                     curlineHtml.append('<td><i>%s</i>:%s</td>\n' 
                                        % (temp, writeFEvalsMaxPrec(refalgdata[i], 2)))
@@ -233,8 +234,8 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                 #set_trace()
                 # TODO: what is the difference between data and ertdata? 
                 data.append(toolsstats.sp(tmp, issuccessful=succ)[0])
-                # if not any(succ):
-                #   set_trace()
+                #if not any(succ):
+                    #set_trace()
                 if any(succ):
                     tmp2 = toolsstats.drawSP(tmp[succ], tmp[succ==False],
                                 (10, 50, 90), genericsettings.simulated_runlength_bootstrap_sample_size)[0]
@@ -261,12 +262,14 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
     
                     #The conditions for significance are now that aRT < aRT_ref and
                     # all(sorted(FEvals_ref) > sorted(FEvals_current)).
-                    if ((nbtests * p) < 0.05 and ert - refalgdata[i] < 0. and
-                                z < 0. and (np.isinf(refalgdata[i]) or all(evals < refevals))):
+                    if ((nbtests * p) < 0.05 and ert - refalgdata[i] < 0.
+                        and z < 0.
+                        and (np.isinf(refalgdata[i])
+                             or all(evals < refevals))):
                         nbstars = -np.ceil(np.log10(nbtests * p))
-                is_bold = False
+                isBold = False
                 if nbstars > 0:
-                    is_bold = True
+                    isBold = True
 
                 if refalgentries and np.isinf(refalgdata[i]): # if the reference algorithm did not solve the problem
                     tmp = writeFEvalsMaxPrec(float(ert), 2)
@@ -277,7 +280,7 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                         else:
                             tmpHtml = tmp
                             
-                        if is_bold:
+                        if isBold:
                             tmp = r'\textbf{%s}' % tmp
                             tmpHtml = '<b>%s</b>' % tmpHtml
                     else:
@@ -293,9 +296,11 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                     tableentryHtml = writeFEvalsMaxPrec(tmp, 2)
 
                     if np.isinf(tmp) and i == len(data)-1:
-                        tableentry = (tableentry + r'\textit{%s}' % writeFEvals2(np.median(entry.maxevals).astype(int), 2, 3))
-                        tableentryHtml = (tableentryHtml + ' <i>%s</i>' % writeFEvals2(np.median(entry.maxevals).astype(int), 2, 4))
-                        if is_bold:
+                        tableentry = (tableentry
+                                      + r'\textit{%s}' % writeFEvals2(np.median(entry.maxevals), 2))
+                        tableentryHtml = (tableentryHtml
+                                      + ' <i>%s</i>' % writeFEvals2(np.median(entry.maxevals), 2))
+                        if isBold:
                             tableentry = r'\textbf{%s}' % tableentry
                             tableentryHtml = '<b>%s</b>' % tableentryHtml
                         elif 11 < 3: # and significance0vs1 < 0:
@@ -304,7 +309,7 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                         tableentry = (r'\multicolumn{2}{@{}%s@{}}{%s}'
                                       % (alignment, tableentry))
                     elif tableentry.find('e') > -1 or (np.isinf(tmp) and i != len(data) - 1):
-                        if is_bold:
+                        if isBold:
                             tableentry = r'\textbf{%s}' % tableentry
                             tableentryHtml = '<b>%s</b>' % tableentryHtml
                         elif 11 < 3: # and significance0vs1 < 0:
@@ -315,7 +320,7 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                     else:
                         tmp = tableentry.split('.', 1)
                         tmpHtml = tableentryHtml.split('.', 1)
-                        if is_bold:
+                        if isBold:
                             tmp = list(r'\textbf{%s}' % i for i in tmp)
                             tmpHtml = list('<b>%s</b>' % i for i in tmpHtml)
                         elif 11 < 3: # and significance0vs1 < 0:
@@ -330,7 +335,7 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                 superscriptHtml = ''
 
                 if nbstars > 0:
-                    # tmp = '\hspace{-.5ex}'.join(nbstars * [r'\star'])
+                    #tmp = '\hspace{-.5ex}'.join(nbstars * [r'\star'])
                     if z > 0:
                         superscript = r'\uparrow' #* nbstars
                         superscriptHtml = '&uarr;'
@@ -434,7 +439,8 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
                 outfile.write(line)
 
         if genericsettings.verbose:
-            print("Table written in %s" % output_file)
+            print "Table written in %s" % output_file
+
 
     if len(dims_of_interest) > 0:
         extraeol = [r'\hline']
@@ -443,3 +449,4 @@ def main(dsList, dims_of_interest, outputdir, latex_commands_file):
 
         res = tableLaTeX([], spec=spec, add_begin_tabular=False)
         prepend_to_file(latex_commands_file, ['\\providecommand{\\pptablefooter}{', res, '}'])
+

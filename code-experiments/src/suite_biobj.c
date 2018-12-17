@@ -75,7 +75,7 @@ static coco_suite_t *suite_biobj_initialize(void) {
   const size_t dimensions[] = { 2, 3, 5, 10, 20, 40 };
 
   /* IMPORTANT: Make sure to change the default instance for every new workshop! */
-  suite = coco_suite_allocate("bbob-biobj", 55, 6, dimensions, "year: 2018");
+  suite = coco_suite_allocate("bbob-biobj", 55, 6, dimensions, "year: 2017");
 
   return suite;
 }
@@ -88,7 +88,7 @@ static const char *suite_biobj_get_instances_by_year(const int year) {
   if ((year == 2016) || (year == 0000)) { /* default/test case */
     return "1-10";
   }
-  else if ((year == 2017) || (year == 2018)) {
+  else if (year == 2017) {
     return "1-15";
   }
   else {
@@ -205,8 +205,7 @@ static coco_problem_t *suite_biobj_get_problem(coco_suite_t *suite,
   problem1 = coco_get_bbob_problem(bbob_functions[function1_idx], dimension, instance1);
   problem2 = coco_get_bbob_problem(bbob_functions[function2_idx], dimension, instance2);
 
-  problem = coco_problem_stacked_allocate(problem1, problem2, smallest_values_of_interest,
-      largest_values_of_interest);
+  problem = coco_problem_stacked_allocate(problem1, problem2, smallest_values_of_interest, largest_values_of_interest);
 
   problem->suite_dep_function = function;
   problem->suite_dep_instance = instance;
@@ -215,7 +214,7 @@ static coco_problem_t *suite_biobj_get_problem(coco_suite_t *suite,
   /* Use the standard stacked problem_id as problem_name and construct a new suite-specific problem_id */
   coco_problem_set_name(problem, problem->problem_id);
   coco_problem_set_id(problem, "bbob-biobj_f%02lu_i%02lu_d%02lu", (unsigned long) function,
-      (unsigned long) instance, (unsigned long) dimension);
+  		(unsigned long) instance, (unsigned long) dimension);
 
   /* Construct problem type */
   coco_problem_set_type(problem, "%s_%s", problem1->problem_type, problem2->problem_type);
@@ -291,7 +290,7 @@ static size_t suite_biobj_get_new_instance(coco_suite_t *suite,
           smallest_values_of_interest = coco_allocate_vector_with_value(dimension, -100);
           largest_values_of_interest = coco_allocate_vector_with_value(dimension, 100);
           problem = coco_problem_stacked_allocate(problem1, problem2, smallest_values_of_interest,
-              largest_values_of_interest);
+          		largest_values_of_interest);
           coco_free_memory(smallest_values_of_interest);
           coco_free_memory(largest_values_of_interest);
 
@@ -331,7 +330,7 @@ static size_t suite_biobj_get_new_instance(coco_suite_t *suite,
       /* An appropriate instance was found */
       appropriate_instance_found = 1;
       coco_info("suite_biobj_set_new_instance(): Instance %lu created from instances %lu and %lu",
-          (unsigned long) instance, (unsigned long) instance1, (unsigned long) instance2);
+      		(unsigned long) instance, (unsigned long) instance1, (unsigned long) instance2);
 
       /* Save the instance to new_instances */
       for (i = 0; i < data->max_new_instances; i++) {
@@ -347,7 +346,7 @@ static size_t suite_biobj_get_new_instance(coco_suite_t *suite,
 
   if (!appropriate_instance_found) {
     coco_error("suite_biobj_get_new_instance(): Could not find suitable instance %lu in %lu tries",
-        (unsigned long) instance, (unsigned long) num_tries);
+    		(unsigned long) instance, (unsigned long) num_tries);
     return 0; /* Never reached */
   }
 
@@ -389,7 +388,7 @@ static double suite_biobj_get_best_value(const char *indicator_name, const char 
 
   if (strcmp(indicator_name, "hyp") == 0) {
 
-    curr_key = coco_allocate_string(COCO_PATH_MAX + 1);
+    curr_key = coco_allocate_string(COCO_PATH_MAX);
     count = sizeof(suite_biobj_best_values_hyp) / sizeof(char *);
     for (i = 0; i < count; i++) {
       sscanf(suite_biobj_best_values_hyp[i], "%s %lf", curr_key, &best_value);

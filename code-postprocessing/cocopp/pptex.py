@@ -34,13 +34,12 @@ html_marker_map = {
               'o': r'&#9675;',
               'd': r'&#9826;',
               's': r'&#9723;',
-              #'v': r'&#9661;',
-              'v': r'&#9660;',
+              'v': r'&#9661;',
               '*': r'&#9734;',
-              'h': r'&#11041;',
+              'h': r'varhexagon',
               '^': r'&#9651;',
-              'p': r'&#11040;',
-              'H': r'&#11043;',
+              'p': r'pentagon',
+              'H': r'hexagon',
               '<': r'&#9665;',
               'D': r'&#9671;',
               '>': r'&#9655;',
@@ -79,11 +78,7 @@ latex_color_map = {
              '#228b22': 'ForestGreen',
              '#32cd32': 'LimeGreen',
              '#9acd32': 'YellowGreen',
-             '#adff2f': 'GreenYellow',
-             '#1f77b4': 'Blue',
-             '#ff7f0e': 'Orange',
-             '#2ca02c': 'Green',
-             '#9467bd': 'Purple'}
+             '#adff2f': 'GreenYellow'}
 
 
 
@@ -114,7 +109,7 @@ class WrongInputSizeError(Error):
 def color_to_latex(color):
     try:
         res = '\color{%s}' % latex_color_map[color]
-    except KeyError as err:
+    except KeyError, err:
         try:
             float(color)
             res = '\color[gray]{%s}' % color
@@ -401,44 +396,37 @@ def tableLaTeX(table, spec, extra_eol=(), add_begin_tabular=True, add_end_tabula
     return res
 
 
-def tableXLaTeX(table, spec, extra_eol=(), add_begin_tabular=True, add_end_tabular=True):
+def tableXLaTeX(table, spec, extraeol=()):
     """Generates a tabular from a sequence of sequence of strings.
 
     :param seq table: sequence of sequence of strings
     :param string spec: string for table specification, see
                         http://en.wikibooks.org/wiki/LaTeX/Tables#The_tabular_environment 
-    :param seq extra_eol: sequence of string the same length as the table
+    :param seq extraeol: sequence of string the same length as the table
                          (same number of lines) which are added at the
                          end of each line.
-    :param bool add_begin_tabular: bool value that specifies if begin tabular is added.
-    :param bool add_end_tabular: bool value that specifies if end tabular is added.
     :returns: sequence of strings of a LaTeX tabular.
 
     """
 
-    if not extra_eol:
-        extra_eol = len(table) * ['']
+    if not extraeol:
+        extraeol = len(table) * ['']
 
     # TODO: check that spec and extraeol have the right format? 
     if 1 < 3:
-        res = [r'\begin{tabularx}{1.0\textwidth}{%s}' % spec] if add_begin_tabular else []
+        res = [r'\begin{tabularx}{1.0\textwidth}{%s}' % spec]
         for i, line in enumerate(table[:-1]):
-            curline = ' & '.join(line) + r'\\' + extra_eol[i]
+            curline = ' & '.join(line) + r'\\' + extraeol[i]
             res.append(curline)
     else: # format with hline, when is it needed, for non-paper tables?
         res = [r'\begin{tabularx}{1.3\textwidth}{%s}' % spec]
         for i, line in enumerate(table[:-1]):
-            curline = ' & '.join(line) + r'\\\hline' + extra_eol[i]
+            curline = ' & '.join(line) + r'\\\hline' + extraeol[i]
             res.append(curline)
+    
+    res.append(' & '.join(table[-1]) + extraeol[-1])
 
-    if len(table) > 0:
-        if add_end_tabular:
-            res.append(' & '.join(table[-1]) + extra_eol[-1])
-        else:
-            res.append(' & '.join(table[-1]) + r'\\' + extra_eol[-1])
-
-    if add_end_tabular:
-        res.append(r'\end{tabularx}')
+    res.append(r'\end{tabularx}')
     res = '\n'.join(res)
     return res
 

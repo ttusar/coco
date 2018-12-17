@@ -1,4 +1,4 @@
-LDFLAGS += -L. -lm
+LDFLAGS += -L. -lm -lcmocka
 CCFLAGS = -g -ggdb -std=c89 -pedantic -Wall -Wextra -Wstrict-prototypes -Wshadow -Wno-sign-compare -Wconversion 
 
 ########################################################################

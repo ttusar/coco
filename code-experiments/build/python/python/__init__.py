@@ -16,7 +16,7 @@ A more complete example use case can be found in the `example_experiment.py`
 file.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from . import solvers, utilities
+from . import utilities
 try:
     from . import _interface
     from ._interface import Suite as _Suite, Observer as _Observer
@@ -31,26 +31,6 @@ del absolute_import, division, print_function, unicode_literals
 # from .utilities import about_equal
 # from .exceptions import NoSuchProblemException, InvalidProblemException
 
-__all__ = ['Observer', 'Suite', 'known_suite_names', 'default_observers']
-
-def default_observers(update=None):
-    """return a map from suite names to default observer names.
-
-    This function can also be used to update this map using
-    a `dict` or a `list` of key-value pairs.
-    """
-    # this is a function only to make the doc available and
-    # because @property doesn't work on module level
-    _default_observers.update(update or {})
-    return _default_observers
-_default_observers = {
-    'bbob': 'bbob',
-    'bbob-biobj': 'bbob-biobj',
-    'bbob-biobj-ext': 'bbob-biobj',
-    'bbob-constrained': 'bbob',
-    'bbob-largescale': 'bbob',  # todo: needs to be confirmed
-    }
-
 class Suite(_Suite):
     """Suite of benchmark problems.
 
@@ -61,10 +41,8 @@ class Suite(_Suite):
     >>> suite = ex.Suite("bbob", "", "")
     >>> f = suite.next_problem()
     >>> assert f.number_of_objectives == 1
-    >>> assert f.evaluations == 0
     >>> print("f([1,2]) = %.11f" % f([1,2]))
     f([1,2]) = 90.00369408000
-    >>> assert f.evaluations == 1
 
     Sweeping through all problems is as simple as:
 
@@ -78,7 +56,6 @@ class Suite(_Suite):
     ...                  suite.number_of_objectives[0],
     ...                  suite.number_of_objectives[-1]))
     ...     fun.observe_with(observer)
-    ...     assert fun.evaluations == 0
     ...     assert fun.number_of_objectives == suite.number_of_objectives[0]
     ...     # run run run using fun  # doctest: +ELLIPSIS
     Number of objectives 2, 2, 2...
@@ -102,16 +79,13 @@ class Suite(_Suite):
     >>> observer = Observer("bbob",
     ...              "result_folder: %s_on_%s" % (solver.__name__, "bbob2009"))
     >>> for fun in suite:
-    ...     assert fun.evaluations == 0
-    ...     if fun.dimension >= 10:
+    ...     if fun.dimension > 10:
     ...         break
     ...     print('Current problem index = %d' % fun.index)
     ...     fun.observe_with(observer)
-    ...     assert fun.evaluations == 0
     ...     solver(fun, fun.lower_bounds, fun.upper_bounds, MAX_FE)
-    ...     # data should be now in the "exdata/random_search_on_bbob2009" folder
-    ...     assert fun.evaluations == MAX_FE  # depends on the solver
-    ...     # doctest: +ELLIPSIS
+    ...   # data should be now in the "exdata/random_search_on_bbob2009" folder
+    ...   # doctest: +ELLIPSIS
     Current problem index = 0...
     >>> #
     >>> # Exactly the same using another looping technique:
@@ -142,7 +116,6 @@ class Suite(_Suite):
     ...     print(suite.dimensions)
     ...     for f in suite:
     ...         assert f.dimension in suite.dimensions
-    ...         assert f.evaluations == 0
     ...         # doctest: +ELLIPSIS
     [2, 3, 5, 10, 20, 40]...
 
@@ -367,9 +340,7 @@ class Observer(_Observer):
     >>> # work work work with observed f
     >>> f.free()
 
-    Details
-    -------
-
+    Details:
         - ``f.free()`` in the above example must be called before to observe
           another problem with the "bbob" observer. Otherwise the Python
           interpreter will crash due to an error raised from the C code.
@@ -396,7 +367,7 @@ class Observer(_Observer):
     @property
     def name(self):
         """name of the observer as used with `Observer(name, ...)` to instantiate
-        `self` before
+        `self` before.
         """
         return super(Observer, self).name
     @property
@@ -405,13 +376,6 @@ class Observer(_Observer):
     @property
     def state(self):
         return super(Observer, self).state
-    @property
-    def result_folder(self):
-        """name of the output folder.
-
-        This name may not be the same as input option `result_folder`.
-        """
-        return super(Observer, self).result_folder
 
 # this definition is copy-edited from interface, solely to pass docstrings to pydoctor
 class Problem(_interface.Problem):
@@ -419,17 +383,13 @@ class Problem(_interface.Problem):
     
     The main feature of a problem instance is that it is callable, returning the
     objective function value when called with a candidate solution as input.
-    
-    It provides other useful properties and methods like `dimension`,
-    `number_of_constraints`, `observe_with`, `initial_solution_proposal`...
-
     """
     def __init__(self):
         super(Problem, self).__init__()
     def constraint(self, x):
         """return constraint values for `x`. 
 
-        By convention, constraints with values <= 0 are satisfied.
+        By convention, constraints with values >= 0 are satisfied.
         """
         return super(Problem, self).constraint(x)
 
@@ -458,8 +418,6 @@ class Problem(_interface.Problem):
         around the problem. For the observer to be finalized, the problem
         must be free'd (implictly or explicitly).
 
-        Return the observed problem `self`.
-
         Details: `observer` can be `None`, in which case nothing is done.
 
         See also: class `Observer`
@@ -470,49 +428,14 @@ class Problem(_interface.Problem):
         """"inofficial" interface to `self` with target f-value of zero. """
         return self(x) - self.final_target_fvalue1
 
-    def initial_solution_proposal(self, restart_number=None):
-        """return feasible initial solution proposals.
-
-        For unconstrained problems, the proposal is different for each
-        consecutive call without argument and for each `restart_number`
-        and may be different under repeated calls with the same
-        `restart_number`. ``self.initial_solution_proposal(0)`` is the
-        same as ``self.initial_solution``.
-
-        Conceptual example::
-
-            # given: a suite instance, a budget, and fmin
-            for problem in suite:
-                # restart until budget is (over-)exhausted
-                while problem.evaluations < budget and not problem.final_target_hit:
-                    fmin(problem, problem.initial_solution_proposal())
-
-        Details: by default, the first proposal is the domain middle or
-        the (only) known feasible solution.
-        Subsequent proposals are coordinate-wise sampled as the sum
-        of two iid random variates uniformly distributed within the
-        domain boundaries. On the ``'bbob'`` suite their density is
-        0.2 * (x / 5 + 1) for x in [-5, 0] and
-        0.2 * (1 - x / 5) for x in [0, 5] and zero otherwise.
-
-        """
-        return super(Problem, self).initial_solution_proposal(restart_number)
     @property
     def initial_solution(self):
         """return feasible initial solution"""
         return super(Problem, self).initial_solution()
     @property
-    def observers(self):
-        """list of observers wrapped around this problem"""
+    def list_of_observers(self):
         return super(Problem, self).list_of_observers
-    @property
-    def is_observed(self):
-        """problem ``p`` is observed ``p.is_observed`` times.
-
-        See also: the list of observers in property `observers`.
-        """
-        return super(Problem, self).is_observed
-
+    
     @property
     def number_of_variables(self):  # this is cython syntax, not known in Python
         # this is a class definition which is instantiated automatically!?
@@ -569,22 +492,11 @@ class Problem(_interface.Problem):
 
     @property
     def id(self):
-        "ID as string without spaces or weird characters"
+        "id as string without spaces or weird characters"
         return super(Problem, self).id
 
     @property
-    def id_function(self):
-        "function number inferred from `id`"
-        return super(Problem, self).id_function
-
-    @property
-    def id_instance(self):
-        "instance number inferred from `id`"
-        return super(Problem, self).id_instance
-
-    @property
     def name(self):
-        """human readible short description with spaces"""
         return super(Problem, self).name
 
     @property
@@ -599,13 +511,6 @@ class Problem(_interface.Problem):
 
     @property
     def info(self):
-        """human readible info, alias for ``str(self)``.
-
-        The format of this info string is not guarantied and may change
-        in future.
-
-        See also: ``repr(self)``
-        """
         return str(self)
 
 def log_level(level=None):
