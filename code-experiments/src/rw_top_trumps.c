@@ -88,11 +88,12 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const char *suite_name,
         function, instance, dimension);
     coco_problem_set_type(problem, "bi-objective");
     /* TODO Add realistic best values */
-    problem->best_value[0] = 0;
-    problem->best_value[1] = 0;
-    problem->nadir_value[0] = 1000;
-    problem->nadir_value[1] = 1000;
+    problem->best_value[0] = -1;
+    problem->best_value[1] = -1;
+    problem->nadir_value[0] = 0;
+    problem->nadir_value[1] = 0;
   }
+
 
   if (problem->best_parameter != NULL) {
     coco_free_memory(problem->best_parameter);

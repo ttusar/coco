@@ -36,11 +36,14 @@ void top_trumps_evaluate(size_t function, size_t instance, size_t size_x,
   bool outOfBounds=false;
   std::vector<double> min(m);
   std::vector<double> max(m);
+  double maxHyp = 1;
+  double maxSD = 50;
   for(int i=0; i<m; i++){
     double a = lbound + (double)rand()/RAND_MAX*(ubound-lbound);
     double b = lbound + (double)rand()/RAND_MAX*(ubound-lbound);
     double box_min = std::min(a,b);
     double box_max = std::max(a,b);
+    maxHyp = maxHyp * (box_max -box_min);
     min[i] = std::round(box_min);
     max[i] = std::round(box_max);
     //std::cout << "random bounds [" << min[i] << ", " << max[i] <<"]"<< std::endl;
@@ -54,19 +57,19 @@ void top_trumps_evaluate(size_t function, size_t instance, size_t size_x,
   }
   if(outOfBounds){
     for (size_t i = 0; i < size_y; i++)
-        y[i] = 1000; //return high number
+        y[i] = 0; //return high number
     return;
   }
 
 
   Deck deck(x_vector, n, m, min, max);
   if (obj == 1) {
-    y_vector[0] = -deck.getHV();
+    y_vector[0] = -deck.getHV()/maxHyp;
   } else if (obj == 2) {
-    y_vector[0] = -deck.getSD();
+    y_vector[0] = -deck.getSD()/maxSD;
   } else if (obj == 6) {
-    y_vector[0] = -deck.getHV();
-    y_vector[1] = -deck.getSD();
+    y_vector[0] = -deck.getHV()/maxHyp;
+    y_vector[1] = -deck.getSD()/maxSD;
   } else {
     std::vector<Agent> agents(players);
     std::vector<int> playerLevel1(4, 0);
@@ -83,24 +86,24 @@ void top_trumps_evaluate(size_t function, size_t instance, size_t size_x,
     if (obj == 3) {
       y_vector[0] = -out.getFairAgg();
     } else if (obj == 4) {
-      y_vector[0] = -out.getLeadChangeAgg();
+      y_vector[0] = -players * out.getLeadChangeAgg()/n;
     } else if (obj == 5) {
-      y_vector[0] = out.getTrickDiffAgg();
+      y_vector[0] = out.getTrickDiffAgg()-1;
     } else if (obj == 7) {
       y_vector[0] = -out.getFairAgg();
-      y_vector[1] = -out.getLeadChangeAgg();
+      y_vector[1] = -players * out.getLeadChangeAgg()/n;
     } else if (obj == 8) {
       y_vector[0] = -out.getFairAgg();
-      y_vector[1] = out.getTrickDiffAgg();
+      y_vector[1] = out.getTrickDiffAgg()-1;
     } else if (obj == 9) {
-      y_vector[0] = -deck.getHV();
+      y_vector[0] = -deck.getHV()/maxHyp;
       y_vector[1] = -out.getFairAgg();
     } else if (obj == 10) {
-      y_vector[0] = -deck.getHV();
-      y_vector[1] = -out.getLeadChangeAgg();   
+      y_vector[0] = -deck.getHV()/maxHyp;
+      y_vector[1] = -players * out.getLeadChangeAgg()/n;
     } else if (obj == 11) {
-      y_vector[0] = -deck.getHV();
-      y_vector[1] = out.getTrickDiffAgg();       
+      y_vector[0] = -deck.getHV()/maxHyp;
+      y_vector[1] = out.getTrickDiffAgg()-1;       
     }
   }
 
