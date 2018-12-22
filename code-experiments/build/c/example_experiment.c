@@ -181,7 +181,7 @@ int main(void) {
                        "result_folder: rw-gan-mario-line-walk-random log_only_better: 0 log_variables: all log_time: 1",
                        random_generator,
                        "random",
-                       101);*/
+                       101);
 
   printf("Done!\n");
   fflush(stdout);
