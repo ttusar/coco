@@ -295,6 +295,7 @@ static coco_observer_t *coco_observer_allocate(const char *result_folder,
                                                const char *base_evaluation_triggers,
                                                const int precision_x,
                                                const int precision_f,
+                                               const int precision_g,
                                                const int log_discrete_as_int) {
 
   coco_observer_t *observer;
@@ -310,6 +311,7 @@ static coco_observer_t *coco_observer_allocate(const char *result_folder,
   observer->base_evaluation_triggers = coco_strdup(base_evaluation_triggers);
   observer->precision_x = precision_x;
   observer->precision_f = precision_f;
+  observer->precision_g = precision_g;
   observer->log_discrete_as_int = log_discrete_as_int;
   observer->data = NULL;
   observer->data_free_function = NULL;
@@ -354,6 +356,7 @@ void coco_observer_free(coco_observer_t *observer) {
 #include "logger_bbob.c"
 #include "logger_biobj.c"
 #include "logger_toy.c"
+#include "logger_rw.c"
 
 /**
  * Currently, three observers are supported:
@@ -390,6 +393,8 @@ void coco_observer_free(coco_observer_t *observer) {
  * of digits to be printed after the decimal point. The default value is 8.
  * - "precision_f: VALUE" defines the precision used when outputting f values and corresponds to the number of
  * digits to be printed after the decimal point. The default value is 15.
+ * - "precision_g: VALUE" defines the precision used when outputting constraints and corresponds to the number
+ * of digits to be printed after the decimal point. The default value is 3.
  * - "log_discrete_as_int: VALUE" determines whether the values of integer variables (in mixed-integer problems)
  * are logged as integers (1) or not (0 - in this case they are logged as doubles). The default value is 1.
  *
@@ -400,8 +405,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
   coco_observer_t *observer;
   char *path, *result_folder, *algorithm_name, *algorithm_info;
   const char *outer_folder_name = "exdata";
-  int precision_x, precision_f, log_discrete_as_int;
-
+  int precision_x, precision_f, precision_g, log_discrete_as_int;
   size_t number_target_triggers;
   size_t number_evaluation_triggers;
   double target_precision;
@@ -413,7 +417,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
    * IMPORTANT: This list should be up-to-date with the code and the documentation */
   const char *known_keys[] = { "result_folder", "algorithm_name", "algorithm_info",
       "number_target_triggers", "target_precision", "number_evaluation_triggers", "base_evaluation_triggers",
-      "precision_x", "precision_f", "log_discrete_as_int" };
+      "precision_x", "precision_f", "precision_g", "log_discrete_as_int" };
   additional_option_keys = NULL; /* To be set by the chosen observer */
 
   if (0 == strcmp(observer_name, "no_observer")) {
@@ -481,6 +485,12 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
       precision_f = 15;
   }
 
+  precision_g = 3;
+  if (coco_options_read_int(observer_options, "precision_g", &precision_g) != 0) {
+    if ((precision_g < 1) || (precision_g > 32))
+      precision_g = 3;
+  }
+
   log_discrete_as_int = 1;
   if (coco_options_read_int(observer_options, "log_discrete_as_int", &log_discrete_as_int) != 0) {
     if ((log_discrete_as_int < 0) || (log_discrete_as_int > 1))
@@ -489,7 +499,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
 
   observer = coco_observer_allocate(path, observer_name, algorithm_name, algorithm_info,
       number_target_triggers, target_precision, number_evaluation_triggers, base_evaluation_triggers,
-      precision_x, precision_f, log_discrete_as_int);
+      precision_x, precision_f, precision_g, log_discrete_as_int);
 
   coco_free_memory(path);
   coco_free_memory(result_folder);
@@ -515,6 +525,8 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
     observer_bbob(observer, observer_options, &additional_option_keys);
   } else if (0 == strcmp(observer_name, "bbob-constrained")) {
     observer_bbob(observer, observer_options, &additional_option_keys);
+  } else if (0 == strcmp(observer_name, "rw")) {
+    observer_rw(observer, observer_options, &additional_option_keys);
   } else {
     coco_warning("Unknown observer!");
     return NULL;

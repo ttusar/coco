@@ -138,6 +138,25 @@ static coco_problem_t *coco_suite_get_problem_from_indices(coco_suite_t *suite,
 }
 
 /**
+ * @brief Returns the best indicator value for the given problem.
+ *
+ * @note This function needs to be updated when a new biobjective suite is added to COCO.
+ */
+static double coco_suite_get_best_indicator_value(const coco_suite_t *suite,
+                                                  const coco_problem_t *problem,
+                                                  const char *indicator_name) {
+  double result = 0;
+
+  if (strcmp(suite->suite_name, "bbob-biobj") == 0) {
+    result = suite_biobj_get_best_value(indicator_name, problem->problem_id);
+  } else {
+    coco_error("coco_suite_get_best_indicator_value_for_problem(): unknown problem suite");
+    return 0; /* Never reached */
+  }
+  return result;
+}
+
+/**
  * @note: While a suite can contain multiple problems with equal function, dimension and instance, this
  * function always returns the first problem in the suite with the given function, dimension and instance
  * values. If the given values don't correspond to a problem, the function returns NULL.
@@ -576,7 +595,8 @@ static int coco_suite_is_next_dimension_found(coco_suite_t *suite) {
 }
 
 /**
- * Currently, seven suites are supported:
+ * Currently, six suites are supported.
+ * Seven suites with artificial test functions:
  * - "bbob" contains 24 <a href="http://coco.lri.fr/downloads/download15.03/bbobdocfunctions.pdf">
  * single-objective functions</a> in 6 dimensions (2, 3, 5, 10, 20, 40)
  * - "bbob-biobj" contains 55 <a href="http://numbbo.github.io/coco-doc/bbob-biobj/functions">bi-objective

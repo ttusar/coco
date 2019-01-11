@@ -61,7 +61,9 @@ static void evaluate_constraint(const double *x, double *y) {
 
 /* Declarations of all functions implemented in this file (so that their order is not important): */
 void example_experiment(const char *suite_name,
+                        const char *suite_options,
                         const char *observer_name,
+                        const char *observer_options,
                         coco_random_state_t *random_generator);
 
 void line_walk_experiment(const char *suite_name,
@@ -106,13 +108,13 @@ void my_line_walk(evaluate_function_t evaluate_func,
 
 /* Structure and functions needed for timing the experiment */
 typedef struct {
-  size_t number_of_dimensions;
-  size_t current_idx;
-  char **output;
-  size_t previous_dimension;
-  size_t cumulative_evaluations;
-  time_t start_time;
-  time_t overall_start_time;
+	size_t number_of_dimensions;
+	size_t current_idx;
+	char **output;
+	size_t previous_dimension;
+	size_t cumulative_evaluations;
+	time_t start_time;
+	time_t overall_start_time;
 } timing_data_t;
 static timing_data_t *timing_data_initialize(coco_suite_t *suite);
 static void timing_data_time_problem(timing_data_t *timing_data, coco_problem_t *problem);
@@ -140,7 +142,7 @@ int main(void) {
    *   bbob-biobj-ext       92 unconstrained noiseless bi-objective functions
    *   [bbob-constrained*   48 constrained noiseless single-objective functions]
    *   [bbob-largescale*    24 unconstrained noiseless single-objective functions in large dimension]
-   *   [bbob-mixint*        24 mixed-integer single-objective functions]
+   *   [bbob-mixint*        mixed-integer single-objective functions]
    *
    * Suites with a star are partly implemented but not yet fully supported.
    *
@@ -153,8 +155,16 @@ int main(void) {
    * For more details on how to change the default suite and observer options, see
    * http://numbbo.github.io/coco-doc/C/#suite-parameters and
    * http://numbbo.github.io/coco-doc/C/#observer-parameters. */
-  example_experiment("bbob-mixint-1", "bbob", random_generator);
-  example_experiment("bbob-mixint-2", "bbob", random_generator);
+
+  /* example_experiment("bbob", "dimensions: 2,3,5", "rw", "log_only_better: 0", random_generator); */
+
+  line_walk_experiment("bbob",
+                       "instance_indices: 1-5 dimensions: 10",
+                       "rw",
+                       "result_folder: bbob-line-walk-random log_only_better: 0 log_variables: all log_time: 0",
+                       random_generator,
+                       "random",
+                       101);
 
   printf("Done!\n");
   fflush(stdout);
@@ -174,7 +184,9 @@ int main(void) {
  * @param random_generator The random number generator.
  */
 void example_experiment(const char *suite_name,
+                        const char *suite_options,
                         const char *observer_name,
+                        const char *observer_options,
                         coco_random_state_t *random_generator) {
 
   size_t run;
@@ -182,20 +194,9 @@ void example_experiment(const char *suite_name,
   coco_observer_t *observer;
   timing_data_t *timing_data;
 
-  /* Set some options for the observer. See documentation for other options. */
-  char *observer_options =
-      coco_strdupf("result_folder: RS_on_%s "
-                   "algorithm_name: RS "
-                   "algorithm_info: \"A simple random search algorithm\"", suite_name);
-
-  /* Initialize the suite and observer.
-   *
-   * For more details on how to change the default options, see
-   * http://numbbo.github.io/coco-doc/C/#suite-parameters and
-   * http://numbbo.github.io/coco-doc/C/#observer-parameters. */
-  suite = coco_suite(suite_name, "", "");
+  /* Initialize the suite and observer. */
+  suite = coco_suite(suite_name, "", suite_options);
   observer = coco_observer(observer_name, observer_options);
-  coco_free_memory(observer_options);
 
   /* Initialize timing */
   timing_data = timing_data_initialize(suite);
@@ -212,10 +213,8 @@ void example_experiment(const char *suite_name,
             coco_problem_get_evaluations_constraints(PROBLEM));
       long evaluations_remaining = (long) (dimension * BUDGET_MULTIPLIER) - evaluations_done;
 
-      /* Break the loop if the target was hit or there are no more remaining evaluations */
-      if ((coco_problem_final_target_hit(PROBLEM) &&
-           coco_problem_get_number_of_constraints(PROBLEM) == 0)
-           || (evaluations_remaining <= 0))
+      /* Break the loop if there are no more remaining evaluations */
+      if (evaluations_remaining <= 0)
         break;
 
       /* Call the optimization algorithm for the remaining number of evaluations */
@@ -233,7 +232,7 @@ void example_experiment(const char *suite_name,
       /* Break the loop if the algorithm performed no evaluations or an unexpected thing happened */
       if (coco_problem_get_evaluations(PROBLEM) == evaluations_done) {
         printf("WARNING: Budget has not been exhausted (%lu/%lu evaluations done)!\n",
-            (unsigned long) evaluations_done, (unsigned long) dimension * BUDGET_MULTIPLIER);
+        		(unsigned long) evaluations_done, (unsigned long) dimension * BUDGET_MULTIPLIER);
         break;
       }
       else if (coco_problem_get_evaluations(PROBLEM) < evaluations_done)
@@ -251,6 +250,7 @@ void example_experiment(const char *suite_name,
   coco_suite_free(suite);
 
 }
+
 /**
  * A function that calls the line walk for all the problems in the suite.
  *
@@ -612,24 +612,24 @@ void my_line_walk(evaluate_function_t evaluate_func,
  */
 static timing_data_t *timing_data_initialize(coco_suite_t *suite) {
 
-  timing_data_t *timing_data = (timing_data_t *) coco_allocate_memory(sizeof(*timing_data));
-  size_t function_idx, dimension_idx, instance_idx, i;
+	timing_data_t *timing_data = (timing_data_t *) coco_allocate_memory(sizeof(*timing_data));
+	size_t function_idx, dimension_idx, instance_idx, i;
 
-  /* Find out the number of all dimensions */
-  coco_suite_decode_problem_index(suite, coco_suite_get_number_of_problems(suite) - 1, &function_idx,
-      &dimension_idx, &instance_idx);
-  timing_data->number_of_dimensions = dimension_idx + 1;
-  timing_data->current_idx = 0;
-  timing_data->output = (char **) coco_allocate_memory(timing_data->number_of_dimensions * sizeof(char *));
-  for (i = 0; i < timing_data->number_of_dimensions; i++) {
-    timing_data->output[i] = NULL;
-  }
-  timing_data->previous_dimension = 0;
-  timing_data->cumulative_evaluations = 0;
-  time(&timing_data->start_time);
-  time(&timing_data->overall_start_time);
+	/* Find out the number of all dimensions */
+	coco_suite_decode_problem_index(suite, coco_suite_get_number_of_problems(suite) - 1, &function_idx,
+			&dimension_idx, &instance_idx);
+	timing_data->number_of_dimensions = dimension_idx + 1;
+	timing_data->current_idx = 0;
+	timing_data->output = (char **) coco_allocate_memory(timing_data->number_of_dimensions * sizeof(char *));
+	for (i = 0; i < timing_data->number_of_dimensions; i++) {
+		timing_data->output[i] = NULL;
+	}
+	timing_data->previous_dimension = 0;
+	timing_data->cumulative_evaluations = 0;
+	time(&timing_data->start_time);
+	time(&timing_data->overall_start_time);
 
-  return timing_data;
+	return timing_data;
 }
 
 /**
@@ -638,29 +638,29 @@ static timing_data_t *timing_data_initialize(coco_suite_t *suite) {
  */
 static void timing_data_time_problem(timing_data_t *timing_data, coco_problem_t *problem) {
 
-  double elapsed_seconds = 0;
+	double elapsed_seconds = 0;
 
-  if ((problem == NULL) || (timing_data->previous_dimension != coco_problem_get_dimension(problem))) {
+	if ((problem == NULL) || (timing_data->previous_dimension != coco_problem_get_dimension(problem))) {
 
-    /* Output existing timing information */
-    if (timing_data->cumulative_evaluations > 0) {
-      time_t now;
-      time(&now);
-      elapsed_seconds = difftime(now, timing_data->start_time) / (double) timing_data->cumulative_evaluations;
-      timing_data->output[timing_data->current_idx++] = coco_strdupf("d=%lu done in %.2e seconds/evaluation\n",
-          timing_data->previous_dimension, elapsed_seconds);
-    }
+		/* Output existing timing information */
+		if (timing_data->cumulative_evaluations > 0) {
+			time_t now;
+			time(&now);
+			elapsed_seconds = difftime(now, timing_data->start_time) / (double) timing_data->cumulative_evaluations;
+			timing_data->output[timing_data->current_idx++] = coco_strdupf("d=%lu done in %.2e seconds/evaluation\n",
+					timing_data->previous_dimension, elapsed_seconds);
+		}
 
-    if (problem != NULL) {
-      /* Re-initialize the timing_data */
-      timing_data->previous_dimension = coco_problem_get_dimension(problem);
-      timing_data->cumulative_evaluations = coco_problem_get_evaluations(problem);
-      time(&timing_data->start_time);
-    }
+		if (problem != NULL) {
+			/* Re-initialize the timing_data */
+			timing_data->previous_dimension = coco_problem_get_dimension(problem);
+			timing_data->cumulative_evaluations = coco_problem_get_evaluations(problem);
+			time(&timing_data->start_time);
+		}
 
-  } else {
-    timing_data->cumulative_evaluations += coco_problem_get_evaluations(problem);
-  }
+	} else {
+		timing_data->cumulative_evaluations += coco_problem_get_evaluations(problem);
+	}
 }
 
 /**
@@ -668,31 +668,32 @@ static void timing_data_time_problem(timing_data_t *timing_data, coco_problem_t 
  */
 static void timing_data_finalize(timing_data_t *timing_data) {
 
-  /* Record the last problem */
-  timing_data_time_problem(timing_data, NULL);
+	/* Record the last problem */
+	timing_data_time_problem(timing_data, NULL);
 
   if (timing_data) {
-    size_t i;
-    double elapsed_seconds;
-    time_t now;
-    int hours, minutes, seconds;
+  	size_t i;
+  	double elapsed_seconds;
+		time_t now;
+		int hours, minutes, seconds;
 
-    time(&now);
-    elapsed_seconds = difftime(now, timing_data->overall_start_time);
+		time(&now);
+		elapsed_seconds = difftime(now, timing_data->overall_start_time);
 
-    printf("\n");
-    for (i = 0; i < timing_data->number_of_dimensions; i++) {
-      if (timing_data->output[i]) {
-        printf("%s", timing_data->output[i]);
-        coco_free_memory(timing_data->output[i]);
-      }
+  	printf("\n");
+  	for (i = 0; i < timing_data->number_of_dimensions; i++) {
+    	if (timing_data->output[i]) {
+				printf("%s", timing_data->output[i]);
+				coco_free_memory(timing_data->output[i]);
+    	}
     }
-    hours = (int) elapsed_seconds / 3600;
-    minutes = ((int) elapsed_seconds % 3600) / 60;
-    seconds = (int)elapsed_seconds - (hours * 3600) - (minutes * 60);
-    printf("Total elapsed time: %dh%02dm%02ds\n", hours, minutes, seconds);
+  	hours = (int) elapsed_seconds / 3600;
+  	minutes = ((int) elapsed_seconds % 3600) / 60;
+  	seconds = (int)elapsed_seconds - (hours * 3600) - (minutes * 60);
+  	printf("Total elapsed time: %dh%02dm%02ds\n", hours, minutes, seconds);
 
     coco_free_memory(timing_data->output);
     coco_free_memory(timing_data);
   }
 }
+

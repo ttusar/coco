@@ -14,6 +14,7 @@ from subprocess import STDOUT
 import platform
 import time
 import glob
+import stat
 
 
 ## Change to the root directory of repository and add our tools/
@@ -218,6 +219,10 @@ def leak_check():
     valgrind_cmd = ['valgrind', '--error-exitcode=1', '--track-origins=yes',
                     '--leak-check=full', '--show-reachable=yes',
                     './test_bbob-constrained', 'leak_check']
+    run('code-experiments/test/integration-test', valgrind_cmd, verbose=_verbosity)
+    valgrind_cmd = ['valgrind', '--error-exitcode=1', '--track-origins=yes',
+                    '--leak-check=full', '--show-reachable=yes',
+                    './test_bbob-mixint', 'leak_check']
     run('code-experiments/test/integration-test', valgrind_cmd, verbose=_verbosity)
 
 
@@ -782,6 +787,7 @@ def test_preprocessing(package_install_option = []):
     install_preprocessing(package_install_option = package_install_option)
     python('code-preprocessing/archive-update', ['-m', 'pytest'], verbose=_verbosity)
     python('code-preprocessing/log-reconstruction', ['-m', 'pytest'], verbose=_verbosity)
+
 
 ################################################################################
 ## Global

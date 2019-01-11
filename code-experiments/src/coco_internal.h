@@ -191,6 +191,7 @@ struct coco_observer_s {
                              /**< @brief The "base evaluations" used to evaluations that trigger logging. */
   int precision_x;           /**< @brief Output precision for decision variables. */
   int precision_f;           /**< @brief Output precision for function values. */
+  int precision_g;           /**< @brief Output precision for constraint values. */
   int log_discrete_as_int;   /**< @brief Whether to output discrete variables in int or double format. */
   void *data;                /**< @brief Void pointer that can be used to point to data specific to an observer. */
 

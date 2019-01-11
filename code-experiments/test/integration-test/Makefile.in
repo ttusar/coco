@@ -25,7 +25,7 @@ clean:
 	rm -f test_instance_extraction.o test_instance_extraction  
 	rm -f test_biobj.o test_biobj  
 	rm -f test_bbob-constrained.o test_bbob-constrained  
-	rm -f test_bbob-mixint.o test_bbob-mixint  
+	rm -f test_bbob-mixint.o test_bbob-mixint
 
 ########################################################################
 ## Programs
@@ -42,7 +42,7 @@ test_bbob-constrained: test_bbob-constrained.o coco.o
 	${CC} ${CCFLAGS} -o test_bbob-constrained coco.o test_bbob-constrained.o ${LDFLAGS}  
 
 test_bbob-mixint: test_bbob-mixint.o
-	${CC} ${CCFLAGS} -o test_bbob-mixint test_bbob-mixint.o ${LDFLAGS}  
+	${CC} ${CCFLAGS} -o test_bbob-mixint test_bbob-mixint.o ${LDFLAGS}
 
 ########################################################################
 ## Additional dependencies
