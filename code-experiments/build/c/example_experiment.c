@@ -124,7 +124,7 @@ static void timing_data_finalize(timing_data_t *timing_data);
  * The main method initializes the random number generator and calls the example experiment on the
  * bi-objective suite.
  */
-int main(void) {
+int main(int argc, char *argv[]) {
 
   coco_random_state_t *random_generator = coco_random_new(RANDOM_SEED);
 
@@ -158,7 +158,7 @@ int main(void) {
 
   /* example_experiment("bbob", "dimensions: 2,3,5", "rw", "log_only_better: 0", random_generator); */
 
-   line_walk_experiment("rw-top-trumps-biobj",
+   /*line_walk_experiment("rw-top-trumps-biobj",
                        "function_indices: 1-6 instance_indices: 1 dimensions: 128",
                        "rw",
                        "result_folder: rw-top-trumps-line-walk-random log_only_better: 0 log_variables: all precision_x: 4 log_time: 1",
@@ -173,15 +173,28 @@ int main(void) {
                        "result_folder: bbob-line-walk-random log_only_better: 0 log_variables: all log_time: 0",
                        random_generator,
                        "random",
-                       101);
+                       101);*/
 
-  line_walk_experiment("rw-gan-mario",
-                       "function_indices: 3,6,9,12,15,18,21,24,27,30,33,36,39,42 instance_indices: 1 dimensions: 10",
+  if (argc==1){
+  	line_walk_experiment("rw-gan-mario",
+                       "instance_indices: 1 dimensions: 10",
                        "rw",
                        "result_folder: rw-gan-mario-line-walk-random log_only_better: 0 log_variables: all log_time: 1",
                        random_generator,
                        "random",
                        101);
+  }else{
+	  line_walk_experiment("rw-gan-mario",
+                       coco_strdupf("function_indices: %d instance_indices: 1 dimensions: 10", atoi(argv[1])),
+                       "rw",
+                       "result_folder: rw-gan-mario-line-walk-random log_only_better: 0 log_variables: all log_time: 1",
+                       random_generator,
+                       "random",
+                       101);	
+  }
+
+
+
 
   printf("Done!\n");
   fflush(stdout);
