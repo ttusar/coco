@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
                        101);
   }else{
 	  line_walk_experiment("rw-gan-mario",
-                       coco_strdupf("function_indices: %d instance_indices: 1 dimensions: 10", atoi(argv[1])),
+                       coco_strdupf("function_indices: %d instance_indices: %d dimensions: 10", atoi(argv[1]), atoi(argv[2])),
                        "rw",
                        "result_folder: rw-gan-mario-line-walk-random log_only_better: 0 log_variables: all log_time: 1",
                        random_generator,
