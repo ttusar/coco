@@ -1968,6 +1968,22 @@ class DataSetList(list):
                     sorted.setdefault('multi', DataSetList()).append(i)
                 else:
                     warnings.warn('Unknown function id.')
+        elif testbedsettings.current_testbed.name =='rw-gan-mario':
+            for i in self:
+                if i.funcId in range(1,19):
+		   sorted.setdefault('direct',  DataSetList()).append(i)
+		elif i.funcId in range(19, 31):
+		   sorted.setdefault('simA',  DataSetList()).append(i)
+		elif i.funcId in range(31, 43):
+		   sorted.setdefault('simScared',  DataSetList()).append(i)
+		elif i.funcId in range(43, 61):
+		   sorted.setdefault('directc',  DataSetList()).append(i)
+		elif i.funcId in range(61, 73):
+		   sorted.setdefault('simAc',  DataSetList()).append(i)
+		elif i.funcId in range(73, 85):
+		   sorted.setdefault('simScaredc',  DataSetList()).append(i)
+                else:
+                    warnings.warn('Unknown function id.')
         else:
             for i in self:
                 if i.funcId in range(1, 6):
@@ -2021,6 +2037,22 @@ class DataSetList(list):
                 groups.append(('hcond', 'Ill-conditioned functions'))
             if any(i.funcId in range(43, 49) for i in self):
                 groups.append(('multi', 'Multi-modal functions'))
+
+            return OrderedDict(groups)
+        elif testbedsettings.current_testbed.name =='rw-gan-mario':
+            groups = []
+            if any(i.funcId in range(1, 19) for i in self):
+                groups.append(('direct', 'Direct'))
+            if any(i.funcId in range(19, 31) for i in self):
+                groups.append(('simA', 'Simulation A*'))
+            if any(i.funcId in range(31, 43) for i in self):
+                groups.append(('simScared', 'Simulation ScaredAgent'))
+            if any(i.funcId in range(43, 61) for i in self):
+                groups.append(('directc', 'Direct Concatenated'))
+            if any(i.funcId in range(61, 73) for i in self):
+                groups.append(('simAc', 'Simulation A* Concatenated'))
+            if any(i.funcId in range(73, 85) for i in self):
+                groups.append(('simScaredc', 'Simulation ScaredAgent Concatenated'))
 
             return OrderedDict(groups)
         else:

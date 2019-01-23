@@ -21,6 +21,8 @@ testbed_name_single_noisy = 'bbob-noisy'
 testbed_name_bi = 'bbob-biobj'
 testbed_name_bi_ext = 'bbob-biobj-ext'
 testbed_name_cons = 'bbob-constrained'
+testbed_name_mario = 'rw-gan-mario'
+testbed_name_tt = 'rw-top-trumps-biobj'
 
 default_suite_single = 'bbob'
 default_suite_single_noisy = 'bbob-noisy'
@@ -31,6 +33,8 @@ default_testbed_single_noisy = 'GECCOBBOBNoisyTestbed'
 default_testbed_bi = 'GECCOBiObjBBOBTestbed'
 default_testbed_bi_ext = 'GECCOBiObjExtBBOBTestbed'
 default_testbed_cons = 'CONSBBOBTestbed'
+default_testbed_mario ='MarioTestbed'
+default_testbed_tt ='ttTestbed'
 
 current_testbed = None
 
@@ -39,7 +43,9 @@ suite_to_testbed = {
     default_suite_single_noisy: default_testbed_single_noisy,
     default_suite_bi: default_testbed_bi,
     'bbob-biobj-ext': default_testbed_bi_ext,
-    'bbob-constrained': default_testbed_cons
+    'bbob-constrained': default_testbed_cons,
+    'rw-gan-mario': default_testbed_mario,
+    'rw-top-trumps-biobj': default_testbed_tt
 }
 
 
@@ -72,7 +78,6 @@ def load_current_testbed(testbed_name, target_values, data_format_name=None):
 
 
 def get_testbed_from_suite(suite_name):
-
     if suite_name in suite_to_testbed:
         return suite_to_testbed[suite_name]
     else:
@@ -267,6 +272,80 @@ class GECCOBBOBTestbed(Testbed):
         self.instantiate_attributes(targetValues)
 
 
+class MarioTestbed(Testbed):
+    """Testbed used in for Mario
+    """
+
+    shortinfo_filename = 'mario-gan-benchmarkshortinfos.txt'
+    pptable_target_runlengths = [0.5, 1.2, 3, 10, 50]  # used in config for expensive setting
+    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
+
+    settings = dict(
+        info_filename='mario-gan-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
+        name=testbed_name_mario,
+        short_names=get_short_names(shortinfo_filename),
+        hardesttargetlatex='10^{-8}',  # used for ppfigs, pptable and pptables
+        ppfigs_ftarget=1e-8,  # to set target runlength in expensive setting, use genericsettings.target_runlength
+        ppfig2_ftarget=1e-8,
+        ppfigdim_target_values=(10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-8),
+        pprldistr_target_values=(10., 1e-1, 1e-4, 1e-8),
+        pprldmany_target_values=10 ** np.arange(2, -8.2, -0.2),
+        pprldmany_target_range_latex='$10^{[-8..2]}$',
+        ppscatter_target_values=np.logspace(-8, 2, 21),  # 21 was 46
+        rldValsOfInterest=(10, 1e-1, 1e-4, 1e-8),  # possibly changed in config
+        ppfvdistr_min_target=1e-8,
+        functions_with_legend=(1, 84),
+        first_function_number=1,
+        last_function_number=84,
+        reference_values_hash_dimensions=[],
+        pptable_ftarget=1e-8,  # value for determining the success ratio in all tables
+        pptable_targetsOfInterest=pptable_targetsOfInterest,
+        pptablemany_targetsOfInterest=pptable_targetsOfInterest,
+        scenario=scenario_fixed,
+        reference_algorithm_filename='',
+        reference_algorithm_displayname='',  # TODO: should be read in from data set in reference_algorithm_filename
+        # .reference_algorithm_filename='data/RANDOMSEARCH'
+        # .reference_algorithm_displayname="RANDOMSEARCH"  # TODO: should be read in from data set in reference_algorithm_filename
+        # expensive optimization settings:
+        #pptable_target_runlengths=pptable_target_runlengths,
+        #pptables_target_runlengths=pptable_target_runlengths,
+        data_format=dataformatsettings.BBOBOldDataFormat(),  #  we cannot assume the 2nd column have constraints evaluation
+        # why do we want the data format hard coded in the testbed?
+        # Isn't the point that the data_format should be set
+        # independently of the testbed constrained to the data we actually
+        # see, that is, not assigned here?
+        number_of_points=5,  # nb of target function values for each decade
+        instancesOfInterest=None  # None: consider all instances
+        # .instancesOfInterest={1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1,
+        #                   10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1,
+        #                   21: 1, 22: 1, 23: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
+        #                   31: 1, 32: 1, 33: 1, 34: 1, 35: 1, 36: 1, 37: 1, 38: 1, 39: 1, 40: 1,
+        #                   41: 1, 42: 1, 43: 1, 44: 1, 45: 1, 46: 1, 47: 1, 48: 1, 49: 1, 50: 1,
+        #                   51: 1, 52: 1, 53: 1, 54: 1, 55: 1, 56: 1, 57: 1, 58: 1, 59: 1, 60: 1} # consider only 2009-2016 instances
+        # .instancesOfInterest={1: 1, 2: 1}
+    ) 
+
+    def __init__(self, targetValues):
+
+        if 11 < 3:
+            # override settings if needed...
+            # self.reference_algorithm_filename = 'best09-16-bbob.tar.gz'
+            # self.reference_algorithm_displayname = 'best 2009--16'  # TODO: should be read in from data set in reference_algorithm_filename
+            # self.reference_algorithm_filename = 'data/RANDOMSEARCH'
+            # self.reference_algorithm_displayname = "RANDOMSEARCH"  # TODO: should be read in from data set in reference_algorithm_filename
+            #self.settings.short_names = get_short_names(self.shortinfo_filename)
+            self.instancesOfInterest = {1: 1, 2: 1, 3: 1, 4: 1, 5: 1}
+
+        for key, val in MarioTestbed.settings.items():
+            setattr(self, key, val)
+
+        #self.instancesOfInterest = {1: 1, 2: 1, 3: 1, 4: 1, 5: 1}
+
+        # set targets according to targetValues class (possibly all changed
+        # in config:
+        self.instantiate_attributes(targetValues)
+
 
 class CONSBBOBTestbed(GECCOBBOBTestbed):
     """BBOB Testbed for constrained problems.
@@ -414,6 +493,69 @@ class GECCOBiObjBBOBTestbed(Testbed):
     def __init__(self, targetValues):
         
         for key, val in GECCOBiObjBBOBTestbed.settings.items():
+            setattr(self, key, val)
+
+        # set targets according to targetValues class (possibly all changed
+        # in config:
+        self.instantiate_attributes(targetValues)
+
+        if 11 < 3:
+            # override settings if needed...
+            # self.reference_algorithm_filename = 'refalgs/best2016-bbob-biobj-NEW.tar.gz'
+            # self.reference_algorithm_displayname = 'best 2016'  # TODO: should be read in from data set in reference_algorithm_filename
+            # self.short_names = get_short_names(self.shortinfo_filename)
+            self.instancesOfInterest = {1: 1, 2: 1, 3: 1, 4: 1, 5: 1}
+
+class ttTestbed(Testbed):
+    """Testbed used in the BBOB workshops to display
+       data sets run on the `bbob-biobj` test suite.
+    """
+
+    shortinfo_filename = 'tt-biobj-benchmarkshortinfos.txt'
+    pptable_target_runlengths = [0.5, 1.2, 3, 10, 50] # used in config for expensive setting
+    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7) # for pptable and pptablemany
+
+    settings = dict(
+        info_filename='tt-biobj-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
+        name=testbed_name_tt,
+        short_names=get_short_names(shortinfo_filename),
+        hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
+        ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
+        ppfig2_ftarget=1e-5,
+        ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
+        pprldmany_target_values=
+        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
+        ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
+        rldValsOfInterest=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        ppfvdistr_min_target=1e-5,
+        functions_with_legend=(1, 30, 31, 55),
+        first_function_number=1,
+        last_function_number=6,
+        reference_values_hash_dimensions=[2, 3, 5, 10, 20],
+        pptable_ftarget=1e-5,  # value for determining the success ratio in all tables
+        pptable_targetsOfInterest=(1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        pptablemany_targetsOfInterest=(1, 1e-1, 1e-2, 1e-3),  # used for pptables
+        scenario=scenario_biobjfixed,
+        reference_algorithm_filename='', # TODO produce correct best2016 algo and delete this line
+        reference_algorithm_displayname='', # TODO: should be read in from data set in reference_algorithm_filename
+        instancesOfInterest={1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1}, # None, # None: consider all instances
+        # expensive optimization settings:
+        pptable_target_runlengths=[0.5, 1.2, 3, 10, 50],  # [0.5, 2, 10, 50]  # used in config for expensive setting
+        pptables_target_runlengths=[2, 10, 50],  # used in config for expensive setting
+        data_format=dataformatsettings.BBOBBiObjDataFormat(),
+        # TODO: why do we want the data format hard coded in the testbed?
+        # Isn't the point that the data_format should be set
+        # independently of the testbed constrained to the data we actually
+        # see, that is, not assigned here?
+        number_of_points=10,  # nb of target function values for each decade
+    ) 
+
+    def __init__(self, targetValues):
+        
+        for key, val in ttTestbed.settings.items():
             setattr(self, key, val)
 
         # set targets according to targetValues class (possibly all changed
