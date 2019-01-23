@@ -24,11 +24,12 @@ for(i in 1:nrow(tries)){
   ctrl = list(subset=c("cm_angle", "ela_level","ela_meta"))
   #ctrl = list(subset=c("basic", "nbc", "disp", "ic", "pca", "ela_distr", "cm_angle", "ela_level","ela_meta"))
   #compute ela:  basic, nbc, disp, ic, pca, ela_distr,  ela_meta,
-  features=NULL
-  try(expr=(features=calculateFeatures(feat.object, control=ctrl, show.info=FALSE)), silent=T)
-  if(is.null(features)){
-    next
-  }
+  #features=NULL
+  features=calculateFeatures(feat.object, control=ctrl, show.info=FALSE)
+  #try(expr=(features=calculateFeatures(feat.object, control=ctrl, show.info=FALSE)), silent=T)
+  #if(is.null(features)){
+  #  next
+  #}
   features$dim = tries$dim[i]
   features$fun = tries$fun[i]
   features$inst = tries$inst[i]
