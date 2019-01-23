@@ -22,8 +22,8 @@ for(i in 1:nrow(tries)){
   X = matrix(unlist(data$loc), ncol=tries$dim[i], byrow = TRUE)
   y = data$fitness
   feat.object = createFeatureObject(X=X, y=y)
-  ctrl = list(subset=c("cm_angle", "ela_level","ela_meta"))
-  #ctrl = list(subset=c("basic", "nbc", "disp", "ic", "pca", "ela_distr", "cm_angle", "ela_level","ela_meta"))
+  #ctrl = list(subset=c("cm_angle", "ela_level","ela_meta"))
+  ctrl = list(subset=c("basic", "nbc", "disp", "ic", "pca", "ela_distr", "cm_angle", "ela_level","ela_meta"))
   #compute ela:  basic, nbc, disp, ic, pca, ela_distr,  ela_meta,
   #features=NULL
   features=calculateFeatures(feat.object, control=ctrl, show.info=FALSE)
