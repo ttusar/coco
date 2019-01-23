@@ -10,6 +10,7 @@ name = args[2]
 require("flacco")
 require("RANN")
 require("e1071")
+require("mda")
 ##file = "/home/volz/svn/gbea/code-experiments/build/c/exdata/mario.RData"
 load(file)
 
