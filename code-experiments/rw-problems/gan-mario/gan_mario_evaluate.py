@@ -330,7 +330,7 @@ if __name__ == '__main__':
     g = tmp % len(available_jsons)
 
     if c == 1:
-        dim = 10
+        dim = 5
 
     #print([c, f, g, inst])
 
