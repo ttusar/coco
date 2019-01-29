@@ -387,9 +387,9 @@ void diagonal_walk_experiment(const char *suite_name,
   observer = coco_observer(observer_name, observer_options);
 
   /* Initialize the fixed random point for the diagonal walk */
-  k = (int)(coco_suite_get_number_of_problems(suite) - 1);
+  k = (int)(coco_suite_get_number_of_problems(suite));
   while (last_problem == NULL) {
-    last_problem = coco_suite_get_problem(suite, (size_t)k);
+    last_problem = coco_suite_get_problem(suite, (size_t)(k-1));
     k--;
     if (k < 0)
       return;
