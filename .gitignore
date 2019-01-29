@@ -22,4 +22,14 @@ code-experiments/rw-problems/*/objectives*.txt
 code-experiments/rw-problems/*/exdata
 *.zip
 *.pyc
+code-experiments/rw-problems/top-trumps/TopTrumps/.depend
+code-experiments/rw-problems/top-trumps/TopTrumps/AgentTest
+code-experiments/rw-problems/top-trumps/TopTrumps/DeckTest
+code-experiments/rw-problems/top-trumps/TopTrumps/GameTest
+code-experiments/rw-problems/top-trumps/TopTrumps/Makefile
+code-experiments/rw-problems/top-trumps/TopTrumps/TopTrumpsExec
+code-experiments/rw-problems/top-trumps/TopTrumps/nbproject/
+code-experiments/rw-problems/top-trumps/TopTrumps/rw_top_trumps_test
+code-experiments/rw-problems/top-trumps/evaluate_function_template
+
 
