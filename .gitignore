@@ -1,21 +1,4 @@
-code-experiments/build/c/VERSION
-code-experiments/build/c/REVISION
-code-experiments/build/c/numbbo.c
-code-experiments/build/c/numbbo.h
-code-experiments/build/c/.*.o
-code-experiments/build/c/demo$
-code-experiments/build/c/random_search/
-code-experiments/build/doxygen
-code-experiments/build/python/bbob2009_testcases.txt
-code-experiments/build/python/code-experiments/build/
-code-experiments/build/python/dist/
-code-experiments/build/python/coco.egg
-code-experiments/build/python/README
-code-experiments/build/python/cython/coco.c
-code-experiments/build/python/cython/coco.h
-code-experiments/build/python/cython/interface.c
-code-experiments/build/python/setup.py
-code-experiments/build/r/pkg
+code-experiments/build/c/*
 release/.*
 .*\#.*
 .*\.orig
@@ -36,6 +19,7 @@ code-experiments/examples/bbob2009-c-cmaes/.*\.par
 code-experiments/rw-problems/gan-mario/GAN/*
 code-experiments/rw-problems/*/variables*.txt
 code-experiments/rw-problems/*/objectives*.txt
+code-experiments/rw-problems/*/exdata
 *.zip
 *.pyc
 
