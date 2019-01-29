@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
   }
   else {
     diagonal_walk_experiment("rw-gan-mario",
-                             coco_strdupf("dimensions: 10 function_indices: %d", atoi(argv[1])),
+                             coco_strdupf("dimensions: 10 function_indices: %d instance_indices: %d", atoi(argv[1]), atoi(argv[2]),
                              "rw",
                              "result_folder: rw-gan-mario-diagonal-walk-random log_only_better: 0 log_variables: all log_time: 1",
                              random_generator,
