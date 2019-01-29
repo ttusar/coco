@@ -34,5 +34,5 @@ examples/bbob2009-c-cmaes/.*\.o
 examples/bbob2009-c-cmaes/.*\.par
 *.pdf
 code-experiments/rw-problems/gan-mario/GAN/*
-code-experimens/rw-problems/*/variables*.txt
-code-experimens/rw-problems/*/objectives*.txt
+code-experimens/rw-problems/gan-mario/variables*
+code-experimens/rw-problems/gan-mario/objectives*.txt
