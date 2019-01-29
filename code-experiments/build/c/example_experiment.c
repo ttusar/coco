@@ -172,7 +172,7 @@ int main(int argc, char* argv[]) {
                              "result_folder: rw-gan-mario-diagonal-walk-random log_only_better: 0 log_variables: all log_time: 1",
                              random_generator,
                              "random",
-                             101,
+                             1001,
                              3);
   }
   else {
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
                              "result_folder: rw-gan-mario-diagonal-walk-random log_only_better: 0 log_variables: all log_time: 1",
                              random_generator,
                              "random",
-                             101,
+                             1001,
                              3);
   }
 
@@ -378,13 +378,14 @@ void diagonal_walk_experiment(const char *suite_name,
   coco_problem_t *p, *last_problem = NULL;
   double *lower_bounds, *upper_bounds, *functions_values, *constraints_values = NULL;
   double *diagonal, *x, *origin_solution, *direction;
+  double **rand_directions = NULL;
   int *r, k, break_loop = 0;
 
   /* Initialize the suite and observer. */
   suite = coco_suite(suite_name, "", suite_options);
   observer = coco_observer(observer_name, observer_options);
 
-  /* Initialize the fixed random point for the line walk */
+  /* Initialize the fixed random point for the diagonal walk */
   k = (int)(coco_suite_get_number_of_problems(suite) - 1);
   while (last_problem == NULL) {
     last_problem = coco_suite_get_problem(suite, (size_t)k);
@@ -397,6 +398,18 @@ void diagonal_walk_experiment(const char *suite_name,
   r = (int *) coco_allocate_memory(largest_dimension * sizeof(int));
   for (i = 0; i < largest_dimension; ++i)
     r[i] = (int) ((double)(num_solutions) * coco_random_uniform(random_generator));
+
+  /* Initialize fixed random directions */
+  rand_directions = (double **) coco_allocate_memory(sizeof(double *) * num_walks);
+  for (w = 0; w < num_walks; w++) {
+    rand_directions[w] = coco_allocate_vector(largest_dimension);
+    for (j = 0; j < largest_dimension; j++) {
+      if (w == 0)
+        rand_directions[w][j] = 0;
+      else
+        rand_directions[w][j] = coco_random_uniform(random_generator);
+    }
+  }
 
   /* Iterate over all problems in the suite */
   while ((p = coco_suite_get_next_problem(suite, NULL)) != NULL) {
@@ -436,9 +449,9 @@ void diagonal_walk_experiment(const char *suite_name,
       /* Initialize the observed problem */
       PROBLEM = coco_problem_add_observer(p, observer);
 
-      /* Choose direction randomly (except for the first one) */
+      /* Set direction */
       for (j = 0; j < dimension; j++) {
-        if ((coco_random_uniform(random_generator) < 0.5) || (w == 0))
+        if (rand_directions[w][j] < 0.5)
           direction[j] = diagonal[j];
         else
           direction[j] = -diagonal[j];
@@ -493,6 +506,10 @@ void diagonal_walk_experiment(const char *suite_name,
   coco_free_memory(functions_values);
   if (number_of_constraints > 0 )
     coco_free_memory(constraints_values);
+  for (w = 0; w < num_walks; w++) {
+    coco_free_memory(rand_directions[w]);
+  }
+  coco_free_memory(rand_directions);
 
   coco_observer_free(observer);
   coco_suite_free(suite);
