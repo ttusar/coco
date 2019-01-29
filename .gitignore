@@ -1,4 +1,4 @@
-code-experiments/build/c/*
+code-experiments/build/*
 release/.*
 .*\#.*
 .*\.orig
