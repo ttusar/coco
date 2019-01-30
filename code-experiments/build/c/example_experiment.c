@@ -165,6 +165,7 @@ int main(int argc, char* argv[]) {
    * http://numbbo.github.io/coco-doc/C/#suite-parameters and
    * http://numbbo.github.io/coco-doc/C/#observer-parameters. */
 
+
   if (argc == 1) {
     diagonal_walk_experiment("rw-gan-mario",
                              "dimensions: 10 function_indices: 1,2,4,5,7,8,10,11,13,14,22,23,25,26,28,29,34,35,37,38,40,41,64,65,67,68,70,71",
@@ -177,7 +178,7 @@ int main(int argc, char* argv[]) {
   }
   else {
     diagonal_walk_experiment("rw-gan-mario",
-                             coco_strdupf("dimensions: 10 function_indices: %d", atoi(argv[1])),
+                             coco_strdupf("dimensions: 10 function_indices: %d instance_indices: %d", atoi(argv[1]), atoi(argv[2])),
                              "rw",
                              "result_folder: rw-gan-mario-diagonal-walk-random log_only_better: 0 log_variables: all log_time: 1",
                              random_generator,
@@ -386,9 +387,9 @@ void diagonal_walk_experiment(const char *suite_name,
   observer = coco_observer(observer_name, observer_options);
 
   /* Initialize the fixed random point for the diagonal walk */
-  k = (int)(coco_suite_get_number_of_problems(suite) - 1);
+  k = (int)(coco_suite_get_number_of_problems(suite));
   while (last_problem == NULL) {
-    last_problem = coco_suite_get_problem(suite, (size_t)k);
+    last_problem = coco_suite_get_problem(suite, (size_t)(k-1));
     k--;
     if (k < 0)
       return;

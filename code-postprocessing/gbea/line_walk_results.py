@@ -4,7 +4,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from math import ceil, isclose
+from math import ceil
 import warnings
 import ntpath
 
@@ -71,7 +71,7 @@ def reformat_line_walk_results(path):
                             if n != p:
                                 current_step = float(n) - float(p)
                                 current_x = i
-                        if isclose(current_step, previous_step) and current_x == previous_x:
+                        if np.isclose(current_step,previous_step) and current_x == previous_x:
                             # Same sequence
                             f_out.write("{}\t{}\t{}\t\n".format(numbers[0], numbers[1],
                                                                 numbers[current_x + 2]))
@@ -141,7 +141,7 @@ def plot_line_walk_results(file_names, pdf=None, title=None, n_rows=4, n_columns
             if x >= dim:
                 fig.axes[i].set_visible(False)
         plt.suptitle(title)
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.subplots_adjust(top=0.9)
         if pdf is not None:
             pdf.savefig(fig)
@@ -193,7 +193,7 @@ def plot_line_walk_times(file_names, pdf=None, title=None, n_rows=2, n_columns=3
             fig.axes[j].set_xlabel("time (s)")
             fig.axes[j].set_ylabel("f{}".format(f))
         plt.suptitle(title)
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.subplots_adjust(top=0.85)
         if pdf is not None:
             pdf.savefig(fig)
@@ -208,14 +208,19 @@ def rw_gan_mario_line_walk(exdata_path, point='random'):
     reformat_line_walk_results(path)
     pdf_file_name = os.path.join(path, "{}-{}.pdf".format(suite_name, point))
     pdf = PdfPages(pdf_file_name)
-    file_name_template = "{}_f{:03d}_i01_d10_{}.txt"
-    for func in range(3, 42, 3):
-        files = [os.path.join(path, file_name_template.format(suite_name, func, "reformatted"))]
+    file_name_template = "{}_f{:03d}_i{:02d}_d10_{}.txt"
+    for func in range(1, 85, 1):
+        files = []
+        for instance in range(1,8):
+            files.append(os.path.join(path, file_name_template.format(suite_name, func,
+                                                                      instance, "reformatted")))
         plot_line_walk_results(files, pdf=pdf, title="GAN Mario f{} ({} point)".format(func, point),
                                n_rows=3, n_columns=4)
     files = []
-    for func in range(3, 42, 3):
-        files.append(os.path.join(path, file_name_template.format(suite_name, func, "time")))
+    for func in range(1, 85, 1):
+        for instance in range(1,8):
+            files.append(os.path.join(path, file_name_template.format(suite_name, func,
+                                                                      instance, "time")))
     plot_line_walk_times(files, pdf=pdf, title="GAN Mario evaluation times")
     pdf.close()
 
@@ -270,6 +275,6 @@ def bbob_line_walk(exdata_path, point='random'):
 if __name__ == '__main__':
     exdata_path = os.path.abspath(os.path.join(os.getcwd(), "..", "..", "code-experiments",
                                                "build", "c", "exdata"))
-    bbob_line_walk(exdata_path)
+    #bbob_line_walk(exdata_path)
     rw_gan_mario_line_walk(exdata_path)
-    rw_top_trumps_line_walk(exdata_path)
+    #rw_top_trumps_line_walk(exdata_path)

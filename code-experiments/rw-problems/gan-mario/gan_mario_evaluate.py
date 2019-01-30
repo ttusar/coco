@@ -329,8 +329,6 @@ if __name__ == '__main__':
     f = int(tmp / len(available_jsons))
     g = tmp % len(available_jsons)
 
-    if c == 1:
-        dim = 10
 
     #print([c, f, g, inst])
 
@@ -341,6 +339,11 @@ if __name__ == '__main__':
     #        file.write('{}\n'.format(0))
     #else:
     # find correct file with highest epoch
+
+    file_name = "objectives_o{:d}_f{:02d}_i{:02d}_d{:02d}.txt".format(obj, problem+1, inst+1, dim)
+    if c == 1:
+        dim = 5
+
     pattern = "GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(available_jsons[g], dim, budget,
                                                             available_instances[inst])
     files = glob.glob(pattern)
@@ -349,5 +352,4 @@ if __name__ == '__main__':
                                                           available_instances[inst])
 
     fun = available_fit[f]
-    file_name = "objectives_o{:d}_f{:02d}_i{:02d}_d{:02d}.txt".format(obj, problem+1, inst+1, dim)
     fun(content[1:], netG, dim, file_name)

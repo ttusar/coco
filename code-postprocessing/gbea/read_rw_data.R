@@ -9,14 +9,17 @@ require(stringr)
 
 dir = args[1]
 name = args[2]
-##dir = "/home/volz/svn/gbea/code-experiments/build/c/exdata/rw-gan-mario"
-##name = "rw-gan-mario.RData"
+#dir = "/media/thehedgeify/Data/svn/gbea/code-postprocessing/gbea/rw-gan-mario-lhs-rw"
+#name = "rw-gan-mario-lhs.RData"
+print(dir)
+print(name)
 
 ## get file names (required to be in main path of the experiments data folder)
-files <- list.files(path=dir, pattern = "\\.txt$",recursive=T) #switch to "\\.tdat" if required
+files <- list.files(path=dir, pattern = "(.)*d10_rw.txt$",recursive=T) #switch to "\\.tdat" if required
 
 df <- data.frame(evaluation=integer(), fitness=double(), loc=list(), dim=integer(), fun=integer(), inst=integer())
 for(f in files){
+  print(f)
   dim <- as.numeric(str_extract(str_extract(f,"d[0-9]+"),"\\d+")) #extract dimension
   fun <- as.numeric(str_extract(str_extract(f,"f[0-9]+"),"\\d+")) #extract function number
   inst <- as.numeric(str_extract(str_extract(f,"i[0-9]+"),"\\d+")) #extract instance number
