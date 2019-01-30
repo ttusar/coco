@@ -1,0 +1,1 @@
+python splendor_evaluate.py <obj> <dim> <fun> <inst>

@@ -74,6 +74,15 @@ void line_walk_experiment(const char *suite_name,
                           const char *origin_solution_type,
                           const size_t num_solutions);
 
+void diagonal_walk_experiment(const char *suite_name,
+                              const char *suite_options,
+                              const char *observer_name,
+                              const char *observer_options,
+                              coco_random_state_t *random_generator,
+                              const char *origin_solution_type,
+                              const size_t num_solutions,
+                              const size_t num_walks);
+
 void my_random_search(evaluate_function_t evaluate_func,
                       evaluate_function_t evaluate_cons,
                       const size_t dimension,
@@ -124,7 +133,7 @@ static void timing_data_finalize(timing_data_t *timing_data);
  * The main method initializes the random number generator and calls the example experiment on the
  * bi-objective suite.
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 
   coco_random_state_t *random_generator = coco_random_new(RANDOM_SEED);
 
@@ -156,45 +165,27 @@ int main(int argc, char *argv[]) {
    * http://numbbo.github.io/coco-doc/C/#suite-parameters and
    * http://numbbo.github.io/coco-doc/C/#observer-parameters. */
 
-  /* example_experiment("bbob", "dimensions: 2,3,5", "rw", "log_only_better: 0", random_generator); */
 
-   /*line_walk_experiment("rw-top-trumps-biobj",
-                       "function_indices: 1-6 instance_indices: 1 dimensions: 128",
-                       "rw",
-                       "result_folder: rw-top-trumps-line-walk-random log_only_better: 0 log_variables: all precision_x: 4 log_time: 1",
-                       random_generator,
-                       "random",
-                       3);
-
-
-  line_walk_experiment("bbob",
-                       "instance_indices: 1-5 dimensions: 10",
-                       "rw",
-                       "result_folder: bbob-line-walk-random log_only_better: 0 log_variables: all log_time: 0",
-                       random_generator,
-                       "random",
-                       101);*/
-
-  if (argc==1){
-  	line_walk_experiment("rw-gan-mario",
-                       "function_indices: 1-2 instance_indices: 1 dimensions: 10",
-                       "rw",
-                       "result_folder: rw-gan-mario-line-walk-random log_only_better: 0 log_variables: all log_time: 1",
-                       random_generator,
-                       "random",
-                       101);
-  }else{
-	  line_walk_experiment("rw-gan-mario",
-                       coco_strdupf("function_indices: %d instance_indices: %d dimensions: 10", atoi(argv[1]), atoi(argv[2])),
-                       "rw",
-                       "result_folder: rw-gan-mario-line-walk-random log_only_better: 0 log_variables: all log_time: 1",
-                       random_generator,
-                       "random",
-                       101);	
+  if (argc == 1) {
+    diagonal_walk_experiment("rw-gan-mario",
+                             "dimensions: 10 function_indices: 1,2,4,5,7,8,10,11,13,14,22,23,25,26,28,29,34,35,37,38,40,41,64,65,67,68,70,71",
+                             "rw",
+                             "result_folder: rw-gan-mario-diagonal-walk-random log_only_better: 0 log_variables: all log_time: 1",
+                             random_generator,
+                             "random",
+                             1001,
+                             3);
   }
-
-
-
+  else {
+    diagonal_walk_experiment("rw-gan-mario",
+                             coco_strdupf("dimensions: 10 function_indices: %d instance_indices: %d", atoi(argv[1]), atoi(argv[2])),
+                             "rw",
+                             "result_folder: rw-gan-mario-diagonal-walk-random log_only_better: 0 log_variables: all log_time: 1",
+                             random_generator,
+                             "random",
+                             1001,
+                             3);
+  }
 
   printf("Done!\n");
   fflush(stdout);
@@ -359,6 +350,170 @@ void line_walk_experiment(const char *suite_name,
   coco_suite_free(suite);
   coco_free_memory(r);
 
+}
+
+/**
+ * A function that samples the decision space in num_walks diagonal directions from the origin solution.
+ *  Because the boundaries of the decision space need to be respected, most walks will perform
+ *  (much) less than num_solutions evaluations
+ *
+ * @param suite_name Name of the suite (e.g. "bbob" or "bbob-biobj").
+ * @param observer_name Name of the observer matching with the chosen suite (e.g. "bbob-biobj"
+ * when using the "bbob-biobj-ext" suite).
+ * @param random_generator The random number generator.
+ * @param num_solutions Number of solutions in the walk in each dimension
+ */
+void diagonal_walk_experiment(const char *suite_name,
+                              const char *suite_options,
+                              const char *observer_name,
+                              const char *observer_options,
+                              coco_random_state_t *random_generator,
+                              const char *origin_solution_type,
+                              const size_t num_solutions,
+                              const size_t num_walks) {
+
+  coco_suite_t *suite;
+  coco_observer_t *observer;
+  size_t i, j, w, largest_dimension;
+  size_t dimension, number_of_constraints, number_of_objectives;
+  coco_problem_t *p, *last_problem = NULL;
+  double *lower_bounds, *upper_bounds, *functions_values, *constraints_values = NULL;
+  double *diagonal, *x, *origin_solution, *direction;
+  double **rand_directions = NULL;
+  int *r, k, break_loop = 0;
+
+  /* Initialize the suite and observer. */
+  suite = coco_suite(suite_name, "", suite_options);
+  observer = coco_observer(observer_name, observer_options);
+
+  /* Initialize the fixed random point for the diagonal walk */
+  k = (int)(coco_suite_get_number_of_problems(suite));
+  while (last_problem == NULL) {
+    last_problem = coco_suite_get_problem(suite, (size_t)(k-1));
+    k--;
+    if (k < 0)
+      return;
+  }
+  largest_dimension = coco_problem_get_dimension(last_problem);
+  coco_problem_free(last_problem);
+  r = (int *) coco_allocate_memory(largest_dimension * sizeof(int));
+  for (i = 0; i < largest_dimension; ++i)
+    r[i] = (int) ((double)(num_solutions) * coco_random_uniform(random_generator));
+
+  /* Initialize fixed random directions */
+  rand_directions = (double **) coco_allocate_memory(sizeof(double *) * num_walks);
+  for (w = 0; w < num_walks; w++) {
+    rand_directions[w] = coco_allocate_vector(largest_dimension);
+    for (j = 0; j < largest_dimension; j++) {
+      if (w == 0)
+        rand_directions[w][j] = 0;
+      else
+        rand_directions[w][j] = coco_random_uniform(random_generator);
+    }
+  }
+
+  /* Iterate over all problems in the suite */
+  while ((p = coco_suite_get_next_problem(suite, NULL)) != NULL) {
+
+    dimension = coco_problem_get_dimension(p);
+    number_of_objectives = coco_problem_get_number_of_objectives(p);
+    number_of_constraints = coco_problem_get_number_of_constraints(p);
+    lower_bounds = coco_problem_get_smallest_values_of_interest(p);
+    upper_bounds = coco_problem_get_largest_values_of_interest(p);
+
+    functions_values = coco_allocate_vector(number_of_objectives);
+    if (number_of_constraints > 0 )
+      constraints_values = coco_allocate_vector(number_of_constraints);
+
+    x = coco_allocate_vector(dimension);
+    diagonal = coco_allocate_vector(dimension);
+    direction = coco_allocate_vector(dimension);
+    origin_solution = coco_allocate_vector(dimension);
+
+    for (j = 0; j < dimension; j++) {
+      diagonal[j] = (upper_bounds[j] - lower_bounds[j]) / (double) (num_solutions - 1);
+    }
+
+    if (strcmp(origin_solution_type, "middle") == 0) {
+      /* Set origin to be the middle point of the domain */
+      coco_problem_get_initial_solution(p, origin_solution);
+    } else {
+      /* Set origin to be a random point in the domain */
+      for (i = 0; i < dimension; ++i)
+        origin_solution[i] = lower_bounds[i] + r[i] / ((double) num_solutions - 1) *
+            (upper_bounds[i] - lower_bounds[i]);
+    }
+
+    /* Perform num_walks walks */
+    for (w = 0; w < num_walks; w++) {
+
+      /* Initialize the observed problem */
+      PROBLEM = coco_problem_add_observer(p, observer);
+
+      /* Set direction */
+      for (j = 0; j < dimension; j++) {
+        if (rand_directions[w][j] < 0.5)
+          direction[j] = diagonal[j];
+        else
+          direction[j] = -diagonal[j];
+      }
+
+      /* Find the first solution in the given direction within the region of interest */
+      break_loop = 0;
+      for (j = 0; j < dimension; j++) {
+        x[j] = origin_solution[j];
+      }
+      for (i = 0; (i < num_solutions) && (!break_loop); i++) {
+        for (j = 0; j < dimension; j++) {
+          x[j] -= direction[j];
+        }
+        for (j = 0; j < dimension; j++) {
+          if ((x[j] < lower_bounds[j]) || (x[j] > upper_bounds[j]))
+            break_loop = 1;
+        }
+      }
+      for (j = 0; j < dimension; j++) {
+        x[j] += direction[j];
+      }
+
+      /* Evaluate the origin */
+      if (number_of_constraints > 0 )
+        evaluate_constraint(origin_solution, constraints_values);
+      evaluate_function(origin_solution, functions_values);
+
+      /* Evaluate solutions until within the region of interest */
+      break_loop = 0;
+      for (i = 0; (i < num_solutions) && (!break_loop); i++) {
+        if (number_of_constraints > 0 )
+          evaluate_constraint(x, constraints_values);
+        evaluate_function(x, functions_values);
+        for (j = 0; j < dimension; j++) {
+          x[j] += direction[j];
+        }
+        for (j = 0; j < dimension; j++) {
+          if ((x[j] < lower_bounds[j]) || (x[j] > upper_bounds[j]))
+            break_loop = 1;
+        }
+      }
+
+      coco_problem_remove_observer(PROBLEM, observer);
+    }
+    coco_free_memory(x);
+    coco_free_memory(diagonal);
+    coco_free_memory(direction);
+    coco_free_memory(origin_solution);
+  }
+
+  coco_free_memory(functions_values);
+  if (number_of_constraints > 0 )
+    coco_free_memory(constraints_values);
+  for (w = 0; w < num_walks; w++) {
+    coco_free_memory(rand_directions[w]);
+  }
+  coco_free_memory(rand_directions);
+
+  coco_observer_free(observer);
+  coco_suite_free(suite);
 }
 
 /**

@@ -47,7 +47,8 @@ def run_experiment(suite_name,
                    add_observer_name='rw',
                    add_observer_options='log_only_better: 0 log_variables: all',
                    alg='cma',
-                   budget_multiplier=10):
+                   budget_multiplier=10,
+                   lhs_equal_points=True):
 
     # prepare
     output_folder = suite_name + '-' + alg + '-' + observer_name
@@ -64,6 +65,13 @@ def run_experiment(suite_name,
                                                                     add_observer_options))
 
     minimal_print = cocoex.utilities.MiniPrint()
+
+    # If lhs_equal_points and the entire suite only has problems of a single dimension, the LHS
+    # uses the same points for all functions and all instances
+    lhs_data = None
+    if alg == 'lhs' and lhs_equal_points and len(suite.dimensions) > 1:
+        # Create sampling data in advance so that it is equal for all functions and instances
+        lhs_data = lhs(n=suite.dimensions[0], samples=suite.dimensions[0] * budget_multiplier)
 
     # go
     for problem in suite:
@@ -88,11 +96,12 @@ def run_experiment(suite_name,
                           problem.dimension * budget_multiplier)
         elif alg == 'lhs':
             # Use Latin Hypercubes to sample the space
-            data = lhs(n=problem.dimension, samples=problem.dimension * budget_multiplier)
+            if lhs_data is None:
+                lhs_data = lhs(n=problem.dimension, samples=problem.dimension * budget_multiplier)
             chunk_num = 0
             while problem.evaluations < problem.dimension * budget_multiplier:
                 chunk_size = min(500, problem.dimension * budget_multiplier - problem.evaluations)
-                chunk = data[chunk_num * chunk_size:(chunk_num + 1) * chunk_size]
+                chunk = lhs_data[chunk_num * chunk_size:(chunk_num + 1) * chunk_size]
                 c = problem.lower_bounds + (problem.upper_bounds - problem.lower_bounds) * chunk
                 [problem(x) for x in c]
         elif alg == 'sms':
@@ -104,14 +113,14 @@ def run_experiment(suite_name,
 
 # export LD_LIBRARY_PATH=path_to_rw_top_trumps_library
 if __name__ == '__main__':
-    #run_experiment('rw-top-trumps', 'instance_indices: 1-3 dimensions: 128',
-    #               add_observer_name='rw',
-    #               add_observer_options='log_only_better: 0 log_variables: all precision_x: 4',
-    #               alg='cma', budget_multiplier=50)
-    run_experiment('rw-top-trumps-biobj', 'instance_indices: 1-3 dimensions: 128', observer_name="bbob-biobj",
+    run_experiment('rw-top-trumps', 'dimensions: 128',
                    add_observer_name='rw',
                    add_observer_options='log_only_better: 0 log_variables: all precision_x: 4',
-                   alg='sms', budget_multiplier=500)
+                   alg='lhs', budget_multiplier=50)
+    #run_experiment('rw-top-trumps-biobj', 'instance_indices: 1-3 dimensions: 128', observer_name="bbob-biobj",
+    #               add_observer_name='rw',
+    #               add_observer_options='log_only_better: 0 log_variables: all precision_x: 4',
+    #               alg='sms', budget_multiplier=500)
     #run_experiment('rw-gan-mario',
     #               'function_indices: 3,6,9,12,15,18,21,24,27,30,33,36,39,42 instance_indices: 1 dimensions: 10',
     #               alg='rs', budget_multiplier=20)
