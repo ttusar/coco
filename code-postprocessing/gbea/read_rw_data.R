@@ -20,9 +20,9 @@ files <- list.files(path=dir, pattern = "(.)*_rw.txt$",recursive=T) #switch to "
 df <- data.frame(evaluation=integer(), fitness=double(), loc=list(), dim=integer(), fun=integer(), inst=integer())
 for(f in files){
   print(f)
-  dim <- as.numeric(str_extract(str_extract(f,"d[0-9]+"),"\\d+")) #extract dimension
-  fun <- as.numeric(str_extract(str_extract(f,"f[0-9]+"),"\\d+")) #extract function number
-  inst <- as.numeric(str_extract(str_extract(f,"i[0-9]+"),"\\d+")) #extract instance number
+  dim <- as.numeric(str_extract(str_extract(f,"_d[0-9]+"),"\\d+")) #extract dimension
+  fun <- as.numeric(str_extract(str_extract(f,"_f[0-9]+"),"\\d+")) #extract function number
+  inst <- as.numeric(str_extract(str_extract(f,"_i[0-9]+"),"\\d+")) #extract instance number
   f = paste(dir,f, sep="/")
   res <- readLines(f) #read file
   readdf <- read.table(textConnection(res),header=F, fill=TRUE) #convert lines to table

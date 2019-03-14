@@ -1,0 +1,42 @@
+33
+   dim fun inst inc_r corr_r inc_sel corr_sel       perc
+1   10  25    1  5562   5973    1108     5973 0.18550142
+2   10  25    2  3205   3375     616     3375 0.18251852
+3   10  25    3  3224   3470     641     3470 0.18472622
+4   10  25    4 13093  13415    2613    13415 0.19478196
+5   10  25    5  3353   3651     664     3651 0.18186798
+6   10  25    6 16394  16772    3264    16772 0.19461006
+7   10  25    7  5203   5425    1044     5425 0.19244240
+8   10   7    1  1211   2405     281     2405 0.11683992
+9   10   7    2  1147   2471     277     2471 0.11210036
+10  10   7    3  1142   2472     238     2472 0.09627832
+11  10   7    4  1176   2450     258     2450 0.10530612
+12  10   7    5  1061   2578     230     2578 0.08921645
+13  10   7    6  1181   2610     261     2610 0.10000000
+14  10   7    7  1186   2407     266     2407 0.11051101
+
+34
+  dim fun inst inc_r corr_r inc_sel corr_sel      perc
+1  10  25    1   566    834     244      834 0.2925659
+2  10  25    2    30     40      24       40 0.6000000
+3  10  25    3  1133   1347     126     1347 0.0935412
+4  10  25    4  1060   1185     207     1185 0.1746835
+5  10  25    5   835    960     198      960 0.2062500
+6  10  25    6    18     27      11       27 0.4074074
+7  10  25    7   268    427     187      427 0.4379391
+
+35
+  dim fun inst inc_r corr_r inc_sel corr_sel      perc
+1  10  25    1  2505   2581     494     2581 0.1913987
+2  10  25    2  4975   5229    1004     5229 0.1920061
+3  10  25    3  3667   3893     746     3893 0.1916260
+4  10  25    4  1482   1698     291     1698 0.1713781
+5  10  25    5  1729   1744     346     1744 0.1983945
+6  10  25    6  5062   5352    1037     5352 0.1937593
+7  10  25    7  5132   5383    1028     5383 0.1909716
+
+
+inst 3 -> even with small errors not necessarily better
+model for 33 and 35 likely not very different -> similar rates -> however, one different decision makes huge difference here
+mainly because general direction thing is not working well -> so you have to be lucky to get a good result in cma-es... so different decision, even if small, screws it up
+also: only selection: not technically true for CMA-ES -> weights for mean etc
