@@ -56,7 +56,6 @@ batchSize = 1
 #################################################################################
 # Utils
 
-
 def exist_gap(im):
     # gap exists if not 10 (coin), not 2 (passable)
     width = numpy.shape(im)[1]
@@ -241,6 +240,13 @@ def translateLatentVector(x, netG, dim):
     return final
 
 
+def outputResult(result, d=1, file_name="objectives.txt"):
+    #print(result)
+    with open(file_name, 'w') as f:
+        f.write('{}\n'.format(d))
+        f.write('{}\n'.format(result))
+
+
 java_options = "-Djava.awt.headless=true "
 
 
@@ -284,71 +290,6 @@ def timeTakenSimScared(x, netG, dim, file_name):
               netG + ' ' + str(dim) + ' ' + str(3) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
-########################################
-def run_exp(fun, x, netG, dim, file_name, obj, i):
-    y = fun(x, netG, dim, file_name)
-    if y==null: #java -> aggregate commands instead
-        return
-    if i==0:
-        with open(file_name, 'w') as f:
-            f.write('{}\n'.format(obj))
-            f.write('{}\n'.format(y))
-    else:
-        with open(file_name, 'a') as f:
-            f.write('{}\n'.format(y))        
-
-
-
-
-def decodeProblem(problem_id):
-    available_jsons = ["overworld", "underground"]  # G
-    available_fit = [enemyDistribution, positionDistribution, decorationFrequency, negativeSpace, leniency,
-                     basicFitnessSimAStar, airTimeSimAStar, timeTakenSimAStar,
-                     basicFitnessSimScared, airTimeSimScared, timeTakenSimScared]  # F
-
-    c = int(problem / (len(available_jsons) * len(available_fit)))
-    tmp = problem % (len(available_jsons) * len(available_fit))
-    f = int(tmp / len(available_jsons))
-    g = tmp % len(available_jsons)
-    return c, f, g
-    
-
-def biProbSplitter(problem_id):
-    if(problem_id==1){
-        return [4, 6]
-    }else if(problem_id==2){
-        return [4, 8]    
-    }else if(problem_id==3){
-        return [11, 17]
-    }else if(problem_id==4){
-        return [11, 23]
-    }else if(problem_id==5){
-        return [12, 18]
-    }else if(problem_id==6){
-        return [12, 24]
-    }else if(problem_id==7){
-        return [13, 19]
-    }else if(problem_id==8){
-        return [13, 25]
-    }else if(problem_id==9){
-        return [14, 20]
-    }else if(problem_id==10){
-        return [14, 26]
-    }
-
-def getNetG(obj, problem, inst, dim, c, g):
-    file_name = "objectives_o{:d}_f{:02d}_i{:02d}_d{:02d}.txt".format(obj, problem+1, inst+1, dim)
-    if c == 1:
-        dim = 5
-
-    pattern = "GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(available_jsons[g], dim, budget,
-                                                            available_instances[inst])
-    files = glob.glob(pattern)
-    epochs = [int(str.split(file, "_")[2]) for file in files]
-    netG = "GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(available_jsons[g], dim, budget, max(epochs),
-                                                          available_instances[inst])
-    return netG, dim
-
 #expecting variables <obj> <dim> <fun> <inst>
 if __name__ == '__main__':
     _, obj, dim, problem, inst = sys.argv
@@ -360,6 +301,13 @@ if __name__ == '__main__':
 
     available_dims = [10, 20, 30, 40]
     available_instances = [5641, 3854, 8370, 494, 1944, 9249, 2517]
+    available_jsons = ["overworld", "underground", "overworlds"]  # G
+    available_fit = [enemyDistribution, positionDistribution, decorationFrequency, negativeSpace, leniency, density,
+                     progressSimAStar, basicFitnessSimAStar, airTimeSimAStar, timeTakenSimAStar,
+                     progressSimScared, basicFitnessSimScared, airTimeSimScared, timeTakenSimScared]  # F
+
+    if obj != 1:
+        raise ValueError("currently only 1 objective")
     if dim not in available_dims:  # check Dimension available
         raise ValueError("asked for dimension '{}', but is not available".format(dim))
     if inst < 0 | inst >= available_instances.count():
@@ -375,18 +323,33 @@ if __name__ == '__main__':
             raise ValueError("num_variables should be '{}', but is '{}'"
                              "".format(dim, num_variables))
 
-    probs = [problem]
-    if(obj==2){
-        probs = biProbSplitter(problem)
-    }
-
-    i=0
-    while i < len(probs):
-        c, f, g = decodeProblem(probs[i])
-        netG, d = getNetG(obj, problem, inst, dim, c, g)
-        fun = available_fit[f]
-        run_exp(fun, content[1:], netG, d, file_name, obj, i)
-    
+    # Decode Problem id
+    c = int(problem / (len(available_jsons) * len(available_fit)))
+    tmp = problem % (len(available_jsons) * len(available_fit))
+    f = int(tmp / len(available_jsons))
+    g = tmp % len(available_jsons)
 
 
-   
+    #print([c, f, g, inst])
+
+    # check variables in range
+    #inp = numpy.array(content[1:])
+    #if numpy.any(inp > 1) or numpy.any(inp < -1):  # input out of range
+    #    with open('objectives.txt', 'w') as file:  # write out NaN result
+    #        file.write('{}\n'.format(0))
+    #else:
+    # find correct file with highest epoch
+
+    file_name = "objectives_o{:d}_f{:02d}_i{:02d}_d{:02d}.txt".format(obj, problem+1, inst+1, dim)
+    if c == 1:
+        dim = 5
+
+    pattern = "GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(available_jsons[g], dim, budget,
+                                                            available_instances[inst])
+    files = glob.glob(pattern)
+    epochs = [int(str.split(file, "_")[2]) for file in files]
+    netG = "GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(available_jsons[g], dim, budget, max(epochs),
+                                                          available_instances[inst])
+
+    fun = available_fit[f]
+    fun(content[1:], netG, dim, file_name)

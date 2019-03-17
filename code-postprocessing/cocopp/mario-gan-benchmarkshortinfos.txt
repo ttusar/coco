@@ -1,0 +1,84 @@
+1 enemyDistribution overworld I
+2 enemyDistribution underground II
+3 enemyDistribution overworld I+III
+4 positionDistribution overworld I
+5 positionDistribution underground II
+6 positionDistribution overworld I+III
+7 decorationFrequency overworld I
+8 decorationFrequency underground II
+9 decorationFrequency overworld I+III
+10 negativeSpace overworld I
+11 negativeSpace underground II
+12 negativeSpace overworld I+III
+13 leniency overworld I
+14 leniency underground II
+15 leniency overworld I+III
+16 density overworld I
+17 density underground II
+18 density overworld I+III
+19 progress A* overworld I
+20 progress A* underground II
+21 progress A* overworld I+III
+22 basicFitness A* overworld I
+23 basicFitness A* underground II
+24 basicFitness A* overworld I+III
+25 airTime A* overworld I
+26 airTime A* underground II
+27 airTime A* overworld I+III
+28 timeTaken A* overworld I
+29 timeTaken A* underground II
+30 timeTaken A* overworld I+III
+31 progress Scared overworld I
+32 progress Scared underground II
+33 progress Scared overworld I+III
+34 basicFitness Scared overworld I
+35 basicFitness Scared underground II
+36 basicFitness Scared overworld I+III
+37 airTime Scared overworld I
+38 airTime Scared underground II
+39 airTime Scared overworld I+III
+40 timeTaken Scared overworld I
+41 timeTaken Scared underground II
+42 timeTaken Scared overworld I+III
+43 enemyDistribution overworld I conc
+44 enemyDistribution underground II conc
+45 enemyDistribution overworld I+III conc
+46 positionDistribution overworld I conc
+47 positionDistribution underground II conc
+48 positionDistribution overworld I+III conc
+49 decorationFrequency overworld I conc
+50 decorationFrequency underground II conc
+51 decorationFrequency overworld I+III conc
+52 negativeSpace overworld I conc
+53 negativeSpace underground II conc
+54 negativeSpace overworld I+III conc
+55 leniency overworld I conc
+56 leniency underground II conc
+57 leniency overworld I+III conc
+58 density overworld I conc
+59 density underground II conc
+60 density overworld I+III conc
+61 progress A* overworld I conc
+62 progress A* underground II conc
+63 progress A* overworld I+III conc
+64 basicFitness A* overworld I conc
+65 basicFitness A* underground II conc
+66 basicFitness A* overworld I+III conc
+67 airTime A* overworld I conc
+68 airTime A* underground II conc
+69 airTime A* overworld I+III conc
+70 timeTaken A* overworld I conc
+71 timeTaken A* underground II conc
+72 timeTaken A* overworld I+III conc
+73 progress Scared overworld I conc
+74 progress Scared underground II conc
+75 progress Scared overworld I+III conc
+76 basicFitness Scared overworld I conc
+77 basicFitness Scared underground II conc
+78 basicFitness Scared overworld I+III conc
+79 airTime Scared overworld I conc
+80 airTime Scared underground II conc
+81 airTime Scared overworld I+III conc
+82 timeTaken Scared overworld I conc
+83 timeTaken Scared underground II conc
+84 timeTaken Scared overworld I+III conc
