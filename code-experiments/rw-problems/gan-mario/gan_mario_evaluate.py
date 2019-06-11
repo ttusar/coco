@@ -310,33 +310,32 @@ def decodeProblem(problem_id):
     tmp = problem % (len(available_jsons) * len(available_fit))
     f = int(tmp / len(available_jsons))
     g = tmp % len(available_jsons)
-    return c, f, g
+    return c, f, g, available_jsons, available_fit
     
 
 def biProbSplitter(problem_id):
-    if(problem_id==1){
+    if problem_id==1:
         return [4, 6]
-    }else if(problem_id==2){
+    elif problem_id==2:
         return [4, 8]    
-    }else if(problem_id==3){
+    elif problem_id==3:
         return [11, 17]
-    }else if(problem_id==4){
+    elif problem_id==4:
         return [11, 23]
-    }else if(problem_id==5){
+    elif problem_id==5:
         return [12, 18]
-    }else if(problem_id==6){
+    elif problem_id==6:
         return [12, 24]
-    }else if(problem_id==7){
+    elif problem_id==7:
         return [13, 19]
-    }else if(problem_id==8){
+    elif problem_id==8:
         return [13, 25]
-    }else if(problem_id==9){
+    elif problem_id==9:
         return [14, 20]
-    }else if(problem_id==10){
+    elif problem_id==10:
         return [14, 26]
-    }
 
-def getNetG(obj, problem, inst, dim, c, g):
+def getNetG(obj, problem, inst, dim, c, g, available_jsons):
     file_name = "objectives_o{:d}_f{:02d}_i{:02d}_d{:02d}.txt".format(obj, problem+1, inst+1, dim)
     if c == 1:
         dim = 5
@@ -376,14 +375,13 @@ if __name__ == '__main__':
                              "".format(dim, num_variables))
 
     probs = [problem]
-    if(obj==2){
+    if obj==2:
         probs = biProbSplitter(problem)
-    }
 
     i=0
     while i < len(probs):
-        c, f, g = decodeProblem(probs[i])
-        netG, d = getNetG(obj, problem, inst, dim, c, g)
+        c, f, g, jsons, available_fit = decodeProblem(probs[i])
+        netG, d = getNetG(obj, problem, inst, dim, c, g, jsons)
         fun = available_fit[f]
         run_exp(fun, content[1:], netG, d, file_name, obj, i)
     
