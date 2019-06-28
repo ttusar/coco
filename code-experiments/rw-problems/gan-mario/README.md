@@ -33,9 +33,9 @@ git clone git@github.com:TheHedgeify/DagstuhlGAN.git
 git checkout gbea
 ant -f DagstuhlGAN/marioaiDagstuhl -Dnb.internal.action.name=rebuild clean jar
 
-cd $ROOT
+cd $ROOT/code-experiments/rw-problems/gan-mario
 rm -rf dist
-ln -s ../DagstuhlGAN/marioaiDagstuhl/dist
+ln -s $ROOT/DagstuhlGAN/marioaiDagstuhl/dist
 rm -rf pytorch
 ````
 at the top of gan_mario_evaluate.py, replace: 
