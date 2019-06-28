@@ -2,30 +2,48 @@
 
 ## Python packages
 
-- `pytorch 0.3.1`
-- `torchvision 0.2.0` or lower
+- `pytorch`
+- `torchvision`
 
 Install using `pip` or `conda`:
 
 ````
-pip install pytorch==0.3.1
-pip install torchvision==0.2.0
+pip install pytorch
+pip install torchvision
 ````
 
 ````
-conda install pytorch=0.3.1
-conda install torchvision=0.2.0
-````
-
-If the right versions are not available, download the `whl` files for your system at [https://pytorch.org/previous-versions/](https://pytorch.org/previous-versions/)
-
-Another alternative (for the installation on Windows without CUDA):
-
-````
-conda install -c peterjc123 pytorch-cpu
-pip install torchvision==0.2.0
+conda install pytorch
+conda install torchvision
 ````
 
 ## Java
 
-Java is required to perform evaluation through simulations. 
+Java is required to perform evaluation through simulations.
+
+## MarioGAN
+
+MarioGAN is required to handle the simulations. There is the option to use the dev version by doing the steps below.
+
+### MarioGAN dev version
+````
+cd $ROOT
+cd ..
+git clone git@github.com:TheHedgeify/DagstuhlGAN.git
+git checkout gbea
+ant -f DagstuhlGAN/marioaiDagstuhl -Dnb.internal.action.name=rebuild clean jar
+
+cd $ROOT
+rm -rf dist
+ln -s ../DagstuhlGAN/marioaiDagstuhl/dist
+rm -rf pytorch
+````
+at the top of gan_mario_evaluate.py, replace: 
+````
+sys.path.append('pytorch')
+````
+with
+````
+sys.path.append('../../../../DagstuhlGAN/pytorch')
+````
+

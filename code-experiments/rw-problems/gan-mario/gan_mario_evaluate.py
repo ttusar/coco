@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../../../DagstuhlGAN/pytorch')
+sys.path.append('pytorch')
 
 # This executes the GAN and evaluates it
 # problem ids
