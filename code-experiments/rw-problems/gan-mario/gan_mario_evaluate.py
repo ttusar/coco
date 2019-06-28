@@ -275,42 +275,44 @@ java_options = "-Djava.awt.headless=true "
 
 
 def progressSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(0) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def basicFitnessSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    print('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
+              netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(0)+ ' ' + file_name)
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def airTimeSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(2) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def timeTakenSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(3) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def progressSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(0) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def basicFitnessSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def airTimeSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(2) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def timeTakenSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(3) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
