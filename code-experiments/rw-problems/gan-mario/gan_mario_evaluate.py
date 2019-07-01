@@ -1,3 +1,6 @@
+import sys
+sys.path.append('pytorch')
+
 # This executes the GAN and evaluates it
 # problem ids
 # id = g + f*G + c*F*G
@@ -10,8 +13,9 @@ from torch.autograd import Variable
 import sys
 import os
 import numpy
-import pytorch.models.dcgan as dcgan
+import models.dcgan as dcgan
 import glob
+from collections import OrderedDict
 
 batchSize = 64
 
@@ -55,6 +59,7 @@ batchSize = 1
 
 #################################################################################
 # Utils
+
 
 def exist_gap(im):
     # gap exists if not 10 (coin), not 2 (passable)
@@ -138,7 +143,8 @@ def leniency(x, netG, dim, file_name):
     t = numpy.array(gap_lengths(im))
     if count_gaps(im) > 0:
         val -= numpy.mean(t[t != 0])
-    outputResult(val, 1, file_name)
+    with open(file_name, 'a') as f:
+            f.write('{}\n'.format(val))
 
 # Percentage of stackable items
 # Value range 0-1
@@ -154,7 +160,8 @@ def density(x, netG, dim, file_name):
     val += dist.get(GROUND, 0)
     val += dist.get(BREAK, 0)
     val = float(val) / (width * height)
-    outputResult(1-val, 1, file_name)
+    with open(file_name, 'a') as f:
+            f.write('{}\n'.format(1-val))
 
 
 # Estimates how much of the space can be reached by computing how many of the tiles can be stood upon
@@ -176,7 +183,8 @@ def negativeSpace(x, netG, dim, file_name):
     val += dist.get(PLANT, 0) * 2 # Because only one tile, but width of 2
     val += dist.get(BILL, 0)
     val = float(val) / (width * height)
-    outputResult(1-val, 1, file_name)
+    with open(file_name, 'a') as f:
+            f.write('{}\n'.format(1-val))
 
 
 # Frequency of pretty tiles, i.e. non-standard.
@@ -202,7 +210,8 @@ def decorationFrequency(x, netG, dim, file_name):
     val += dist.get(RKOOPA, 0)
     val += dist.get(SPINY, 0)
     val = float(val) / (width * height)
-    outputResult(1-val, 1, file_name)
+    with open(file_name, 'a') as f:
+            f.write('{}\n'.format(1-val))
 
 # gets vertical distribution of tiles you can stand on
 # Value range ?
@@ -210,7 +219,8 @@ def decorationFrequency(x, netG, dim, file_name):
 def positionDistribution(x, netG, dim, file_name):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [GROUND, BREAK, QUESTIONP, QUESTIONC, TUBE, PLANT, BILL])
-    outputResult(-ys, 1, file_name)
+    with open(file_name, 'a') as f:
+            f.write('{}\n'.format(-ys))
 
 
 # get horizontal distribution of enemies
@@ -219,17 +229,38 @@ def positionDistribution(x, netG, dim, file_name):
 def enemyDistribution(x, netG, dim, file_name):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [PLANT, BILL, GOOMBA, GKOOPA, RKOOPA, SPINY])
-    outputResult(-xs, 1, file_name)
-
+    with open(file_name, 'a') as f:
+            f.write('{}\n'.format(-xs))
 
 def translateLatentVector(x, netG, dim):
+    ##Fix for new pytorch compatibility below (from Jacob)
+    # This is a new DCGAN model that has the proper state dict labels/keys for the latest version of PyTorch (no periods '.')
     generator = dcgan.DCGAN_G(imageSize, dim, features, ngf, ngpu, n_extra_layers)
-    generator.load_state_dict(torch.load(netG, map_location=lambda storage, loc: storage))
+    # This is a state dictionary with deprecated key labels/names
+    deprecatedModel = torch.load(netG, map_location=lambda storage, loc: storage)
+    # Make new model with weights/parameters from deprecatedModel but labels/keys from generator.state_dict()
+    fixedModel = OrderedDict()
+    for (goodKey,ignore) in list(generator.state_dict().items()):
+    # Take the good key and replace the : with . in order to get the deprecated key so the associated value can be retrieved
+        badKey = goodKey.replace(":",".")
+        # Some parameter settings of the generator.state_dict() are not actually part of the saved models
+        if badKey in deprecatedModel:
+            goodValue = deprecatedModel[badKey]
+            fixedModel[goodKey] = goodValue
+
+    if not fixedModel:
+        # If the fixedModel was empty, then the model was trained with the new labels, and the regular load process is fine
+        generator.load_state_dict(deprecatedModel)
+    else:
+        # Load the parameters with the fixed labels  
+        generator.load_state_dict(fixedModel)
+
     inp = numpy.array_split(x, len(x) / dim)
     final = None
     for x in inp:
         latent_vector = torch.FloatTensor(x).view(batchSize, dim, 1, 1)
-        levels = generator(Variable(latent_vector, volatile=True))
+        with torch.no_grad():
+            levels = generator(Variable(latent_vector))
         levels.data = levels.data[:, :, :14, :28]
         im = levels.data.cpu().numpy()
         im = numpy.argmax(im, axis=1)
@@ -240,55 +271,99 @@ def translateLatentVector(x, netG, dim):
     return final
 
 
-def outputResult(result, d=1, file_name="objectives.txt"):
-    #print(result)
-    with open(file_name, 'w') as f:
-        f.write('{}\n'.format(d))
-        f.write('{}\n'.format(result))
-
-
 java_options = "-Djava.awt.headless=true "
 
 
 def progressSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(0) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def basicFitnessSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    print('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
+              netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(0)+ ' ' + file_name)
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def airTimeSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(2) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def timeTakenSimAStar(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(3) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def progressSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(0) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def basicFitnessSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def airTimeSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(2) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
 
 def timeTakenSimScared(x, netG, dim, file_name):
-    os.system('java ' + java_options + '-jar marioaiDagstuhl.jar "' + str(content[1:]) + '" ' +
+    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
               netG + ' ' + str(dim) + ' ' + str(3) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
 
+
+def decodeProblem(problem):
+    available_jsons = ["overworld", "underground"]  # G
+    available_fit = [enemyDistribution, positionDistribution, decorationFrequency, negativeSpace, leniency,
+                     basicFitnessSimAStar, basicFitnessSimAStar, basicFitnessSimScared,
+                     airTimeSimAStar, airTimeSimAStar, airTimeSimScared,
+                     timeTakenSimAStar, timeTakenSimAStar, timeTakenSimScared]  # F
+    available_c = [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]
+
+    f = int(problem / len(available_jsons))
+    c = available_c[f]
+    g = problem % len(available_jsons)
+    return c, available_jsons[g], available_fit[f]
+    
+
+def biProbSplitter(problem_id):
+    if problem_id==1:
+        return [4, 6]
+    elif problem_id==2:
+        return [4, 8]    
+    elif problem_id==3:
+        return [11, 17]
+    elif problem_id==4:
+        return [11, 23]
+    elif problem_id==5:
+        return [12, 18]
+    elif problem_id==6:
+        return [12, 24]
+    elif problem_id==7:
+        return [13, 19]
+    elif problem_id==8:
+        return [13, 25]
+    elif problem_id==9:
+        return [14, 20]
+    elif problem_id==10:
+        return [14, 26]
+
+def getNetG(obj, problem, inst, dim, c, json):
+    file_name = "objectives_o{:d}_f{:02d}_i{:02d}_d{:02d}.txt".format(obj, problem+1, inst+1, dim)
+    if c == 1:
+        dim = 5
+
+    pattern = "GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(json, dim, budget,
+                                                            available_instances[inst])
+    files = glob.glob(pattern)
+    epochs = [int(str.split(file, "_")[2]) for file in files]
+    netG = "GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(json, dim, budget, max(epochs),
+                                                          available_instances[inst])
+    return netG, dim, file_name
 
 #expecting variables <obj> <dim> <fun> <inst>
 if __name__ == '__main__':
@@ -301,13 +376,6 @@ if __name__ == '__main__':
 
     available_dims = [10, 20, 30, 40]
     available_instances = [5641, 3854, 8370, 494, 1944, 9249, 2517]
-    available_jsons = ["overworld", "underground", "overworlds"]  # G
-    available_fit = [enemyDistribution, positionDistribution, decorationFrequency, negativeSpace, leniency, density,
-                     progressSimAStar, basicFitnessSimAStar, airTimeSimAStar, timeTakenSimAStar,
-                     progressSimScared, basicFitnessSimScared, airTimeSimScared, timeTakenSimScared]  # F
-
-    if obj != 1:
-        raise ValueError("currently only 1 objective")
     if dim not in available_dims:  # check Dimension available
         raise ValueError("asked for dimension '{}', but is not available".format(dim))
     if inst < 0 | inst >= available_instances.count():
@@ -323,33 +391,21 @@ if __name__ == '__main__':
             raise ValueError("num_variables should be '{}', but is '{}'"
                              "".format(dim, num_variables))
 
-    # Decode Problem id
-    c = int(problem / (len(available_jsons) * len(available_fit)))
-    tmp = problem % (len(available_jsons) * len(available_fit))
-    f = int(tmp / len(available_jsons))
-    g = tmp % len(available_jsons)
+    probs = [problem]
+    if obj==2:
+        probs = [x - 1 for x in biProbSplitter(problem+1)]
+
+    i=0
+    while i < len(probs):
+        c, json, fun = decodeProblem(probs[i])
+        netG, d, out_file = getNetG(obj, problem, inst, dim, c, json)
+        if i==0:
+            with open(out_file, 'w') as outf:
+                outf.write('{}\n'.format(obj))
+        #fun = available_fit[f]
+        fun(content[1:], netG, d, out_file)
+        i+=1
+    
 
 
-    #print([c, f, g, inst])
-
-    # check variables in range
-    #inp = numpy.array(content[1:])
-    #if numpy.any(inp > 1) or numpy.any(inp < -1):  # input out of range
-    #    with open('objectives.txt', 'w') as file:  # write out NaN result
-    #        file.write('{}\n'.format(0))
-    #else:
-    # find correct file with highest epoch
-
-    file_name = "objectives_o{:d}_f{:02d}_i{:02d}_d{:02d}.txt".format(obj, problem+1, inst+1, dim)
-    if c == 1:
-        dim = 5
-
-    pattern = "GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(available_jsons[g], dim, budget,
-                                                            available_instances[inst])
-    files = glob.glob(pattern)
-    epochs = [int(str.split(file, "_")[2]) for file in files]
-    netG = "GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(available_jsons[g], dim, budget, max(epochs),
-                                                          available_instances[inst])
-
-    fun = available_fit[f]
-    fun(content[1:], netG, dim, file_name)
+   

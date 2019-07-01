@@ -12,7 +12,7 @@ import random
 from evoalgos.individual import ESIndividual
 import math
 from optproblems import Problem
-
+import sys
 
 
 def sms_emoa(fun, lb, ub, budget):
@@ -113,7 +113,8 @@ def run_experiment(suite_name,
 
 # export LD_LIBRARY_PATH=path_to_rw_top_trumps_library
 if __name__ == '__main__':
-    run_experiment('rw-top-trumps', 'dimensions: 128',
+    run_experiment('rw-gan-mario',
+		   'function_indices: ' + str(sys.argv[1]) + ' instance_indices: ' + str(sys.argv[2]) + ' dimensions: 10',
                    add_observer_name='rw',
                    add_observer_options='log_only_better: 0 log_variables: all precision_x: 4',
                    alg='lhs', budget_multiplier=50)

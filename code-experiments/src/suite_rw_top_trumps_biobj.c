@@ -24,7 +24,7 @@ static coco_suite_t *suite_rw_top_trumps_biobj_initialize(void) {
   coco_suite_t *suite;
   const size_t dimensions[] = { 88, 128, 168, 208 };
 
-  suite = coco_suite_allocate("rw-top-trumps-biobj", 6, 4, dimensions, "instances: 1-15");
+  suite = coco_suite_allocate("rw-top-trumps-biobj", 3, 4, dimensions, "instances: 1-15");
 
   return suite;
 }

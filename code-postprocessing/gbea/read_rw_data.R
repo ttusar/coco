@@ -15,21 +15,22 @@ print(dir)
 print(name)
 
 ## get file names (required to be in main path of the experiments data folder)
-files <- list.files(path=dir, pattern = "(.)*d10_rw.txt$",recursive=T) #switch to "\\.tdat" if required
+files <- list.files(path=dir, pattern = "(.)*_rw.txt$",recursive=T) #switch to "\\.tdat" if required
 
 df <- data.frame(evaluation=integer(), fitness=double(), loc=list(), dim=integer(), fun=integer(), inst=integer())
 for(f in files){
   print(f)
-  dim <- as.numeric(str_extract(str_extract(f,"d[0-9]+"),"\\d+")) #extract dimension
-  fun <- as.numeric(str_extract(str_extract(f,"f[0-9]+"),"\\d+")) #extract function number
-  inst <- as.numeric(str_extract(str_extract(f,"i[0-9]+"),"\\d+")) #extract instance number
+  dim <- as.numeric(str_extract(str_extract(f,"_d[0-9]+"),"\\d+")) #extract dimension
+  fun <- as.numeric(str_extract(str_extract(f,"_f[0-9]+"),"\\d+")) #extract function number
+  inst <- as.numeric(str_extract(str_extract(f,"_i[0-9]+"),"\\d+")) #extract instance number
   f = paste(dir,f, sep="/")
   res <- readLines(f) #read file
-  readdf <- read.table(textConnection(res[4:length(res)]),header=F) #convert lines to table
+  readdf <- read.table(textConnection(res),header=F, fill=TRUE) #convert lines to table
+  readdf = na.omit(readdf)
   loc = readdf[,3:(2+dim)] #x-values
   loc = apply(loc, 1, list)
-  readdf <- readdf[,1:2]
-  colnames(readdf) = c("evaluation", "fitness")
+  readdf <- readdf[,c(1,2,ncol(readdf))]
+  colnames(readdf) = c("evaluation", "fitness", "time")
   readdf$loc = loc
   readdf$dim = dim
   readdf$fun = fun
