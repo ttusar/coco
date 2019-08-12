@@ -330,11 +330,11 @@ def getNetG(problem, inst, dim, c, json):
         dim = 5
 
     pattern = "GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(json, dim, budget,
-                                                            available_instances[inst])
+                                                            inst)
     files = glob.glob(pattern)
     epochs = [int(str.split(file, "_")[2]) for file in files]
     netG = "GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(json, dim, budget, max(epochs),
-                                                          available_instances[inst])
+                                                          inst)
     return netG, dim
 
 
@@ -355,7 +355,7 @@ def evaluate_mario_gan(suite_name, num_objectives, problem, inst, x):
     out = [None] * len(probs)
     for i, prob in enumerate(probs):
         c, json, fun = decodeProblem(prob-1) #-1 because COCO starts with index 1
-        netG, d = getNetG(prob-1, inst-1, len(x), c, json) #-1 because COCO starts with index 1
+        netG, d = getNetG(prob-1, available_instances[inst-1], len(x), c, json) #-1 because COCO starts with index 1
         out[i] = fun(x, netG, d)
     
     return out
