@@ -8,7 +8,7 @@ import socket
 from toy_socket.toy_socket_evaluator import evaluate_toy_socket
 from mario_gan.mario_gan_evaluator import evaluate_mario_gan
 # ADD HERE imports from other evaluators, for example
-# from my_suite.my_evaluator import evaluate_my_suite
+# from .my_suite.my_evaluator import evaluate_my_suite
 
 HOST = ''            # Symbolic name, meaning all available interfaces
 PORT = 7251          # Arbitrary non-privileged port

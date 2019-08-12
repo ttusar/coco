@@ -14,7 +14,7 @@ from torch.autograd import Variable
 import sys
 import os
 import numpy
-import pytorch.models.dcgan as dcgan
+from .pytorch.models import dcgan
 import glob
 from collections import OrderedDict
 
@@ -329,7 +329,7 @@ def getNetG(problem, inst, dim, c, json):
     if c == 1:
         dim = 5
 
-    print path
+    print(path)
     pattern = "{}/GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(path,json, dim, budget,
                                                             inst)
     files = glob.glob(pattern)
@@ -364,5 +364,5 @@ def evaluate_mario_gan(suite_name, num_objectives, problem, inst, x):
 
 if __name__ == '__main__':
     out = evaluate_mario_gan("mario-gan", 1, 21, 1, [0.577396866201949, 0.7814522617215477, -0.4290037786827649, -0.7939910428259774, 0.4272655228644559, -0.4788319759161429, 0.7092257647567968, -0.7713656070501105, 0.751081985876608, -0.7008837870643055])
-    print out
+    print(out)
 
