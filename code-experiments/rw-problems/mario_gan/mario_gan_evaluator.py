@@ -1,5 +1,4 @@
 import sys
-sys.path.append('pytorch')
 import subprocess
 
 
@@ -15,7 +14,7 @@ from torch.autograd import Variable
 import sys
 import os
 import numpy
-import models.dcgan as dcgan
+import pytorch.models.dcgan as dcgan
 import glob
 from collections import OrderedDict
 
