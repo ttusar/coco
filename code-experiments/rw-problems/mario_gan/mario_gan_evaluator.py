@@ -1,5 +1,7 @@
 import sys
 sys.path.append('pytorch')
+import subprocess
+
 
 # This executes the GAN and evaluates it
 # problem ids
@@ -41,6 +43,8 @@ GKOOPA = 10
 RKOOPA = 11
 SPINY = 12
 
+sim=30
+
 #        tiles.put('X', 0); //solid
 #        tiles.put('x', 1); //breakable
 #        tiles.put('-', 2); //passable
@@ -74,40 +78,31 @@ def exist_gap(im):
             gaps[i] = 1
     return gaps
 
-
 def count_gaps(im):
     gaps = exist_gap(im)
     return sum(gaps)
-
 
 def gap_lengths(im):
     gaps = exist_gap(im)
     gaps = "".join([str(int(x)) for x in gaps])
     return list(map(len, gaps.split('0')))
 
-
 def max_gap(im):
     return max(gap_lengths(im))
-
 
 def count_tile_type(im, tile):
     num_tiles = (len(im[im == tile]))
     return num_tiles
 
-
 def gan_maximise_tile_type(x, nz, tile):
     return -count_tile_type(x, nz, tile)
-
 
 def gan_target_tile_type(x, nz, tile, target):
     return abs(target - count_tile_type(x, nz, tile))
 
-
 def gan_target_tile_type_frac(im, tile, target_frac):
     total_tiles = float(numpy.shape(im)[0] * numpy.shape(im)[1])
     return abs(target_frac - (count_tile_type(im, tile) / total_tiles))
-
-
 
 def tilePositionSummaryStats(im, tiles):
     coords = numpy.where(im==tiles[0])
@@ -120,6 +115,15 @@ def tilePositionSummaryStats(im, tiles):
         x_coords = numpy.append(x_coords, tmp[1])
         y_coords = numpy.append(y_coords, tmp[0])
     return numpy.mean(x_coords), numpy.std(x_coords), numpy.mean(y_coords), numpy.std(y_coords)
+
+def executeSimulation(x, netG, dim, fun, agent):
+	java_output = subprocess.check_output('java -Djava.awt.headless=true -jar dist/MarioGAN.jar "' + str(x) +'" "' + netG + '" '+str(dim)+' '+str(fun)+' '+str(agent) +' ' +str(sim), shell=True);
+	lines = java_output.split('\n')
+	result = lines[11+sim]
+	if "Result" not in result:
+		raise ValueError('MarioGAN.jar output not formatted as expected, got {} '.format(result))
+	return float(result)
+
 
 ################################################################################################
 # Fitness Functions
@@ -264,49 +268,23 @@ def translateLatentVector(x, netG, dim):
     return final
 
 
-java_options = "-Djava.awt.headless=true "
-
 
 def progressSimAStar(x, netG, dim):
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(0) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
-
-
+	return executeSimulation(x, netG, dim, 0, 0)
 def basicFitnessSimAStar(x, netG, dim):
-    print('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(0)+ ' ' + file_name)
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
-
-
+	return executeSimulation(x, netG, dim, 1, 0)
 def airTimeSimAStar(x, netG, dim):
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(2) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
-
-
+	return executeSimulation(x, netG, dim, 2, 0)
 def timeTakenSimAStar(x, netG, dim):
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(3) + ' ' + str(0)+ ' ' + file_name)## + ' > /dev/null')
-
-
+	return executeSimulation(x, netG, dim, 3, 0)
 def progressSimScared(x, netG, dim):
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(0) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
-
-
+	return executeSimulation(x, netG, dim, 0, 1)
 def basicFitnessSimScared(x, netG, dim):
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(1) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
-
-
+	return executeSimulation(x, netG, dim, 1, 1)
 def airTimeSimScared(x, netG, dim):
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(2) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
-
-
+	return executeSimulation(x, netG, dim, 2, 1)
 def timeTakenSimScared(x, netG, dim):
-    os.system('java ' + java_options + '-jar dist/MarioGAN.jar "' + str(content[1:]) + '" ' +
-              netG + ' ' + str(dim) + ' ' + str(3) + ' ' + str(1)+ ' ' + file_name)## + ' > /dev/null')
+	return executeSimulation(x, netG, dim, 3, 1)
 
 
 def decodeProblem(problem):
