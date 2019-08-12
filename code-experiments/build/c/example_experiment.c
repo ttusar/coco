@@ -137,7 +137,7 @@ int main(void) {
    * http://numbbo.github.io/coco-doc/C/#suite-parameters and
    * http://numbbo.github.io/coco-doc/C/#observer-parameters. */
 
-  example_experiment("bbob", "", "bbob", "result_folder: RS_on_bbob", random_generator);
+  example_experiment("mario-gan", "", "rw", "result_folder: RS_on_bbob", random_generator);
 
   printf("Done!\n");
   fflush(stdout);
