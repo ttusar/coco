@@ -6,6 +6,7 @@ connect it to other evaluators (for other suites) -- see occurrences of 'ADD HER
 """
 import socket
 from toy_socket.toy_socket_evaluator import evaluate_toy_socket
+from mario_gan.mario_gan_evaluator import evaluate_mario_gan
 # ADD HERE imports from other evaluators, for example
 # from my_suite.my_evaluator import evaluate_my_suite
 
@@ -34,6 +35,10 @@ def evaluate_message(message):
         # Find the right evaluator
         if 'toy-socket' in suite_name:
             evaluate = evaluate_toy_socket
+         elif 'mario-gan' in suite_name:
+             evaluate = evaluate_mario_gan
+         elif 'mario-gan-biobj' in suite_name:
+             evaluate = evaluate_mario_gan
         # ADD HERE the function for another evaluator, for example
         # elif 'my-suite' in suite_name:
         #     evaluate = evaluate_my_suite
