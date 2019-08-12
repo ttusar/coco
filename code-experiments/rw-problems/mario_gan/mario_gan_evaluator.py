@@ -338,7 +338,7 @@ def getNetG(problem, inst, dim, c, json):
     return netG, dim
 
 
-def evaluate_mario_gan(suite_name, num_objectives, func, inst, x):
+def evaluate_mario_gan(suite_name, num_objectives, problem, inst, x):
     available_dims = [10, 20, 30, 40]
     available_instances = [5641, 3854, 8370, 494, 1944, 9249, 2517]
     if len(x) not in available_dims:  # check Dimension available
