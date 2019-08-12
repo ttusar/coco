@@ -117,12 +117,12 @@ def tilePositionSummaryStats(im, tiles):
     return numpy.mean(x_coords), numpy.std(x_coords), numpy.mean(y_coords), numpy.std(y_coords)
 
 def executeSimulation(x, netG, dim, fun, agent):
-	java_output = subprocess.check_output('java -Djava.awt.headless=true -jar dist/MarioGAN.jar "' + str(x) +'" "' + netG + '" '+str(dim)+' '+str(fun)+' '+str(agent) +' ' +str(sim), shell=True);
-	lines = java_output.split('\n')
-	result = lines[11+sim]
-	if "Result" not in result:
-		raise ValueError('MarioGAN.jar output not formatted as expected, got {} '.format(result))
-	return float(result)
+    java_output = subprocess.check_output('java -Djava.awt.headless=true -jar dist/MarioGAN.jar "' + str(x) +'" "' + netG + '" '+str(dim)+' '+str(fun)+' '+str(agent) +' ' +str(sim), shell=True);
+    lines = java_output.split('\n')
+    result = lines[11+sim]
+    if "Result" not in result:
+        raise ValueError('MarioGAN.jar output not formatted as expected, got {} '.format(result))
+    return float(result)
 
 
 ################################################################################################
@@ -147,7 +147,7 @@ def leniency(x, netG, dim):
     t = numpy.array(gap_lengths(im))
     if count_gaps(im) > 0:
         val -= numpy.mean(t[t != 0])
-	return val
+    return val
 
 # Percentage of stackable items
 # Value range 0-1
@@ -163,7 +163,7 @@ def density(x, netG, dim):
     val += dist.get(GROUND, 0)
     val += dist.get(BREAK, 0)
     val = float(val) / (width * height)
-	return (1-val)
+    return (1-val)
 
 
 # Estimates how much of the space can be reached by computing how many of the tiles can be stood upon
@@ -185,7 +185,7 @@ def negativeSpace(x, netG, dim):
     val += dist.get(PLANT, 0) * 2 # Because only one tile, but width of 2
     val += dist.get(BILL, 0)
     val = float(val) / (width * height)
-	return (1-val)
+    return (1-val)
 
 
 # Frequency of pretty tiles, i.e. non-standard.
@@ -211,7 +211,7 @@ def decorationFrequency(x, netG, dim):
     val += dist.get(RKOOPA, 0)
     val += dist.get(SPINY, 0)
     val = float(val) / (width * height)
-	return (1-val)
+    return (1-val)
 
 # gets vertical distribution of tiles you can stand on
 # Value range ?
@@ -219,7 +219,7 @@ def decorationFrequency(x, netG, dim):
 def positionDistribution(x, netG, dim, file_name):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [GROUND, BREAK, QUESTIONP, QUESTIONC, TUBE, PLANT, BILL])
-	return (-ys)
+    return (-ys)
 
 # get horizontal distribution of enemies
 # Value range ?
@@ -227,7 +227,7 @@ def positionDistribution(x, netG, dim, file_name):
 def enemyDistribution(x, netG, dim, file_name):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [PLANT, BILL, GOOMBA, GKOOPA, RKOOPA, SPINY])
-	return (-xs)
+    return (-xs)
 
 def translateLatentVector(x, netG, dim):
     ##Fix for new pytorch compatibility below (from Jacob)
@@ -270,21 +270,21 @@ def translateLatentVector(x, netG, dim):
 
 
 def progressSimAStar(x, netG, dim):
-	return executeSimulation(x, netG, dim, 0, 0)
+    return executeSimulation(x, netG, dim, 0, 0)
 def basicFitnessSimAStar(x, netG, dim):
-	return executeSimulation(x, netG, dim, 1, 0)
+    return executeSimulation(x, netG, dim, 1, 0)
 def airTimeSimAStar(x, netG, dim):
-	return executeSimulation(x, netG, dim, 2, 0)
+    return executeSimulation(x, netG, dim, 2, 0)
 def timeTakenSimAStar(x, netG, dim):
-	return executeSimulation(x, netG, dim, 3, 0)
+    return executeSimulation(x, netG, dim, 3, 0)
 def progressSimScared(x, netG, dim):
-	return executeSimulation(x, netG, dim, 0, 1)
+    return executeSimulation(x, netG, dim, 0, 1)
 def basicFitnessSimScared(x, netG, dim):
-	return executeSimulation(x, netG, dim, 1, 1)
+    return executeSimulation(x, netG, dim, 1, 1)
 def airTimeSimScared(x, netG, dim):
-	return executeSimulation(x, netG, dim, 2, 1)
+    return executeSimulation(x, netG, dim, 2, 1)
 def timeTakenSimScared(x, netG, dim):
-	return executeSimulation(x, netG, dim, 3, 1)
+    return executeSimulation(x, netG, dim, 3, 1)
 
 
 def decodeProblem(problem):
@@ -322,8 +322,8 @@ def biProbSplitter(problem_id):
         return [14, 20]
     elif problem_id==10:
         return [14, 26]
-	else:
-		raise ValueError('Suite {} has no function {}'.format("mario-gan-biobj", problem_id))
+    else:
+        raise ValueError('Suite {} has no function {}'.format("mario-gan-biobj", problem_id))
 
 def getNetG(problem, inst, dim, c, json):
     if c == 1:
@@ -339,16 +339,16 @@ def getNetG(problem, inst, dim, c, json):
 
 
 def evaluate_mario_gan(suite_name, num_objectives, func, inst, x):
-	available_dims = [10, 20, 30, 40]
+    available_dims = [10, 20, 30, 40]
     available_instances = [5641, 3854, 8370, 494, 1944, 9249, 2517]
     if len(x) not in available_dims:  # check Dimension available
         raise ValueError("x was dimension '{}', but is not available".format(len(x)))
     if inst < 0 | inst > available_instances.count():
         raise ValueError("asked for instance '{}', but is not available".format(inst))
-	if num_objectives not in [1,2]:
-		raise ValueError('Suite {} cannot have {} objectives'.format(suite_name, num_objectives))
+    if num_objectives not in [1,2]:
+        raise ValueError('Suite {} cannot have {} objectives'.format(suite_name, num_objectives))
 
-	probs = [problem]
+    probs = [problem]
     if suite_name == 'mario-gan-biobj' and num_objectives == 2:
         probs = [j - 1 for j in biProbSplitter(problem)]
 
@@ -358,10 +358,10 @@ def evaluate_mario_gan(suite_name, num_objectives, func, inst, x):
         netG, d = getNetG(prob-1, inst-1, len(x), c, json) #-1 because COCO starts with index 1
         out[i] = fun(x, netG, d)
     
-	return out
+    return out
 
 
 if __name__ == '__main__':
-	out = evaluate_mario_gan("mario-gan", 1, 21, 1, [0.577396866201949, 0.7814522617215477, -0.4290037786827649, -0.7939910428259774, 0.4272655228644559, -0.4788319759161429, 0.7092257647567968, -0.7713656070501105, 0.751081985876608, -0.7008837870643055])
-	print out
+    out = evaluate_mario_gan("mario-gan", 1, 21, 1, [0.577396866201949, 0.7814522617215477, -0.4290037786827649, -0.7939910428259774, 0.4272655228644559, -0.4788319759161429, 0.7092257647567968, -0.7713656070501105, 0.751081985876608, -0.7008837870643055])
+    print out
 
