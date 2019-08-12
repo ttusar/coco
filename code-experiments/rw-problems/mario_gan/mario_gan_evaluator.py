@@ -43,6 +43,7 @@ RKOOPA = 11
 SPINY = 12
 
 sim=30
+path = os.path.dirname(os.path.abspath(__file__))
 
 #        tiles.put('X', 0); //solid
 #        tiles.put('x', 1); //breakable
@@ -116,7 +117,7 @@ def tilePositionSummaryStats(im, tiles):
     return numpy.mean(x_coords), numpy.std(x_coords), numpy.mean(y_coords), numpy.std(y_coords)
 
 def executeSimulation(x, netG, dim, fun, agent):
-    java_output = subprocess.check_output('java -Djava.awt.headless=true -jar dist/MarioGAN.jar "' + str(x) +'" "' + netG + '" '+str(dim)+' '+str(fun)+' '+str(agent) +' ' +str(sim), shell=True);
+    java_output = subprocess.check_output('java -Djava.awt.headless=true -jar '+path+'/dist/MarioGAN.jar "' + str(x) +'" "' + netG + '" '+str(dim)+' '+str(fun)+' '+str(agent) +' ' +str(sim), shell=True);
     lines = java_output.split('\n')
     result = lines[11+sim]
     if "Result" not in result:
@@ -328,11 +329,12 @@ def getNetG(problem, inst, dim, c, json):
     if c == 1:
         dim = 5
 
-    pattern = "GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(json, dim, budget,
+    print path
+    pattern = "{}/GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(path,json, dim, budget,
                                                             inst)
     files = glob.glob(pattern)
     epochs = [int(str.split(file, "_")[2]) for file in files]
-    netG = "GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(json, dim, budget, max(epochs),
+    netG = "{}/GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(path, json, dim, budget, max(epochs),
                                                           inst)
     return netG, dim
 
