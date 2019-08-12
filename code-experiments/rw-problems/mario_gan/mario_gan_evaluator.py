@@ -122,7 +122,7 @@ def executeSimulation(x, netG, dim, fun, agent):
     result = lines[11+sim]
     if "Result" not in result:
         raise ValueError('MarioGAN.jar output not formatted as expected, got {} '.format(result))
-    return float(result)
+    return float(result[6:])
 
 
 ################################################################################################
