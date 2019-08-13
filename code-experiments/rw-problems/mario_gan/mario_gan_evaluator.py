@@ -42,7 +42,7 @@ GKOOPA = 10
 RKOOPA = 11
 SPINY = 12
 
-sim=30
+sim=1
 path = os.path.dirname(os.path.abspath(__file__))
 
 #        tiles.put('X', 0); //solid
@@ -118,8 +118,8 @@ def tilePositionSummaryStats(im, tiles):
 
 def executeSimulation(x, netG, dim, fun, agent):
     java_output = subprocess.check_output('java -Djava.awt.headless=true -jar '+path+'/dist/MarioGAN.jar "' + str(x) +'" "' + netG + '" '+str(dim)+' '+str(fun)+' '+str(agent) +' ' +str(sim), shell=True);
-    lines = java_output.split('\n')
-    result = lines[11+sim]
+    lines = java_output.split(b'\n')
+    result = lines[11+sim].decode("utf-8")
     if "Result" not in result:
         raise ValueError('MarioGAN.jar output not formatted as expected, got {} '.format(result))
     return float(result[6:])
@@ -216,7 +216,7 @@ def decorationFrequency(x, netG, dim):
 # gets vertical distribution of tiles you can stand on
 # Value range ?
 # maximise
-def positionDistribution(x, netG, dim, file_name):
+def positionDistribution(x, netG, dim):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [GROUND, BREAK, QUESTIONP, QUESTIONC, TUBE, PLANT, BILL])
     return (-ys)
@@ -224,7 +224,7 @@ def positionDistribution(x, netG, dim, file_name):
 # get horizontal distribution of enemies
 # Value range ?
 # maximise
-def enemyDistribution(x, netG, dim, file_name):
+def enemyDistribution(x, netG, dim):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [PLANT, BILL, GOOMBA, GKOOPA, RKOOPA, SPINY])
     return (-xs)
@@ -333,7 +333,8 @@ def getNetG(problem, inst, dim, c, json):
     pattern = "{}/GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(path,json, dim, budget,
                                                             inst)
     files = glob.glob(pattern)
-    epochs = [int(str.split(file, "_")[2]) for file in files]
+
+    epochs = [int(str.split(os.path.basename(file), "_")[2]) for file in files]
     netG = "{}/GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(path, json, dim, budget, max(epochs),
                                                           inst)
     return netG, dim
