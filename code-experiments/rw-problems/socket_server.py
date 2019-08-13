@@ -83,6 +83,8 @@ def socket_server_start():
                 raise e
             except KeyboardInterrupt or SystemExit:
                 print('Server terminated')
+                if s is not None:
+                    s.close()
                 return 0
             with conn:
                 # Read the message
