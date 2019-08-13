@@ -333,7 +333,7 @@ def getNetG(problem, inst, dim, c, json):
     pattern = "{}/GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(path,json, dim, budget,
                                                             inst)
     files = glob.glob(pattern)
-    epochs = [print (str.split(file, "_")) for file in files]
+    epochs = [int(str.split(os.path.basename(file), "_")) for file in files]
 	print files
     netG = "{}/GAN/{}-{}-{}/netG_epoch_{}_{}.pth".format(path, json, dim, budget, max(epochs),
                                                           inst)
