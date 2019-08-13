@@ -118,6 +118,7 @@ def tilePositionSummaryStats(im, tiles):
 
 def executeSimulation(x, netG, dim, fun, agent):
     java_output = subprocess.check_output('java -Djava.awt.headless=true -jar '+path+'/dist/MarioGAN.jar "' + str(x) +'" "' + netG + '" '+str(dim)+' '+str(fun)+' '+str(agent) +' ' +str(sim), shell=True);
+    print(java_output)
     lines = java_output.split('\n')
     result = lines[11+sim]
     if "Result" not in result:
