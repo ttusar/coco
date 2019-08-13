@@ -216,7 +216,7 @@ def decorationFrequency(x, netG, dim):
 # gets vertical distribution of tiles you can stand on
 # Value range ?
 # maximise
-def positionDistribution(x, netG, dim, file_name):
+def positionDistribution(x, netG, dim):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [GROUND, BREAK, QUESTIONP, QUESTIONC, TUBE, PLANT, BILL])
     return (-ys)
@@ -224,7 +224,7 @@ def positionDistribution(x, netG, dim, file_name):
 # get horizontal distribution of enemies
 # Value range ?
 # maximise
-def enemyDistribution(x, netG, dim, file_name):
+def enemyDistribution(x, netG, dim):
     im = translateLatentVector(x, netG, dim)
     xm, xs, ym, ys = tilePositionSummaryStats(im, [PLANT, BILL, GOOMBA, GKOOPA, RKOOPA, SPINY])
     return (-xs)
