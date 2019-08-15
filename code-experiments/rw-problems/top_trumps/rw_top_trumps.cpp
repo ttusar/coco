@@ -31,39 +31,52 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
   srand(seed);
   int n = (int) dimension / m;
 
-  double * lower_bounds = (double *) malloc(dimension * sizeof(double));
-  double * upper_bounds = (double *) malloc(dimension * sizeof(double));
-
+  std::vector<double> y_vector(number_of_objectives);
   std::vector<double> x_vector(x, x + dimension);
-  top_trumps_bounds(instance, dimension, lower_bounds, upper_bounds);
+
+//set box constraints based on seed, i.e. depending on instance. Return large value if outside.
+  double lbound = 0;
+  double ubound=100;
+  bool outOfBounds=false;
   std::vector<double> min(m);
   std::vector<double> max(m);
   double maxHyp = 1;
   double maxSD = 50;
-  for(size_t i = 0; i < dimension; i++){
-    if(x[i] < lower_bounds[i] || upper_bounds[i] < x[i]){
-      for (size_t i = 0; i < dimension; i++)
+  for(int i=0; i<m; i++){
+    double a = lbound + (double)rand()/RAND_MAX*(ubound-lbound);
+    double b = lbound + (double)rand()/RAND_MAX*(ubound-lbound);
+    double box_min = std::min(a,b);
+    double box_max = std::max(a,b);
+    maxHyp = maxHyp * (box_max -box_min);
+    min[i] = std::round(box_min);
+    max[i] = std::round(box_max);
+    //std::cout << "random bounds [" << min[i] << ", " << max[i] <<"]"<< std::endl;
+    for(int j=0; j<n; j++){
+        if(x_vector[j*m+i] <min[i] || x_vector[j*m+i] > max[i]){
+            //std::cout << "boundary on " << j*m+i << std::endl;
+            outOfBounds=true;
+        }
+    }
+      
+  }
+  if(outOfBounds){
+    for (size_t i = 0; i < number_of_objectives; i++)
         y[i] = 0; //return high number
-      return;
-    } else {
-      min[i] = lower_bounds[i];
-      max[i] = upper_bounds[i];
-      maxHyp = maxHyp * (max[i]-min[i]);
-    }    
+    return;
   }
 
 
   Deck deck(x_vector, n, m, min, max);
   if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1) && (function <=2)) {
     if (function == 1) {
-      y[0] = -deck.getHV()/maxHyp;
+      y_vector[0] = -deck.getHV()/maxHyp;
     } else if (function == 2) {
-      y[0] = -deck.getSD()/maxSD;
+      y_vector[0] = -deck.getSD()/maxSD;
     }
   } else if ((strcmp(suite_name, "top-trumps-biobj") == 0) && (number_of_objectives == 2) && (function<=1)) {
     if (function == 1) {
-      y[0] = -deck.getHV()/maxHyp;
-      y[1] = -deck.getSD()/maxSD;
+      y_vector[0] = -deck.getHV()/maxHyp;
+      y_vector[1] = -deck.getSD()/maxSD;
     } 
   } else{
 		std::vector<Agent> agents(players);
@@ -80,22 +93,22 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
 	
 		if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1)) {
 		  if (function == 3) {
-		    y[0] = -out.getFairAgg();
+		    y_vector[0] = -out.getFairAgg();
 		  } else if (function == 4) {
-		    y[0] = -players * out.getLeadChangeAgg()/n;
+		    y_vector[0] = -players * out.getLeadChangeAgg()/n;
 		  } else if (function == 5) {
-		    y[0] = out.getTrickDiffAgg()-1;
+		    y_vector[0] = out.getTrickDiffAgg()-1;
 		  } else {
 				fprintf(stderr, "evaluate(): suite %s does not have function %lu", suite_name, function);
 				exit(EXIT_FAILURE);
 		  }
 		} else if ((strcmp(suite_name, "top-trumps-biobj") == 0) && (number_of_objectives == 2)) {
 			if (function == 2) {
-			  y[0] = -out.getFairAgg();
-			  y[1] = -players * out.getLeadChangeAgg()/n;
+			  y_vector[0] = -out.getFairAgg();
+			  y_vector[1] = -players * out.getLeadChangeAgg()/n;
 			} else if (function == 3) {
-			  y[0] = -out.getFairAgg();
-			  y[1] = out.getTrickDiffAgg()-1;
+			  y_vector[0] = -out.getFairAgg();
+			  y_vector[1] = out.getTrickDiffAgg()-1;
 	 		} else {
 				fprintf(stderr, "evaluate(): suite %s does not have function %lu", suite_name, function);
 				exit(EXIT_FAILURE);
@@ -105,6 +118,8 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
 		  exit(EXIT_FAILURE);
 		}
 	}
+  for (size_t i = 0; i < number_of_objectives; i++)
+    y[i] = y_vector[i];
 }
 
 
