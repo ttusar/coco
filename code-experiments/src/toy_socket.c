@@ -39,11 +39,17 @@ static coco_problem_t *toy_socket_problem_allocate(const size_t number_of_object
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
 
   if (number_of_objectives == 1) {
-    problem->best_value[0] = -1000;
-    for (i = 0; i < dimension; ++i)
-      problem->best_parameter[i] = 0; /* TODO Support unknown optimum */
+    /* Example of unknown best_parameter and best_value */
+    if (problem->best_parameter != NULL) {
+      coco_free_memory(problem->best_parameter);
+      problem->best_parameter = NULL;
+    }
+    if (problem->best_value != NULL) {
+      coco_free_memory(problem->best_value);
+      problem->best_value = NULL;
+    }
   }
-  /* Need to provide estimation for the ideal and nadir points in the bi-objective case */
+  /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
   else if (number_of_objectives == 2) {
     problem->best_value[0] = -1000;
     problem->best_value[1] = -1000;
