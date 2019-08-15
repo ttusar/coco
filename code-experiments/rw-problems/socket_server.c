@@ -85,7 +85,7 @@ char *evaluate_message(char *message) {
   y = malloc(number_of_objectives * sizeof(double));
   if ((strcmp(suite_name, "toy-socket") == 0) || (strcmp(suite_name, "toy-socket-biobj") == 0)) {
     evaluate_function = evaluate_toy_socket;
-  } else if (strcmp(suite_name, "top-trumps") == 0) || (strcmp(suite_name, "top-trumps-biobj") == 0)) {
+  } else if ((strcmp(suite_name, "top-trumps") == 0) || (strcmp(suite_name, "top-trumps-biobj") == 0)) {
     evaluate_function = evaluate_top_trumps;
   }
   /* ADD HERE the function for another evaluator, for example
