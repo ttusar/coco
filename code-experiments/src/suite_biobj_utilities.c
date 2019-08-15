@@ -538,7 +538,8 @@ static int suite_biobj_get_best_hyp_value(const char *suite_name, const char *ke
     return -1;
   }
   else if (strcmp(suite_name, "toy-socket-biobj") == 0) {
-    return 0; /* TODO */
+    *value = default_value;
+    return -1;
   }
   else if (strcmp(suite_name, "mario-gan-biobj") == 0) {
     return 0; /* TODO */

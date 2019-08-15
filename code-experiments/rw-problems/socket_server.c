@@ -175,7 +175,7 @@ void socket_server_start(int silent) {
     response = evaluate_message(message);
 
     /* Send the response */
-    send(new_sock, response, (int)strlen(response), 0);
+    send(new_sock, response, (int)strlen(response) + 1, 0);
     if (silent == 0)
       printf("Sent response %s (length %ld)\n", response, strlen(response));
 
@@ -237,7 +237,7 @@ void socket_server_start(int silent) {
     response = evaluate_message(message);
 
     /* Send the response */
-    send(new_sock, response, strlen(response), 0);
+    send(new_sock, response, strlen(response) + 1, 0);
     if (silent == 0)
       printf("Sent response %s (length %ld)\n", response, strlen(response));
 
@@ -246,7 +246,7 @@ void socket_server_start(int silent) {
 #endif
 }
 
-int main(int argc,char* argv[])
+int main(int argc, char* argv[])
 {
   int silent = 0;
   if (argc == 2) {
@@ -259,4 +259,5 @@ int main(int argc,char* argv[])
     printf("Too many options (at most one supported), ignoring all\n");
   }
   socket_server_start(silent);
+  return 0;
 }
