@@ -134,7 +134,7 @@ int main(void) {
 
   example_experiment("toy-socket", "", "bbob-new", "result_folder: RS_on_toy-socket", random_generator);
   example_experiment("mario-gan", "", "bbob-new", "result_folder: RS_on_mario-gan", random_generator);
-  example_experiment("mario-gan-biobj", "", "bbob-biobj", "result_folder: RS_on_mario-gan", random_generator);
+  example_experiment("mario-gan-biobj", "", "bbob-biobj", "result_folder: RS_on_mario-gan-biobj", random_generator);
 
   /**
    * For more details on how to change the default suite and observer options, see
