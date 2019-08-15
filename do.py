@@ -800,6 +800,9 @@ def build_rw_top_trumps():
         rw_library += '.dll'
     else:
         rw_library = 'lib' + rw_library + '.so'
+
+    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+              'code-experiments/rw-problems/{}'.format(rw_library))
     return rw_library
 
 
