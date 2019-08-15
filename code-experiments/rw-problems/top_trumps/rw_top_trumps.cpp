@@ -52,6 +52,8 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
     }    
   }
 
+  fprintf(stdout, "test: suite %s, function %lu, instance %lu, dimension %lu, objectives %lu", suite_name, function, instance, dimension, number_of_objectives);
+
   Deck deck(x_vector, n, m, min, max);
   if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1) && (function <=2)) {
     if (function == 1) {
@@ -59,7 +61,7 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
     } else if (function == 2) {
       y[0] = -deck.getSD()/maxSD;
     }
-  } else if ((strcmp(suite_name, "toy-socket-biobj") == 0) && (number_of_objectives == 2) && (function<=1)) {
+  } else if ((strcmp(suite_name, "top-trumps-biobj") == 0) && (number_of_objectives == 2) && (function<=1)) {
     if (function == 1) {
       y[0] = -deck.getHV()/maxHyp;
       y[1] = -deck.getSD()/maxSD;
@@ -88,7 +90,7 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
 				fprintf(stderr, "evaluate(): suite %s does not have function %lu", suite_name, function);
 				exit(EXIT_FAILURE);
 		  }
-		} else if ((strcmp(suite_name, "toy-socket-biobj") == 0) && (number_of_objectives == 2)) {
+		} else if ((strcmp(suite_name, "top-trumps-biobj") == 0) && (number_of_objectives == 2)) {
 			if (function == 2) {
 			  y[0] = -out.getFairAgg();
 			  y[1] = -players * out.getLeadChangeAgg()/n;
