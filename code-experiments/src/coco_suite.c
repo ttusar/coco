@@ -950,5 +950,6 @@ void coco_suite_decode_problem_index(const coco_suite_t *suite,
   *instance_idx = problem_index % suite->number_of_instances;
   *function_idx = (problem_index / suite->number_of_instances) % suite->number_of_functions;
   *dimension_idx = problem_index / (suite->number_of_instances * suite->number_of_functions);
-
 }
+
+
