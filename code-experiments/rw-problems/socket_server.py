@@ -38,9 +38,9 @@ def evaluate_message(message):
         if 'toy-socket' in suite_name:
             evaluate = evaluate_toy_socket
         elif 'mario-gan' in suite_name:
-             evaluate = evaluate_mario_gan
+            evaluate = evaluate_mario_gan
         elif 'mario-gan-biobj' in suite_name:
-             evaluate = evaluate_mario_gan
+            evaluate = evaluate_mario_gan
         # ADD HERE the function for another evaluator, for example
         # elif 'my-suite' in suite_name:
         #     evaluate = evaluate_my_suite
