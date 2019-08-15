@@ -7,7 +7,7 @@
 #include "coco.h"
 #include "coco_platform.h"
 #include "socket_communication.c"
-
+#include "rw_top_trumps.h"
 /**
  * @brief Creates a single- or bi-objective top-trumps problem.
  */
@@ -26,10 +26,10 @@ static coco_problem_t *top_trumps_problem_allocate(const size_t number_of_object
         (unsigned long)number_of_objectives);
 
   problem = coco_problem_allocate(dimension, number_of_objectives, 0);
-  for (i = 0; i < dimension; ++i) {
-    problem->smallest_values_of_interest[i] = -5;
-    problem->largest_values_of_interest[i] = 5;
-  }
+  top_trumps_bounds(instance, dimension,
+      problem->smallest_values_of_interest,
+      problem->largest_values_of_interest);
+
   problem->number_of_integer_variables = 0;
   problem->evaluate_function = socket_evaluate;
 

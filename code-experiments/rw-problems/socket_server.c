@@ -82,9 +82,9 @@ char *evaluate_message(char *message) {
   if ((strcmp(suite_name, "toy-socket") == 0) || (strcmp(suite_name, "toy-socket-biobj") == 0)) {
     evaluate_function = evaluate_toy_socket;
   } else if (strcmp(suite_name, "top-trumps") == 0) {
-    evaluate_function = evaluate_my_suite;
+    evaluate_function = evaluate_top_trumps;
   } else if (strcmp(suite_name, "top-trumps-biobj") == 0) {
-    evaluate_function = evaluate_my_suite;
+    evaluate_function = evaluate_top_trumps;
   } 
   /* ADD HERE the function for another evaluator, for example
   else if (strcmp(suite_name, "my-suite") == 0) {
