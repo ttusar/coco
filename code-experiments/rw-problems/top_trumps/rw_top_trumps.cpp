@@ -60,10 +60,13 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
       
   }
   if(outOfBounds){
+	  fprintf(stdout, "out of bounds");
     for (size_t i = 0; i < number_of_objectives; i++)
         y[i] = 0; //return high number
     return;
   }
+
+
 
 
   Deck deck(x_vector, n, m, min, max);
