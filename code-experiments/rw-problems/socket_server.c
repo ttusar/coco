@@ -34,6 +34,10 @@
 #include "my-suite/my_evaluator.c"
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * This is an interface for the evaluation function that needs to be implemented by other
  * evaluators.
@@ -81,11 +85,9 @@ char *evaluate_message(char *message) {
   y = malloc(number_of_objectives * sizeof(double));
   if ((strcmp(suite_name, "toy-socket") == 0) || (strcmp(suite_name, "toy-socket-biobj") == 0)) {
     evaluate_function = evaluate_toy_socket;
-  } else if (strcmp(suite_name, "top-trumps") == 0) {
+  } else if (strcmp(suite_name, "top-trumps") == 0) || (strcmp(suite_name, "top-trumps-biobj") == 0)) {
     evaluate_function = evaluate_top_trumps;
-  } else if (strcmp(suite_name, "top-trumps-biobj") == 0) {
-    evaluate_function = evaluate_top_trumps;
-  } 
+  }
   /* ADD HERE the function for another evaluator, for example
   else if (strcmp(suite_name, "my-suite") == 0) {
     evaluate_function = evaluate_my_suite;
