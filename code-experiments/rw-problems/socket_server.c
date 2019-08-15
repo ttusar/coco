@@ -34,10 +34,6 @@
 #include "my-suite/my_evaluator.c"
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * This is an interface for the evaluation function that needs to be implemented by other
  * evaluators.

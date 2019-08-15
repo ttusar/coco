@@ -9,9 +9,6 @@
 #include "socket_communication.c"
 #include "rw_top_trumps.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * @brief Creates a single- or bi-objective top-trumps problem.
