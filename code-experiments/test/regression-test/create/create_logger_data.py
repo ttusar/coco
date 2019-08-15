@@ -126,6 +126,13 @@ if __name__ == '__main__':
         dict(suite_name='bbob-biobj-mixint', suite_options=suite_options_1,
              observer_name='bbob-biobj', observer_options=observer_options_1,
              instance_order='def'),
+
+        dict(suite_name='toy-socket', suite_options='',
+             observer_name='bbob-new', observer_options='',
+             instance_order='def'),
+        dict(suite_name='toy-socket-biobj', suite_options='',
+             observer_name='bbob-biobj', observer_options='',
+             instance_order='def'),
     ]
 
     for setting in settings:
