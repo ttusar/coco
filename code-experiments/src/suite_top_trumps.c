@@ -5,7 +5,7 @@
  */
 
 #include "coco.h"
-#include "top-trumps.c"
+#include "top_trumps.c"
 #include "socket_communication.c"
 
 static coco_suite_t *coco_suite_allocate(const char *suite_name,
