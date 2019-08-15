@@ -19,7 +19,7 @@
  * The maximal budget for evaluations done by an optimization algorithm equals dimension * BUDGET_MULTIPLIER.
  * Increase the budget multiplier value gradually to see how it affects the runtime.
  */
-static const unsigned int BUDGET_MULTIPLIER = 2;
+static const unsigned int BUDGET_MULTIPLIER = 30;
 
 /**
  * The maximal number of independent restarts allowed for an algorithm that restarts itself.
@@ -132,12 +132,13 @@ int main(void) {
    * to the settings, defined in example_experiment(...) below.
    */
 
+  example_experiment("toy-socket", "", "bbob-new", "result_folder: RS_on_toy-socket", random_generator);
+  example_experiment("toy-socket-biobj", "", "bbob-biobj", "result_folder: RS_on_toy-socket-biobj", random_generator);
+
   /**
    * For more details on how to change the default suite and observer options, see
    * http://numbbo.github.io/coco-doc/C/#suite-parameters and
    * http://numbbo.github.io/coco-doc/C/#observer-parameters. */
-
-  example_experiment("bbob", "", "bbob", "result_folder: RS_on_bbob", random_generator);
 
   printf("Done!\n");
   fflush(stdout);
