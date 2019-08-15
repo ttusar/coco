@@ -71,7 +71,7 @@ static coco_suite_t *coco_suite_intialize(const char *suite_name, const char *su
     suite = suite_top_trumps_biobj_initialize(suite_options);
   }
   else {
-    coco_error("coco_suite_intialize(): unknown problem suite");
+    coco_error("coco_suite_intialize(): suite '%s' unknown problem suite",  suite->suite_name);
     return NULL;
   }
 
