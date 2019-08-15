@@ -52,7 +52,8 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
     }    
   }
 
-  fprintf(stdout, "test: suite %s, function %lu, instance %lu, dimension %lu, objectives %lu", suite_name, function, instance, dimension, number_of_objectives);
+  fprintf(stderr, "test: suite %s, function %lu, instance %lu, dimension %lu, objectives %lu", suite_name, function, instance, dimension, number_of_objectives);
+	exit(EXIT_FAILURE);
 
   Deck deck(x_vector, n, m, min, max);
   if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1) && (function <=2)) {
