@@ -27,7 +27,7 @@ int main(void) {
   for (i = 0; i < size_x; i++)
     x[i] = 12;
 
-  top_trumps_evaluate(function, instance, size_x, x, size_y, y);
+  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -42,7 +42,7 @@ int main(void) {
   fflush(stdout);
 
   function=2;
-  top_trumps_evaluate(function, instance, size_x, x, size_y, y);
+  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -53,7 +53,7 @@ int main(void) {
   fflush(stdout);
 
   function=3;
-  top_trumps_evaluate(function, instance, size_x, x, size_y, y);
+  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -64,7 +64,7 @@ int main(void) {
   fflush(stdout);
 
   function=4;
-  top_trumps_evaluate(function, instance, size_x, x, size_y, y);
+  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -75,7 +75,7 @@ int main(void) {
   fflush(stdout);
 
   function=5;
-  top_trumps_evaluate(function, instance, size_x, x, size_y, y);
+  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -94,10 +94,9 @@ int main(void) {
 
   lb = (double *) malloc(size_x* sizeof(double));
   ub= (double *) malloc(size_x* sizeof(double));
-  top_trumps_bounds(function, instance, size_x, lb, ub);
+  top_trumps_bounds(instance, size_x, lb, ub);
   
-  
-  top_trumps_evaluate(function, instance, size_x, x, size_y, y);
+  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);

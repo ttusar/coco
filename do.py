@@ -54,6 +54,7 @@ _build_verbosity = True
 ## C
 def build_c():
     """ Builds the C source code """
+    build_c_rw_top_trumps()
     global RELEASE
     amalgamate(CORE_FILES + ['code-experiments/src/coco_runtime_c.c'],
                'code-experiments/build/c/coco.c', RELEASE,
@@ -292,6 +293,7 @@ def test_suites(args):
 
 def _prep_python():
     global RELEASE
+    build_python_rw_top_trumps()
     amalgamate(CORE_FILES + ['code-experiments/src/coco_runtime_c.c'],
                'code-experiments/build/python/cython/coco.c',
                RELEASE, {"COCO_VERSION": git_version(pep440=True)})
@@ -787,6 +789,32 @@ def test_socket_python(package_install_option=[]):
 
 
 ################################################################################
+## Real-world problems
+def build_rw_top_trumps():
+    rw_library = 'rw_top_trumps'
+    copy_file('code-experiments/rw-problems/top_trumps/{}.h'.format(rw_library),
+              'code-experiments/src/{}.h'.format(rw_library))
+    make('code-experiments/rw-problems/top_trumps', 'clean', verbose=_build_verbosity)
+    make('code-experiments/rw-problems/top_trumps', 'all', verbose=_build_verbosity)
+    if 'win32' in sys.platform:
+        rw_library += '.dll'
+    else:
+        rw_library = 'lib' + rw_library + '.so'
+    return rw_library
+
+
+def build_c_rw_top_trumps():
+    rw_library = build_rw_top_trumps()
+    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+              'code-experiments/build/c/{}'.format(rw_library))
+
+
+def build_python_rw_top_trumps():
+    rw_library = build_rw_top_trumps()
+    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+              'code-experiments/build/python/{}'.format(rw_library))
+
+################################################################################
 ## Post processing
 def test_postprocessing(all_tests=False, package_install_option=[]):
     install_postprocessing(package_install_option = package_install_option)
@@ -960,6 +988,7 @@ Available commands for users:
   build-matlab-sms        - Build SMS-EMOA example in Matlab
   build-octave            - Build Matlab module in Octave
   build-python            - Build Python modules (see NOTE below)
+  build-rw-top-trumps     - Build the TopTrumps real-world problem suite
   install-postprocessing  - Install postprocessing (see NOTE below)
 
   run-c                   - Build and run example experiment in C
@@ -1049,6 +1078,7 @@ def main(args):
     elif cmd == 'build-octave': build_octave()
     elif cmd == 'build-octave-sms': build_octave_sms()
     elif cmd == 'build-python': build_python(package_install_option=package_install_option)
+    elif cmd == 'build-rw-top-trumps': build_rw_top_trumps()
     elif cmd == 'install-postprocessing': install_postprocessing(package_install_option=package_install_option)
     elif cmd == 'run-c': run_c()
     elif cmd == 'run-java': run_java()

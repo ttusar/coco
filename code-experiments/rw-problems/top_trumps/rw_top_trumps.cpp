@@ -10,68 +10,62 @@
 #include <assert.h>
 #include <iostream>
 
+#include <stdio.h>
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void top_trumps_evaluate(size_t function, size_t instance, size_t size_x,
-    double *x, size_t size_y, double *y) {
+int m=4;
+int rep = 2000;
+int players = 2;
 
+/**
+ * An evaluator for problems from the toy-socket suite to demonstrate external evaluation in C
+ */
+void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t function,
+    size_t instance, size_t dimension, const double *x, double *y)
+{
   int seed = (int) instance;
   srand(seed);
-  int obj = (int) function;
-  int rep = 2000;
-  int m = 4;
-  int players = 2;
-  int n = (int) size_x / m;
+  int n = (int) dimension / m;
 
-  assert(((obj <= 5) && (size_y == 1)) || ((obj >= 6) && (size_y == 2)));
+  double * lower_bounds = (double *) malloc(dimension * sizeof(double));
+  double * upper_bounds = (double *) malloc(dimension * sizeof(double));
 
-  std::vector<double> y_vector(n);
-  std::vector<double> x_vector(x, x + size_x);
-  
-  //set box constraints based on seed, i.e. depending on instance. Return large value if outside.
-  double lbound = 0;
-  double ubound=100;
-  bool outOfBounds=false;
+  std::vector<double> x_vector(x, x + dimension);
+  top_trumps_bounds(instance, dimension, lower_bounds, upper_bounds);
   std::vector<double> min(m);
   std::vector<double> max(m);
   double maxHyp = 1;
   double maxSD = 50;
-  for(int i=0; i<m; i++){
-    double a = lbound + (double)rand()/RAND_MAX*(ubound-lbound);
-    double b = lbound + (double)rand()/RAND_MAX*(ubound-lbound);
-    double box_min = std::min(a,b);
-    double box_max = std::max(a,b);
-    maxHyp = maxHyp * (box_max -box_min);
-    min[i] = std::round(box_min);
-    max[i] = std::round(box_max);
-    //std::cout << "random bounds [" << min[i] << ", " << max[i] <<"]"<< std::endl;
-    for(int j=0; j<n; j++){
-        if(x_vector[j*m+i] <min[i] || x_vector[j*m+i] > max[i]){
-            //std::cout << "boundary on " << j*m+i << std::endl;
-            outOfBounds=true;
-        }
-    }
-      
-  }
-  if(outOfBounds){
-    for (size_t i = 0; i < size_y; i++)
+  for(size_t i = 0; i < dimension; i++){
+    if(x[i] < lower_bounds[i] || upper_bounds[i] < x[i]){
+      for (size_t i = 0; i < dimension; i++)
         y[i] = 0; //return high number
-    return;
+      return;
+    } else {
+      min[i] = lower_bounds[i];
+      max[i] = upper_bounds[i];
+      maxHyp = maxHyp * (max[i]-min[i]);
+    }    
   }
-
 
   Deck deck(x_vector, n, m, min, max);
-  if (obj == 1) {
-    y_vector[0] = -deck.getHV()/maxHyp;
-  } else if (obj == 2) {
-    y_vector[0] = -deck.getSD()/maxSD;
-  } else if (obj == 6) {
-    y_vector[0] = -deck.getHV()/maxHyp;
-    y_vector[1] = -deck.getSD()/maxSD;
-  } else {
-    std::vector<Agent> agents(players);
+  if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1) && (function <=2)) {
+    if (function == 1) {
+      y[0] = -deck.getHV()/maxHyp;
+    } else if (function == 2) {
+      y[0] = -deck.getSD()/maxSD;
+    }
+  } else if ((strcmp(suite_name, "toy-socket-biobj") == 0) && (number_of_objectives == 2) && (function<=1)) {
+    if (function == 1) {
+      y[0] = -deck.getHV()/maxHyp;
+      y[1] = -deck.getSD()/maxSD;
+    } 
+  } else{
+		std::vector<Agent> agents(players);
     std::vector<int> playerLevel1(4, 0);
     agents[0] = Agent(playerLevel1, deck);
     std::vector<int> playerLevel2(4, 1);
@@ -82,41 +76,42 @@ void top_trumps_evaluate(size_t function, size_t instance, size_t size_x,
     for (int i = 0; i < rep; i++) {
       out = game.run(out, 0);
     }
-
-    if (obj == 3) {
-      y_vector[0] = -out.getFairAgg();
-    } else if (obj == 4) {
-      y_vector[0] = -players * out.getLeadChangeAgg()/n;
-    } else if (obj == 5) {
-      y_vector[0] = out.getTrickDiffAgg()-1;
-    } else if (obj == 7) {
-      y_vector[0] = -out.getFairAgg();
-      y_vector[1] = -players * out.getLeadChangeAgg()/n;
-    } else if (obj == 8) {
-      y_vector[0] = -out.getFairAgg();
-      y_vector[1] = out.getTrickDiffAgg()-1;
-    } else if (obj == 9) {
-      y_vector[0] = -deck.getHV()/maxHyp;
-      y_vector[1] = -out.getFairAgg();
-    } else if (obj == 10) {
-      y_vector[0] = -deck.getHV()/maxHyp;
-      y_vector[1] = -players * out.getLeadChangeAgg()/n;
-    } else if (obj == 11) {
-      y_vector[0] = -deck.getHV()/maxHyp;
-      y_vector[1] = out.getTrickDiffAgg()-1;       
-    }
-  }
-
-  for (size_t i = 0; i < size_y; i++)
-    y[i] = y_vector[i];
+	
+		if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1)) {
+		  if (function == 3) {
+		    y[0] = -out.getFairAgg();
+		  } else if (function == 4) {
+		    y[0] = -players * out.getLeadChangeAgg()/n;
+		  } else if (function == 5) {
+		    y[0] = out.getTrickDiffAgg()-1;
+		  } else {
+				fprintf(stderr, "evaluate(): suite %s does not have function %lu", suite_name, function);
+				exit(EXIT_FAILURE);
+		  }
+		} else if ((strcmp(suite_name, "toy-socket-biobj") == 0) && (number_of_objectives == 2)) {
+			if (function == 2) {
+			  y[0] = -out.getFairAgg();
+			  y[1] = -players * out.getLeadChangeAgg()/n;
+			} else if (function == 3) {
+			  y[0] = -out.getFairAgg();
+			  y[1] = out.getTrickDiffAgg()-1;
+	 		} else {
+				fprintf(stderr, "evaluate(): suite %s does not have function %lu", suite_name, function);
+				exit(EXIT_FAILURE);
+	  	}
+		} else {
+		  fprintf(stderr, "evaluate(): suite %s cannot have %lu objectives", suite_name, number_of_objectives);
+		  exit(EXIT_FAILURE);
+		}
+	}
 }
 
-void top_trumps_bounds(size_t function, size_t instance, size_t size_x,
+
+void top_trumps_bounds(size_t instance, size_t size_x,
     double *lower_bounds, double *upper_bounds) {
     
   int seed = (int) instance;
   srand(seed);
-  int m=4;
     //set box constraints based on seed, i.e. depending on instance. Return large value if outside.
   double lbound = 0;
   double ubound=100;

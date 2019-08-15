@@ -4,7 +4,7 @@
  *  Created on: 29. jun. 2018
  *      Author: Tea Tusar
  */
-#include "rw_top_trumps.h"
+#include "top_trumps_evaluator.h"
 
 #include "Simulation/Game.h"
 #include <assert.h>
@@ -28,8 +28,8 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
   size_t i;
   int n = (int) size_x / m;
 
-	double * lower_bounds = (double *) malloc(dimension * sizeof(double));
-	double * upper_bounds = (double *) malloc(dimension * sizeof(double));
+  double * lower_bounds = (double *) malloc(dimension * sizeof(double));
+  double * upper_bounds = (double *) malloc(dimension * sizeof(double));
 
 	top_trumps_bounds(instance, dimension, lower_bounds, upper_bounds);
   for(size_t i = 0; i < dimension; i++){

@@ -13,11 +13,10 @@
 extern "C" {
 #endif
 
-void top_trumps_evaluate(size_t function, size_t instance, size_t size_x,
-    double *x, size_t size_y, double *y);
+void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t function,
+    size_t instance, size_t dimension, const double *x, double *y);
 
-void top_trumps_bounds(size_t function, size_t instance, size_t size_x,
-    double *lower_bounds, double *upper_bounds);
+void top_trumps_bounds(size_t instance, size_t size_x, double *lower_bounds, double *upper_bounds);
 
 void top_trumps_test(void);
 
