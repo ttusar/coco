@@ -30,6 +30,21 @@ static coco_suite_t *suite_top_trumps_initialize(const char *suite_options) {
 }
 
 /**
+ * @brief Sets the instances associated with years.
+ */
+static const char *suite_top_trumps_get_instances_by_year(const int year) {
+   if (year == 0) {
+    return "1";
+  }
+  else {
+    coco_error("suite_top_trumps_get_instances_by_year(): year %d not defined for suite top-trumps", year);
+    return NULL;
+  }
+}
+
+
+
+/**
  * @brief Returns the problem from the top-trumps suite that corresponds to the given parameters.
  *
  * @param suite The COCO suite.

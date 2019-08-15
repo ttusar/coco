@@ -17,7 +17,7 @@ static coco_suite_t *coco_suite_allocate(const char *suite_name,
 /**
  * @brief Sets the dimensions and default instances for the top-trumps suite.
  */
-static coco_suite_t *suite_top_trumps_initialize(const char *suite_options) {
+static coco_suite_t *suite_top_trumps_biobj_initialize(const char *suite_options) {
 
   coco_suite_t *suite;
   const size_t dimensions[] = { 88, 128, 168, 208 };
@@ -30,6 +30,20 @@ static coco_suite_t *suite_top_trumps_initialize(const char *suite_options) {
 }
 
 /**
+ * @brief Sets the instances associated with years.
+ */
+static const char *suite_top_trumps_biobj_get_instances_by_year(const int year) {
+   if (year == 0) {
+    return "1";
+  }
+  else {
+    coco_error("suite_top_trumps_biobj_get_instances_by_year(): year %d not defined for suite top-trumps-biobj", year);
+    return NULL;
+  }
+}
+
+
+/**
  * @brief Returns the problem from the top-trumps suite that corresponds to the given parameters.
  *
  * @param suite The COCO suite.
@@ -38,7 +52,7 @@ static coco_suite_t *suite_top_trumps_initialize(const char *suite_options) {
  * @param instance_idx Index of the instance (starting from 0).
  * @return The problem that corresponds to the given parameters.
  */
-static coco_problem_t *suite_top_trumps_get_problem(coco_suite_t *suite,
+static coco_problem_t *suite_top_trumps_biobj_get_problem(coco_suite_t *suite,
                                                       const size_t function_idx,
                                                       const size_t dimension_idx,
                                                       const size_t instance_idx) {
