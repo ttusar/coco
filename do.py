@@ -791,7 +791,7 @@ def test_socket_python(package_install_option=[]):
 ################################################################################
 ## Real-world problems
 def build_top_trumps():
-    rw_library = 'rw_top_trumps'
+    rw_library = 'top_trumps'
     copy_file('code-experiments/rw-problems/top_trumps/{}.h'.format(rw_library),
               'code-experiments/src/{}.h'.format(rw_library))
     make('code-experiments/rw-problems/top_trumps', 'clean', verbose=_build_verbosity)

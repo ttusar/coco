@@ -1,10 +1,10 @@
 /*
- * rw_top_trumps.cpp
+ * top_trumps.cpp
  *
  *  Created on: 29. jun. 2018
  *      Author: Tea Tusar
  */
-#include "rw_top_trumps.h"
+#include "top_trumps.h"
 
 #include "Simulation/Game.h"
 #include <assert.h>

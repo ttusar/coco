@@ -1,5 +1,5 @@
 /*
- * rw_top_trumps.h
+ * top_trumps.h
  *
  *  Created on: 29. jun. 2018
  *      Author: Tea Tusar
