@@ -5,7 +5,7 @@
  * functioning of socket communication for function evaluation. A bi-objective version can be
  * found in the file suite_toy_socket_biobj.c
  *
- * The suite contains 2 problems with dimension 2 and 1 instance.
+ * The suite contains 2 problems with dimensions 2, 30 and 1 instance.
  */
 
 #include "coco.h"

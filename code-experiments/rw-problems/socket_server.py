@@ -21,6 +21,8 @@ def evaluate_message(message):
     """Parses the message and calls an evaluator to compute the evaluation. Then constructs a
     response. Returns the response."""
     try:
+        # Make sure to remove and null endings
+        message = message.split('\x00', 1)[0]
         # Parse the message
         msg = message.split(' ')
         suite_name = msg[msg.index('n') + 1]
@@ -36,9 +38,9 @@ def evaluate_message(message):
         if 'toy-socket' in suite_name:
             evaluate = evaluate_toy_socket
         elif 'mario-gan' in suite_name:
-             evaluate = evaluate_mario_gan
+            evaluate = evaluate_mario_gan
         elif 'mario-gan-biobj' in suite_name:
-             evaluate = evaluate_mario_gan
+            evaluate = evaluate_mario_gan
         # ADD HERE the function for another evaluator, for example
         # elif 'my-suite' in suite_name:
         #     evaluate = evaluate_my_suite
