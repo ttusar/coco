@@ -35,7 +35,7 @@
  */
 static coco_suite_t *coco_suite_intialize(const char *suite_name, const char *suite_options) {
 
-  coco_suite_t *suite;
+  coco_suite_t *suite = NULL;
 
   if (strcmp(suite_name, "toy") == 0) {
     suite = suite_toy_initialize();
