@@ -132,6 +132,7 @@ int main(void) {
    * to the settings, defined in example_experiment(...) below.
    */
 
+  example_experiment("top-trumps", "", "bbob-new", "result_folder: RS_on_top-trumps", random_generator);
   example_experiment("toy-socket", "", "bbob-new", "result_folder: RS_on_toy-socket", random_generator);
   example_experiment("mario-gan", "", "bbob-new", "result_folder: RS_on_mario-gan", random_generator);
   example_experiment("mario-gan-biobj", "", "bbob-biobj", "result_folder: RS_on_mario-gan-biobj", random_generator);
