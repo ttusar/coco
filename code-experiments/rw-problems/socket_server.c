@@ -29,6 +29,7 @@
 #define PRECISION_Y 16      /* Precision used to write objective values */
 
 #include "toy_socket/toy_socket_evaluator.c"  /* Use the toy_evaluator for evaluation */
+#include "top_trumps/rw_top_trumps.h"
 /* ADD HERE includes of other evaluators, for example
 #include "my-suite/my_evaluator.c"
 */
@@ -80,6 +81,8 @@ char *evaluate_message(char *message) {
   y = malloc(number_of_objectives * sizeof(double));
   if ((strcmp(suite_name, "toy-socket") == 0) || (strcmp(suite_name, "toy-socket-biobj") == 0)) {
     evaluate_function = evaluate_toy_socket;
+  } else if ((strcmp(suite_name, "top-trumps") == 0) || (strcmp(suite_name, "top-trumps-biobj") == 0)) {
+    evaluate_function = evaluate_top_trumps;
   }
   /* ADD HERE the function for another evaluator, for example
   else if (strcmp(suite_name, "my-suite") == 0) {
@@ -175,7 +178,7 @@ void socket_server_start(int silent) {
     response = evaluate_message(message);
 
     /* Send the response */
-    send(new_sock, response, (int)strlen(response), 0);
+    send(new_sock, response, (int)strlen(response) + 1, 0);
     if (silent == 0)
       printf("Sent response %s (length %ld)\n", response, strlen(response));
 
@@ -237,7 +240,7 @@ void socket_server_start(int silent) {
     response = evaluate_message(message);
 
     /* Send the response */
-    send(new_sock, response, strlen(response), 0);
+    send(new_sock, response, strlen(response) + 1, 0);
     if (silent == 0)
       printf("Sent response %s (length %ld)\n", response, strlen(response));
 
@@ -246,7 +249,7 @@ void socket_server_start(int silent) {
 #endif
 }
 
-int main(int argc,char* argv[])
+int main(int argc, char* argv[])
 {
   int silent = 0;
   if (argc == 2) {
@@ -259,4 +262,5 @@ int main(int argc,char* argv[])
     printf("Too many options (at most one supported), ignoring all\n");
   }
   socket_server_start(silent);
+  return 0;
 }

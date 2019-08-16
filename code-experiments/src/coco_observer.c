@@ -10,7 +10,8 @@
 #include <math.h>
 
 /**
- * @brief The type for triggers based on target values.
+ * @brief The type for triggers based on logarithmic target values (targets that are uniformly distributed
+ * in the logarithmic space).
  *
  * The target values that trigger logging are at every 10**(exponent/number_of_triggers) from positive
  * infinity down to precision, at 0, and from -precision on with step -10**(exponent/number_of_triggers) until
@@ -23,7 +24,19 @@ typedef struct {
   size_t number_of_triggers;  /**< @brief Number of target triggers between 10**i and 10**(i+1) for any i. */
   double precision;           /**< @brief Minimal precision of interest. */
 
-} coco_observer_targets_t;
+} coco_observer_log_targets_t;
+
+/**
+ * @brief The type for triggers based on uniformly distributed target values.
+ *
+ * The target values that trigger logging are at every precision * integer value.
+ */
+typedef struct {
+
+  double value;               /**< @brief Value of the currently hit target. */
+  double precision;           /**< @brief Minimal precision of interest. */
+
+} coco_observer_unif_targets_t;
 
 /**
  * @brief The type for triggers based on numbers of evaluations.
@@ -66,60 +79,60 @@ typedef struct {
 /**@{*/
 
 /**
- * @brief Creates and returns a structure containing information on targets.
+ * @brief Creates and returns a structure containing information on logarithmic targets.
  *
  * @param number_of_targets The number of targets between 10**(i/n) and 10**((i+1)/n) for each i.
  * @param precision Minimal precision of interest.
  */
-static coco_observer_targets_t *coco_observer_targets(const size_t number_of_targets,
-                                                      const double precision) {
+static coco_observer_log_targets_t *coco_observer_log_targets(const size_t number_of_targets,
+                                                              const double precision) {
 
-  coco_observer_targets_t *targets = (coco_observer_targets_t *) coco_allocate_memory(sizeof(*targets));
-  targets->exponent = INT_MAX;
-  targets->value = DBL_MAX;
-  targets->number_of_triggers = number_of_targets;
-  targets->precision = precision;
+  coco_observer_log_targets_t *log_targets = (coco_observer_log_targets_t *) coco_allocate_memory(sizeof(*log_targets));
+  log_targets->exponent = INT_MAX;
+  log_targets->value = DBL_MAX;
+  log_targets->number_of_triggers = number_of_targets;
+  log_targets->precision = precision;
 
-  return targets;
+  return log_targets;
 }
 
 /**
  * @brief Computes and returns whether the given value should trigger logging.
  */
-static int coco_observer_targets_trigger(coco_observer_targets_t *targets, const double given_value) {
+static int coco_observer_log_targets_trigger(coco_observer_log_targets_t *log_targets, const double given_value) {
 
   int update_performed = 0;
 
-  const double number_of_targets_double = (double) (long) targets->number_of_triggers;
+  const double number_of_targets_double = (double) (long) log_targets->number_of_triggers;
 
   double verified_value = 0;
   int current_exponent = 0;
   int adjusted_exponent = 0;
 
-  assert(targets != NULL);
+  assert(log_targets != NULL);
 
   /* The given_value is positive or zero */
   if (given_value >= 0) {
 
   	if (given_value == 0) {
   		/* If zero, use even smaller value than precision */
-  		verified_value = targets->precision / 10.0;
-  	} else if (given_value < targets->precision) {
+  		verified_value = log_targets->precision / 10.0;
+  	} else if (given_value < log_targets->precision) {
       /* If close to zero, use precision instead of the given_value*/
-      verified_value = targets->precision;
+      verified_value = log_targets->precision;
     } else {
       verified_value = given_value;
     }
 
     current_exponent = (int) (ceil(log10(verified_value) * number_of_targets_double));
 
-    if (current_exponent < targets->exponent) {
+    if (current_exponent < log_targets->exponent) {
       /* Update the target information */
-      targets->exponent = current_exponent;
+      log_targets->exponent = current_exponent;
       if (given_value == 0)
-      	targets->value = 0;
+      	log_targets->value = 0;
       else
-      	targets->value = pow(10, (double) current_exponent / number_of_targets_double);
+      	log_targets->value = pow(10, (double) current_exponent / number_of_targets_double);
       update_performed = 1;
     }
   }
@@ -127,8 +140,8 @@ static int coco_observer_targets_trigger(coco_observer_targets_t *targets, const
   else {
 
     /* If close to zero, use precision instead of the given_value*/
-    if (given_value > -targets->precision) {
-      verified_value = targets->precision;
+    if (given_value > -log_targets->precision) {
+      verified_value = log_targets->precision;
     } else {
       verified_value = -given_value;
     }
@@ -139,15 +152,48 @@ static int coco_observer_targets_trigger(coco_observer_targets_t *targets, const
     /* Compute the adjusted_exponent in such a way, that it is always diminishing in value. The adjusted
      * exponent can only be used to verify if a new target has been hit. To compute the actual target
      * value, the current_exponent needs to be used. */
-    adjusted_exponent = 2 * (int) (ceil(log10(targets->precision / 10.0) * number_of_targets_double))
+    adjusted_exponent = 2 * (int) (ceil(log10(log_targets->precision / 10.0) * number_of_targets_double))
         - current_exponent - 1;
 
-    if (adjusted_exponent < targets->exponent) {
+    if (adjusted_exponent < log_targets->exponent) {
       /* Update the target information */
-      targets->exponent = adjusted_exponent;
-      targets->value = - pow(10, (double) current_exponent / number_of_targets_double);
+      log_targets->exponent = adjusted_exponent;
+      log_targets->value = - pow(10, (double) current_exponent / number_of_targets_double);
       update_performed = 1;
     }
+  }
+
+  return update_performed;
+}
+
+/**
+ * @brief Creates and returns a structure containing information on uniform targets.
+ *
+ * @param precision Minimal precision of interest.
+ */
+static coco_observer_unif_targets_t *coco_observer_unif_targets(const double precision) {
+
+  coco_observer_unif_targets_t *unif_targets = (coco_observer_unif_targets_t *) coco_allocate_memory(sizeof(*unif_targets));
+  unif_targets->value = DBL_MAX;
+  unif_targets->precision = precision;
+
+  return unif_targets;
+}
+
+/**
+ * @brief Computes and returns whether the given value should trigger logging.
+ */
+static int coco_observer_unif_targets_trigger(coco_observer_unif_targets_t *unif_targets, const double given_value) {
+
+  int update_performed = 0;
+  double target_reached;
+
+  assert(unif_targets != NULL);
+
+  target_reached = coco_double_round_up_with_precision(given_value, unif_targets->precision);
+  if (target_reached < unif_targets->value) {
+    update_performed = 1;
+    unif_targets->value = target_reached;
   }
 
   return update_performed;
@@ -290,7 +336,9 @@ static coco_observer_t *coco_observer_allocate(const char *result_folder,
                                                const char *algorithm_name,
                                                const char *algorithm_info,
                                                const size_t number_target_triggers,
-                                               const double target_precision,
+                                               const double log_target_precision,
+                                               const double unif_target_precision,
+                                               const int unif_target_trigger,
                                                const size_t number_evaluation_triggers,
                                                const char *base_evaluation_triggers,
                                                const int precision_x,
@@ -306,7 +354,9 @@ static coco_observer_t *coco_observer_allocate(const char *result_folder,
   observer->algorithm_name = coco_strdup(algorithm_name);
   observer->algorithm_info = coco_strdup(algorithm_info);
   observer->number_target_triggers = number_target_triggers;
-  observer->target_precision = target_precision;
+  observer->log_target_precision = log_target_precision;
+  observer->unif_target_precision = unif_target_precision;
+  observer->unif_target_trigger = unif_target_trigger;
   observer->number_evaluation_triggers = number_evaluation_triggers;
   observer->base_evaluation_triggers = coco_strdup(base_evaluation_triggers);
   observer->precision_x = precision_x;
@@ -354,6 +404,7 @@ void coco_observer_free(coco_observer_t *observer) {
 }
 
 #include "logger_bbob.c"
+#include "logger_bbob_new.c"
 #include "logger_biobj.c"
 #include "logger_toy.c"
 #include "logger_rw.c"
@@ -380,8 +431,12 @@ void coco_observer_free(coco_observer_t *observer) {
  * surrounded by double quotes. The default value is "" (no description).
  * - "number_target_triggers: VALUE" defines the number of targets between each 10**i and 10**(i+1)
  * (equally spaced in the logarithmic scale) that trigger logging. The default value is 100.
- * - "target_precision: VALUE" defines the precision used for targets (there are no targets for
- * abs(values) < target_precision). The default value is 1e-8.
+ * - "log_target_precision: VALUE" defines the precision used for logarithmic targets (there are no targets for
+ * abs(values) < log_target_precision). The default value is 1e-8.
+ * - "unif_target_precision: VALUE" defines the precision used for uniform targets. The default value is 1e-5.
+ * - "unif_target_trigger: VALUE" determines whether the uniform targets should trigger logging.
+ * These triggers will always be used instead of the logarithmic triggers in case the problem does
+ * not have a known optimum. The default value is 0 (false).
  * - "number_evaluation_triggers: VALUE" defines the number of evaluations to be logged between each 10**i
  * and 10**(i+1). The default value is 20.
  * - "base_evaluation_triggers: VALUES" defines the base evaluations used to produce an additional
@@ -405,20 +460,20 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
   coco_observer_t *observer;
   char *path, *result_folder, *algorithm_name, *algorithm_info;
   const char *outer_folder_name = "exdata";
-  int precision_x, precision_f, precision_g, log_discrete_as_int;
+  int precision_x, precision_f, precision_g, log_discrete_as_int, unif_target_trigger;
 
   size_t number_target_triggers;
   size_t number_evaluation_triggers;
-  double target_precision;
+  double log_target_precision, unif_target_precision;
   char *base_evaluation_triggers;
 
   coco_option_keys_t *known_option_keys, *given_option_keys, *additional_option_keys, *redundant_option_keys;
 
   /* Sets the valid keys for observer options
    * IMPORTANT: This list should be up-to-date with the code and the documentation */
-  const char *known_keys[] = { "result_folder", "algorithm_name", "algorithm_info",
-      "number_target_triggers", "target_precision", "number_evaluation_triggers", "base_evaluation_triggers",
-      "precision_x", "precision_f", "precision_g", "log_discrete_as_int" };
+  const char *known_keys[] = { "result_folder", "algorithm_name", "algorithm_info", "number_target_triggers",
+      "log_target_precision", "unif_target_precision", "unif_target_trigger", "number_evaluation_triggers",
+      "base_evaluation_triggers", "precision_x", "precision_f", "precision_g", "log_discrete_as_int" };
   additional_option_keys = NULL; /* To be set by the chosen observer */
 
   if (0 == strcmp(observer_name, "no_observer")) {
@@ -457,11 +512,20 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
       number_target_triggers = 100;
   }
 
-  target_precision = 1e-8;
-  if (coco_options_read_double(observer_options, "target_precision", &target_precision) != 0) {
-    if ((target_precision > 1) || (target_precision <= 0))
-      target_precision = 1e-8;
+  log_target_precision = 1e-8;
+  if (coco_options_read_double(observer_options, "log_target_precision", &log_target_precision) != 0) {
+    if ((log_target_precision > 1) || (log_target_precision <= 0))
+      log_target_precision = 1e-8;
   }
+
+  unif_target_precision = 1e-5;
+  if (coco_options_read_double(observer_options, "unif_target_precision", &log_target_precision) != 0) {
+    if (unif_target_precision <= 0)
+      unif_target_precision = 1e-5;
+  }
+
+  if (coco_options_read_int(observer_options, "unif_target_trigger", &(unif_target_trigger)) == 0)
+    unif_target_trigger = 0;
 
   number_evaluation_triggers = 20;
   if (coco_options_read_size_t(observer_options, "number_evaluation_triggers", &number_evaluation_triggers) != 0) {
@@ -499,8 +563,9 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
   }
 
   observer = coco_observer_allocate(path, observer_name, algorithm_name, algorithm_info,
-      number_target_triggers, target_precision, number_evaluation_triggers, base_evaluation_triggers,
-      precision_x, precision_f, precision_g, log_discrete_as_int);
+      number_target_triggers, log_target_precision, unif_target_precision, unif_target_trigger,
+      number_evaluation_triggers, base_evaluation_triggers, precision_x, precision_f,
+      precision_g, log_discrete_as_int);
 
   coco_free_memory(path);
   coco_free_memory(result_folder);
@@ -518,6 +583,8 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
     observer_toy(observer, observer_options, &additional_option_keys);
   } else if (0 == strcmp(observer_name, "bbob")) {
     observer_bbob(observer, observer_options, &additional_option_keys);
+  } else if (0 == strcmp(observer_name, "bbob-new")) {
+    observer_bbob_new(observer, observer_options, &additional_option_keys);
   } else if (0 == strcmp(observer_name, "bbob-biobj")) {
     observer_biobj(observer, observer_options, &additional_option_keys);
   } else if (0 == strcmp(observer_name, "bbob-biobj-ext")) {
@@ -533,7 +600,7 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
   } else if (0 == strcmp(observer_name, "rw")) {
     observer_rw(observer, observer_options, &additional_option_keys);
   } else {
-    coco_warning("Unknown observer!");
+    coco_warning("Unknown observer %s!", observer_name);
     return NULL;
   }
 

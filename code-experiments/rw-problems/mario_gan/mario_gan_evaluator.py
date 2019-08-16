@@ -329,7 +329,7 @@ def getNetG(problem, inst, dim, c, json):
     if c == 1:
         dim = 5
 
-    print(path)
+    # print(path)
     pattern = "{}/GAN/{}-{}-{}/netG_epoch_*_{}.pth".format(path,json, dim, budget,
                                                             inst)
     files = glob.glob(pattern)

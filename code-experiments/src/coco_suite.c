@@ -26,6 +26,9 @@
 #include "suite_toy_socket_biobj.c"
 #include "suite_mario_gan.c"
 #include "suite_mario_gan_biobj.c"
+#include "suite_top_trumps.c"
+#include "suite_top_trumps_biobj.c"
+
 
 /** @brief The maximum number of different instances in a suite. */
 #define COCO_MAX_INSTANCES 1000
@@ -62,9 +65,13 @@ static coco_suite_t *coco_suite_intialize(const char *suite_name, const char *su
     suite = suite_mario_gan_initialize(suite_options);
   } else if (strcmp(suite_name, "mario-gan-biobj") == 0) {
     suite = suite_mario_gan_biobj_initialize(suite_options);
+  } else if (strcmp(suite_name, "top-trumps") == 0) {
+    suite = suite_top_trumps_initialize(suite_options);
+  } else if (strcmp(suite_name, "top-trumps-biobj") == 0) {
+    suite = suite_top_trumps_biobj_initialize(suite_options);
   }
   else {
-    coco_error("coco_suite_intialize(): unknown problem suite");
+    coco_error("coco_suite_intialize(): suite '%s' unknown problem suite",  suite->suite_name);
     return NULL;
   }
 
@@ -100,6 +107,10 @@ static const char *coco_suite_get_instances_by_year(const coco_suite_t *suite, c
     year_string = suite_mario_gan_get_instances_by_year(year);
   } else if (strcmp(suite->suite_name, "mario-gan-biobj") == 0) {
     year_string = suite_mario_gan_biobj_get_instances_by_year(year);
+  } else if (strcmp(suite->suite_name, "top-trumps") == 0) {
+    year_string = suite_top_trumps_get_instances_by_year(year);
+  } else if (strcmp(suite->suite_name, "top-trumps-biobj") == 0) {
+    year_string = suite_top_trumps_biobj_get_instances_by_year(year);
   } else {
     coco_error("coco_suite_get_instances_by_year(): suite '%s' has no years defined", suite->suite_name);
     return NULL;
@@ -151,6 +162,10 @@ static coco_problem_t *coco_suite_get_problem_from_indices(coco_suite_t *suite,
     problem = suite_mario_gan_get_problem(suite, function_idx, dimension_idx, instance_idx);
   } else if (strcmp(suite->suite_name, "mario-gan-biobj") == 0) {
     problem = suite_mario_gan_biobj_get_problem(suite, function_idx, dimension_idx, instance_idx);
+  } else if (strcmp(suite->suite_name, "top-trumps") == 0) {
+    problem = suite_top_trumps_get_problem(suite, function_idx, dimension_idx, instance_idx);
+  } else if (strcmp(suite->suite_name, "top-trumps-biobj") == 0) {
+    problem = suite_top_trumps_biobj_get_problem(suite, function_idx, dimension_idx, instance_idx);
   } else {
     coco_error("coco_suite_get_problem_from_indices(): unknown problem suite");
     return NULL;
@@ -162,20 +177,21 @@ static coco_problem_t *coco_suite_get_problem_from_indices(coco_suite_t *suite,
 }
 
 /**
- * @brief Returns the best indicator value for the given problem.
+ * @brief Saves the best indicator value for the given problem in value.
+ *
+ * If the best indicator values are not known for this suite, the function returns -1.
  */
-static double coco_suite_get_best_indicator_value(const coco_suite_t *suite,
-                                                  const coco_problem_t *problem,
-                                                  const char *indicator_name) {
-  double result = 0;
+static int coco_suite_get_best_indicator_value(const coco_suite_t *suite,
+                                               const coco_problem_t *problem,
+                                               const char *indicator_name,
+                                               double *value) {
 
   if (strcmp(indicator_name, "hyp") == 0) {
-    result = suite_biobj_get_best_hyp_value(suite->suite_name, problem->problem_id);
+    return suite_biobj_get_best_hyp_value(suite->suite_name, problem->problem_id, value);
   } else {
     coco_error("coco_suite_get_best_indicator_value(): indicator %s not supported", indicator_name);
     return 0; /* Never reached */
   }
-  return result;
 }
 
 /**
@@ -950,5 +966,6 @@ void coco_suite_decode_problem_index(const coco_suite_t *suite,
   *instance_idx = problem_index % suite->number_of_instances;
   *function_idx = (problem_index / suite->number_of_instances) % suite->number_of_functions;
   *dimension_idx = problem_index / (suite->number_of_instances * suite->number_of_functions);
-
 }
+
+
