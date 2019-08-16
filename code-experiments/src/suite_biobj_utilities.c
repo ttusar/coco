@@ -545,6 +545,10 @@ static int suite_biobj_get_best_hyp_value(const char *suite_name, const char *ke
     *value = default_value;
     return -1;
   }
+  else if (strcmp(suite_name, "top-trumps-biobj") == 0) {
+    *value = default_value;
+    return -1;
+  }
   else {
     coco_error("suite_biobj_get_best_hyp_value(): suite %s not supported", suite_name);
     return -1; /* Never reached */
