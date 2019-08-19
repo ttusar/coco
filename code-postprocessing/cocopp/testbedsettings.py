@@ -636,7 +636,7 @@ class MarioGanTestbed(Testbed):
 
     def __init__(self, targetValues):
 
-        for key, val in MarioTestbed.settings.items():
+        for key, val in MarioGanTestbed.settings.items():
             setattr(self, key, val)
         self.instantiate_attributes(targetValues)
 
