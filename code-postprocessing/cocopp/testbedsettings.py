@@ -603,7 +603,7 @@ class MarioGanTestbed(Testbed):
     shortinfo_filename = 'mario-gan-benchmarkshortinfos.txt'
     pptable_target_runlengths = [0.5, 1.2, 3, 10, 50]  # used in config for expensive setting
     pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
-    dimsOfInterest = (10)
+    dimsOfInterest = (10, 20, 30, 40)
 
     settings = dict(
         info_filename='mario-gan-benchmarkinfos.txt',
