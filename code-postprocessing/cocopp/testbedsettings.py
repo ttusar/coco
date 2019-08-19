@@ -356,7 +356,7 @@ class CONSBBOBTestbed(GECCOBBOBTestbed):
 
 
 
-class GECCOBBOBNoisyTestbed(Testbed):
+class GECCOBBOBNoisyTestbed(GECCOBBOBTestbed):
     """The noisy testbed used in the GECCO BBOB workshops 2009, 2010, 2012,
        2013, 2015, and 2016.
     """
@@ -596,7 +596,7 @@ class BBOBLargeScaleTestbed(GECCOBBOBTestbed):
 
 
 
-class MarioGanTestbed(MarioGanTestbed):
+class MarioGanTestbed(Testbed):
     """Testbed used in for Mario
     """
 
