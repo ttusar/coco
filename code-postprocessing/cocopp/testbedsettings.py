@@ -600,7 +600,7 @@ class BBOBLargeScaleTestbed(GECCOBBOBTestbed):
 
 
 class MarioGanTestbed(MarioGanTestbed):
-   """Testbed used in for Mario
+    """Testbed used in for Mario
     """
 
     shortinfo_filename = 'mario-gan-benchmarkshortinfos.txt'
