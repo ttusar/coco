@@ -58,9 +58,6 @@ suite_to_testbed = {
     'bbob-mixint': default_testbed_mixint,
     'bbob-biobj-mixint': default_testbed_bi_mixint,
     'mario-gan': default_testbed_mario_gan,
-    'top-trumps': default_testbed_top_trumps,
-    'mario-gan-biobj': default_testbed_mario_gan_biobj,
-    'top-trumps-biobj': default_testbed_top_trumps_biobj
 }
 
 
