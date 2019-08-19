@@ -356,7 +356,7 @@ class CONSBBOBTestbed(GECCOBBOBTestbed):
 
 
 
-class GECCOBBOBNoisyTestbed(GECCOBBOBTestbed):
+class GECCOBBOBNoisyTestbed(Testbed):
     """The noisy testbed used in the GECCO BBOB workshops 2009, 2010, 2012,
        2013, 2015, and 2016.
     """
