@@ -44,6 +44,7 @@ default_testbed_cons = 'CONSBBOBTestbed'
 default_testbed_ls = 'BBOBLargeScaleTestbed'
 default_testbed_mixint = 'GECCOBBOBMixintTestbed'
 default_testbed_bi_mixint = 'GECCOBBOBBiObjMixintTestbed'
+default_testbed_mario_gan = 'MarioGanTestbed'
 
 current_testbed = None
 
@@ -55,7 +56,11 @@ suite_to_testbed = {
     'bbob-constrained': default_testbed_cons,
     'bbob-largescale': default_testbed_ls,
     'bbob-mixint': default_testbed_mixint,
-    'bbob-biobj-mixint': default_testbed_bi_mixint
+    'bbob-biobj-mixint': default_testbed_bi_mixint,
+    'mario-gan': default_testbed_mario_gan,
+    'top-trumps': default_testbed_top_trumps,
+    'mario-gan-biobj': default_testbed_mario_gan_biobj,
+    'top-trumps-biobj': default_testbed_top_trumps_biobj
 }
 
 
@@ -591,6 +596,53 @@ class BBOBLargeScaleTestbed(GECCOBBOBTestbed):
             setattr(self, key, val)
             if 'target_values' in key or 'targetsOfInterest' in key:
                 self.instantiate_attributes(targetValues, [key])
+
+
+
+class MarioGanTestbed(MarioGanTestbed):
+   """Testbed used in for Mario
+    """
+
+    shortinfo_filename = 'mario-gan-benchmarkshortinfos.txt'
+    pptable_target_runlengths = [0.5, 1.2, 3, 10, 50]  # used in config for expensive setting
+    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
+
+    settings = dict(
+        info_filename='mario-gan-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
+        name="mario-gan",
+        short_names=get_short_names(shortinfo_filename),
+        hardesttargetlatex='10^{-8}',  # used for ppfigs, pptable and pptables
+        ppfigs_ftarget=1e-8,  # to set target runlength in expensive setting, use genericsettings.target_runlength
+        ppfig2_ftarget=1e-8,
+        ppfigdim_target_values=(10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-8),
+        pprldistr_target_values=(10., 1e-1, 1e-4, 1e-8),
+        pprldmany_target_values=10 ** np.arange(2, -8.2, -0.2),
+        pprldmany_target_range_latex='$10^{[-8..2]}$',
+        ppscatter_target_values=np.logspace(-8, 2, 21),  # 21 was 46
+        rldValsOfInterest=(10, 1e-1, 1e-4, 1e-8),  # possibly changed in config
+        ppfvdistr_min_target=1e-8,
+        functions_with_legend=(1, 28),
+        first_function_number=1,
+        last_function_number=28,
+        reference_values_hash_dimensions=[],
+        pptable_ftarget=1e-8,  # value for determining the success ratio in all tables
+        pptable_targetsOfInterest=pptable_targetsOfInterest,
+        pptablemany_targetsOfInterest=pptable_targetsOfInterest,
+        scenario=scenario_fixed,
+        reference_algorithm_filename='',
+        reference_algorithm_displayname='',  
+        data_format=dataformatsettings.BBOBOldDataFormat(), 
+        number_of_points=5,  # nb of target function values for each decade
+        instancesOfInterest=None  # None: consider all instances
+    ) 
+
+    def __init__(self, targetValues):
+
+        for key, val in MarioTestbed.settings.items():
+            setattr(self, key, val)
+        self.instantiate_attributes(targetValues)
+
 
 
 class GECCOBBOBMixintTestbed(GECCOBBOBTestbed):
