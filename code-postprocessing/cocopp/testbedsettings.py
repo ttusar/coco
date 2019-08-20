@@ -626,7 +626,7 @@ class MarioGanTestbed(Testbed):
         ppfvdistr_min_target=1e-8,
         functions_with_legend=(0, 0),
         first_function_number=1,
-        last_function_number=24,
+        last_function_number=28,
         reference_values_hash_dimensions=[],
         pptable_ftarget=1e-8,  # value for determining the success ratio in all tables
         pptable_targetsOfInterest=pptable_targetsOfInterest,
