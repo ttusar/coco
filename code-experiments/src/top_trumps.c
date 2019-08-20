@@ -7,7 +7,7 @@
 #include "coco.h"
 #include "coco_platform.h"
 #include "socket_communication.c"
-#include "rw_top_trumps.h"
+#include "top_trumps.h"
 
 
 /**
@@ -21,7 +21,6 @@ static coco_problem_t *top_trumps_problem_allocate(const size_t number_of_object
                                                    const char *problem_name_template) {
 
   coco_problem_t *problem = NULL;
-  size_t i;
 
   if ((number_of_objectives != 1) && (number_of_objectives != 2))
       coco_error("top-trumps_problem_allocate(): %lu objectives are not supported (only 1 or 2)",
@@ -37,9 +36,18 @@ static coco_problem_t *top_trumps_problem_allocate(const size_t number_of_object
 
   coco_problem_set_id(problem, problem_id_template, function, instance, dimension);
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
+  coco_problem_set_type(problem, "top-trumps");
 
   if (number_of_objectives == 1) {
-    problem->best_value[0] = -1;
+    /* Unknown best_parameter and best_value */
+    if (problem->best_parameter != NULL) {
+      coco_free_memory(problem->best_parameter);
+      problem->best_parameter = NULL;
+    }
+    if (problem->best_value != NULL) {
+      coco_free_memory(problem->best_value);
+      problem->best_value = NULL;
+    }
   }
   /* Need to provide estimation for the ideal and nadir points in the bi-objective case */
   else if (number_of_objectives == 2) {
@@ -48,9 +56,6 @@ static coco_problem_t *top_trumps_problem_allocate(const size_t number_of_object
     problem->nadir_value[0] = 0;
     problem->nadir_value[1] = 0;
   }
-    
-  for (i = 0; i < dimension; ++i)
-    problem->best_parameter[i] = 0;
 
   return problem;
 }

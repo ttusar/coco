@@ -22,7 +22,7 @@ static coco_suite_t *suite_top_trumps_biobj_initialize(const char *suite_options
   coco_suite_t *suite;
   const size_t dimensions[] = { 88, 128, 168, 208 };
 
-  suite = coco_suite_allocate("top-trumps", 3, 4, dimensions, "instances: 1-15");
+  suite = coco_suite_allocate("top-trumps-biobj", 3, 4, dimensions, "instances: 1-15");
   suite->data = socket_communication_data_initialize(suite_options);
   suite->data_free_function = socket_communication_data_free;
 
@@ -53,9 +53,9 @@ static const char *suite_top_trumps_biobj_get_instances_by_year(const int year) 
  * @return The problem that corresponds to the given parameters.
  */
 static coco_problem_t *suite_top_trumps_biobj_get_problem(coco_suite_t *suite,
-                                                      const size_t function_idx,
-                                                      const size_t dimension_idx,
-                                                      const size_t instance_idx) {
+                                                          const size_t function_idx,
+                                                          const size_t dimension_idx,
+                                                          const size_t instance_idx) {
 
   coco_problem_t *problem = NULL;
 
