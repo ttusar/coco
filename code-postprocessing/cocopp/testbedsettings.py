@@ -603,12 +603,17 @@ class MarioGanTestbed(Testbed):
     shortinfo_filename = 'mario-gan-benchmarkshortinfos.txt'
     pptable_target_runlengths = [0.5, 1.2, 3, 10, 50]  # used in config for expensive setting
     pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
+    dimsOfInterest = (10, 20, 30, 40)
 
     settings = dict(
         info_filename='mario-gan-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
         name="mario-gan",
         short_names=get_short_names(shortinfo_filename),
+        dimensions_to_display=(10, 20, 30, 40),
+        goto_dimension=10,  # auto-focus on this dimension in html
+        rldDimsOfInterest=dimsOfInterest,
+        tabDimsOfInterest=dimsOfInterest,
         hardesttargetlatex='10^{-8}',  # used for ppfigs, pptable and pptables
         ppfigs_ftarget=1e-8,  # to set target runlength in expensive setting, use genericsettings.target_runlength
         ppfig2_ftarget=1e-8,
@@ -619,14 +624,14 @@ class MarioGanTestbed(Testbed):
         ppscatter_target_values=np.logspace(-8, 2, 21),  # 21 was 46
         rldValsOfInterest=(10, 1e-1, 1e-4, 1e-8),  # possibly changed in config
         ppfvdistr_min_target=1e-8,
-        functions_with_legend=(1, 28),
+        functions_with_legend=(0, 0),
         first_function_number=1,
-        last_function_number=28,
+        last_function_number=24,
         reference_values_hash_dimensions=[],
         pptable_ftarget=1e-8,  # value for determining the success ratio in all tables
         pptable_targetsOfInterest=pptable_targetsOfInterest,
         pptablemany_targetsOfInterest=pptable_targetsOfInterest,
-        scenario=scenario_fixed,
+        scenario=scenario_rlbased,
         reference_algorithm_filename='',
         reference_algorithm_displayname='',  
         data_format=dataformatsettings.BBOBOldDataFormat(), 
