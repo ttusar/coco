@@ -5,7 +5,7 @@
  *      Author: Tea Tusar
  */
 #include <stdio.h>
-#include "top_trumps.h"
+#include "rw_top_trumps.h"
 
 int main(void) {
 

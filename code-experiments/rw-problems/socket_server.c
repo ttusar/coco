@@ -29,7 +29,7 @@
 #define PRECISION_Y 16      /* Precision used to write objective values */
 
 #include "toy_socket/toy_socket_evaluator.c"  /* Use the toy_evaluator for evaluation */
-#include "top_trumps/top_trumps.h"
+#include "top_trumps/rw_top_trumps.h"
 /* ADD HERE includes of other evaluators, for example
 #include "my-suite/my_evaluator.c"
 */

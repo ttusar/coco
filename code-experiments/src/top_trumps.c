@@ -7,7 +7,7 @@
 #include "coco.h"
 #include "coco_platform.h"
 #include "socket_communication.c"
-#include "top_trumps.h"
+#include "rw_top_trumps.h"
 
 
 /**
