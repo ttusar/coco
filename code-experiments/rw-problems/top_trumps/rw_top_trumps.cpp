@@ -1,17 +1,10 @@
-/*
- * top_trumps.cpp
- *
- *  Created on: 29. jun. 2018
- *      Author: Tea Tusar
- */
-#include "top_trumps.h"
-
 #include "Simulation/Game.h"
 #include <assert.h>
 #include <iostream>
 
 #include <stdio.h>
 #include <string.h>
+#include "rw_top_trumps.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,9 +15,9 @@ int rep = 2000;
 int players = 2;
 
 /**
- * An evaluator for problems from the toy-socket suite to demonstrate external evaluation in C
+ * The evaluator for problems from the rw_top_trumps suite
  */
-void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t function,
+void evaluate_rw_top_trumps(char *suite_name, size_t number_of_objectives, size_t function,
     size_t instance, size_t dimension, const double *x, double *y)
 {
   int seed = (int) instance;
@@ -69,13 +62,13 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
 
 
   Deck deck(x_vector, n, m, min, max);
-  if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1) && (function <=2)) {
+  if ((strcmp(suite_name, "rw-top-trumps") == 0) && (number_of_objectives == 1) && (function <=2)) {
     if (function == 1) {
       y_vector[0] = -deck.getHV()/maxHyp;
     } else if (function == 2) {
       y_vector[0] = -deck.getSD()/maxSD;
     }
-  } else if ((strcmp(suite_name, "top-trumps-biobj") == 0) && (number_of_objectives == 2) && (function<=1)) {
+  } else if ((strcmp(suite_name, "rw-top-trumps-biobj") == 0) && (number_of_objectives == 2) && (function<=1)) {
     if (function == 1) {
       y_vector[0] = -deck.getHV()/maxHyp;
       y_vector[1] = -deck.getSD()/maxSD;
@@ -93,7 +86,7 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
       out = game.run(out, 0);
     }
 	
-		if ((strcmp(suite_name, "top-trumps") == 0) && (number_of_objectives == 1)) {
+		if ((strcmp(suite_name, "rw-top-trumps") == 0) && (number_of_objectives == 1)) {
 		  if (function == 3) {
 		    y_vector[0] = -out.getFairAgg();
 		  } else if (function == 4) {
@@ -104,7 +97,7 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
 				fprintf(stderr, "evaluate(): suite %s does not have function %lu", suite_name, function);
 				exit(EXIT_FAILURE);
 		  }
-		} else if ((strcmp(suite_name, "top-trumps-biobj") == 0) && (number_of_objectives == 2)) {
+		} else if ((strcmp(suite_name, "rw-top-trumps-biobj") == 0) && (number_of_objectives == 2)) {
 			if (function == 2) {
 			  y_vector[0] = -out.getFairAgg();
 			  y_vector[1] = -players * out.getLeadChangeAgg()/n;
@@ -125,7 +118,7 @@ void evaluate_top_trumps(char *suite_name, size_t number_of_objectives, size_t f
 }
 
 
-void top_trumps_bounds(size_t instance, size_t size_x,
+void rw_top_trumps_bounds(size_t instance, size_t size_x,
     double *lower_bounds, double *upper_bounds) {
     
   int seed = (int) instance;
@@ -151,7 +144,7 @@ void top_trumps_bounds(size_t instance, size_t size_x,
   }
 }
 
-void top_trumps_test(void) {
+void rw_top_trumps_test(void) {
   std::cout << "Top trumps is working!\n";
 }
 

@@ -1,33 +1,27 @@
-/**
- * @file top_trumps.c
- *
- * @brief Calling suite
- */
-
+#include "rw_top_trumps.h" /* File copied here during building of the top trumps problem */
 #include "coco.h"
 #include "coco_platform.h"
 #include "socket_communication.c"
-#include "top_trumps.h"
 
 
 /**
- * @brief Creates a single- or bi-objective top-trumps problem.
+ * @brief Creates a single- or bi-objective rw-top-trumps problem.
  */
-static coco_problem_t *top_trumps_problem_allocate(const size_t number_of_objectives,
-                                                   const size_t function,
-                                                   const size_t dimension,
-                                                   const size_t instance,
-                                                   const char *problem_id_template,
-                                                   const char *problem_name_template) {
+static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_objectives,
+                                                      const size_t function,
+                                                      const size_t dimension,
+                                                      const size_t instance,
+                                                      const char *problem_id_template,
+                                                      const char *problem_name_template) {
 
   coco_problem_t *problem = NULL;
 
   if ((number_of_objectives != 1) && (number_of_objectives != 2))
-      coco_error("top-trumps_problem_allocate(): %lu objectives are not supported (only 1 or 2)",
+      coco_error("rw_top_trumps_problem_allocate(): %lu objectives are not supported (only 1 or 2)",
         (unsigned long)number_of_objectives);
 
   problem = coco_problem_allocate(dimension, number_of_objectives, 0);
-  top_trumps_bounds(instance, dimension,
+  rw_top_trumps_bounds(instance, dimension,
       problem->smallest_values_of_interest,
       problem->largest_values_of_interest);
 
@@ -36,7 +30,7 @@ static coco_problem_t *top_trumps_problem_allocate(const size_t number_of_object
 
   coco_problem_set_id(problem, problem_id_template, function, instance, dimension);
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
-  coco_problem_set_type(problem, "top-trumps");
+  coco_problem_set_type(problem, "rw-top-trumps");
 
   if (number_of_objectives == 1) {
     /* Unknown best_parameter and best_value */

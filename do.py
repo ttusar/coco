@@ -54,7 +54,7 @@ _build_verbosity = True
 ## C
 def build_c():
     """ Builds the C source code """
-    build_top_trumps()
+    build_rw_top_trumps()
     global RELEASE
     amalgamate(CORE_FILES + ['code-experiments/src/coco_runtime_c.c'],
                'code-experiments/build/c/coco.c', RELEASE,
@@ -293,7 +293,7 @@ def test_suites(args):
 
 def _prep_python():
     global RELEASE
-    build_top_trumps()
+    build_rw_top_trumps()
     amalgamate(CORE_FILES + ['code-experiments/src/coco_runtime_c.c'],
                'code-experiments/build/python/cython/coco.c',
                RELEASE, {"COCO_VERSION": git_version(pep440=True)})
@@ -790,8 +790,8 @@ def test_socket_python(package_install_option=[]):
 
 ################################################################################
 ## Real-world problems
-def build_top_trumps():
-    rw_library = 'top_trumps'
+def build_rw_top_trumps():
+    rw_library = 'rw_top_trumps'
     copy_file('code-experiments/rw-problems/top_trumps/{}.h'.format(rw_library),
               'code-experiments/src/{}.h'.format(rw_library))
     make('code-experiments/rw-problems/top_trumps', 'clean', verbose=_build_verbosity)
@@ -1106,7 +1106,7 @@ def main(args):
     elif cmd == 'run-socket-c': run_socket_c()
     elif cmd == 'run-socket-python': run_socket_python()
     elif cmd == 'test-socket-python': test_socket_python(package_install_option=package_install_option)
-    elif cmd == 'build-top-trumps': build_top_trumps()
+    elif cmd == 'build-top-trumps': build_rw_top_trumps()
     else: help()
 
 

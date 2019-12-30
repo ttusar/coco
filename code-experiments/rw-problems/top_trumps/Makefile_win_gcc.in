@@ -1,5 +1,5 @@
-LNAME := top_trumps
-ENAME := top_trumps_test
+LNAME := rw_top_trumps
+ENAME := test_rw_top_trumps
 ifeq ($(OS),Windows_NT)
     LIBNAME := $(LNAME).dll
 else

@@ -1,11 +1,6 @@
-/*
- * rw_top_trump_test.c
- *
- *  Created on: 29. jun. 2018
- *      Author: Tea Tusar
- */
 #include <stdio.h>
-#include "top_trumps.h"
+
+#include "rw_top_trumps.h"
 
 int main(void) {
 
@@ -19,7 +14,7 @@ int main(void) {
   double * lb;
   double * ub;
 
-  top_trumps_test();
+  rw_top_trumps_test();
 
   x = (double *) malloc(size_x * sizeof(double));
   y = (double *) malloc(size_y * sizeof(double));
@@ -27,7 +22,7 @@ int main(void) {
   for (i = 0; i < size_x; i++)
     x[i] = 12;
 
-  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
+  evaluate_rw_top_trumps("rw-top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -42,7 +37,7 @@ int main(void) {
   fflush(stdout);
 
   function=2;
-  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
+  evaluate_rw_top_trumps("rw-top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -53,7 +48,7 @@ int main(void) {
   fflush(stdout);
 
   function=3;
-  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
+  evaluate_rw_top_trumps("rw-top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -64,7 +59,7 @@ int main(void) {
   fflush(stdout);
 
   function=4;
-  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
+  evaluate_rw_top_trumps("rw-top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -75,7 +70,7 @@ int main(void) {
   fflush(stdout);
 
   function=5;
-  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
+  evaluate_rw_top_trumps("rw-top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
@@ -94,9 +89,9 @@ int main(void) {
 
   lb = (double *) malloc(size_x* sizeof(double));
   ub= (double *) malloc(size_x* sizeof(double));
-  top_trumps_bounds(instance, size_x, lb, ub);
+  rw_top_trumps_bounds(instance, size_x, lb, ub);
   
-  evaluate_top_trumps("top-trumps", size_y, function, instance, size_x, x, y);
+  evaluate_rw_top_trumps("rw-top-trumps", size_y, function, instance, size_x, x, y);
 
   printf("function = %lu, instance = %lu, objectives = %lu\n",
       (unsigned long)function, (unsigned long)instance, (unsigned long)size_y);
