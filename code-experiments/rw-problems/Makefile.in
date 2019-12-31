@@ -4,7 +4,7 @@
 
 CCFLAGS = -g -ggdb -std=c89 -pedantic -Wall -Wextra -Wstrict-prototypes -Wshadow -Wno-sign-compare -Wconversion
 
-LNAME := top_trumps
+LNAME := rw_top_trumps
 ifeq ($(OS),Windows_NT)
     LIBNAME := $(LNAME).dll
 else

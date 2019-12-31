@@ -743,10 +743,10 @@ def test_java():
 ## External evaluation with sockets
 def run_socket_c():
     """ Builds and runs the C server for external evaluation with sockets """
-    make('code-experiments/rw-problems', 'clean', verbose=_build_verbosity)
-    make('code-experiments/rw-problems', 'all', verbose=_build_verbosity)
+    make(os.path.join('code-experiments', 'rw-problems'), 'clean', verbose=_build_verbosity)
+    make(os.path.join('code-experiments', 'rw-problems'), 'all', verbose=_build_verbosity)
     try:
-        run('code-experiments/rw-problems', ['./socket_server'], verbose=_verbosity)
+        run(os.path.join('code-experiments', 'rw-problems'), ['./socket_server'], verbose=_verbosity)
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
