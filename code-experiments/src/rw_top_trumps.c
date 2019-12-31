@@ -25,7 +25,7 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_obj
       problem->smallest_values_of_interest,
       problem->largest_values_of_interest);
 
-  problem->number_of_integer_variables = 0;
+  problem->number_of_integer_variables = dimension;
   problem->evaluate_function = socket_evaluate;
 
   coco_problem_set_id(problem, problem_id_template, function, instance, dimension);
