@@ -1,8 +1,13 @@
 /**
  * The socket server in C.
  *
- * Uses the toy_socket_evaluator to evaluate problems from the toy-socket suite. Change code below to
- * connect it to other evaluators (for other suites) -- see occurrences of 'ADD HERE'.
+ * Uses the toy_socket_evaluator to evaluate problems from the toy-socket suite. Additional
+ * evaluators can be used -- whether they are included or not depends on the respective
+ * preprocessor directives (see the #define and #if directives below that start with EVALUATE_).
+ * These definitions can be modified directly or through do.py.
+ *
+ * Change code below to connect it to other evaluators (for other suites) -- see occurrences
+ * of 'ADD HERE'.
  */
 
 /* The winsock2.h header *needs* to be included before windows.h! */
@@ -22,16 +27,22 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define PORT 7251
 #define MESSAGE_SIZE 8000   /* Should be large enough to contain a number of x-values */
 #define RESPONSE_SIZE 256   /* Should be large enough to contain a couple of objective values */
 #define SUITE_NAME_SIZE 64  /* Should be large enough to contain the name of a suite */
 #define PRECISION_Y 16      /* Precision used to write objective values */
 
-#include "toy_socket/toy_socket_evaluator.c"  /* Use the toy_evaluator for evaluation */
-#include "top_trumps/rw_top_trumps.h"
+#include "toy_socket/toy_socket_evaluator.c"  /* Include the toy_evaluator for evaluation */
+
+#define EVALUATE_RW_TOP_TRUMPS 0              /* Value can be modified through do.py */
+#if EVALUATE_RW_TOP_TRUMPS > 0
+#include "top_trumps/rw_top_trumps.h"         /* Include rw_top_trumps for evaluation */
+#endif
 /* ADD HERE includes of other evaluators, for example
+#define EVALUATE_MY_EVALUATOR 0
+#if EVALUATE_MY_EVALUATOR > 0
 #include "my-suite/my_evaluator.c"
+#endif
 */
 
 /**
@@ -81,9 +92,12 @@ char *evaluate_message(char *message) {
   y = malloc(number_of_objectives * sizeof(double));
   if ((strcmp(suite_name, "toy-socket") == 0) || (strcmp(suite_name, "toy-socket-biobj") == 0)) {
     evaluate_function = evaluate_toy_socket;
-  } else if ((strcmp(suite_name, "rw-top-trumps") == 0) || (strcmp(suite_name, "rw-top-trumps-biobj") == 0)) {
+  }
+#if EVALUATE_RW_TOP_TRUMPS > 0
+  else if ((strcmp(suite_name, "rw-top-trumps") == 0) || (strcmp(suite_name, "rw-top-trumps-biobj") == 0)) {
     evaluate_function = evaluate_rw_top_trumps;
   }
+#endif
   /* ADD HERE the function for another evaluator, for example
   else if (strcmp(suite_name, "my-suite") == 0) {
     evaluate_function = evaluate_my_suite;
@@ -112,11 +126,11 @@ char *evaluate_message(char *message) {
 }
 
 /**
- * Starts the server.
+ * Starts the server on the given port.
  *
  * Should be working for different platforms.
  */
-void socket_server_start(int silent) {
+void socket_server_start(unsigned short port, int silent) {
 
   int address_size;
   char message[MESSAGE_SIZE];
@@ -146,7 +160,7 @@ void socket_server_start(int silent) {
 
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY; /* "any address" in IPV4 */
-  address.sin_port = htons(PORT);
+  address.sin_port = htons(port);
 
   /* Bind */
   if (bind(sock, (SOCKADDR *) &address, sizeof(address)) < 0) {
@@ -158,7 +172,7 @@ void socket_server_start(int silent) {
     fprintf(stderr, "socket_server_start(): Listen failed: %d", WSAGetLastError());
   }
 
-  printf("Server ready, listening on port %d\n", PORT);
+  printf("Server ready, listening on port %d\n", port);
   address_size = sizeof(address);
 
   while (1) {
@@ -204,7 +218,7 @@ void socket_server_start(int silent) {
   }
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY; /* "any address" in IPV4 */
-  address.sin_port = htons(PORT);
+  address.sin_port = htons(port);
 
   /* Bind */
   if (bind(sock, (struct sockaddr*) &address, sizeof(address)) < 0) {
@@ -218,7 +232,7 @@ void socket_server_start(int silent) {
     exit(EXIT_FAILURE);
   }
 
-  printf("Server ready, listening on port %d\n", PORT);
+  printf("Server ready, listening on port %d\n", port);
   address_size = sizeof(address);
 
   while (1) {
@@ -253,15 +267,25 @@ void socket_server_start(int silent) {
 int main(int argc, char* argv[])
 {
   int silent = 0;
-  if (argc == 2) {
-    if (strcmp(argv[1], "silent") == 0) {
-      silent = 1;
-    } else {
-      printf("Ignoring input option %s\n", argv[1]);
+  long port;
+  unsigned short port_short;
+
+  if ((argc >= 2) && (argc <= 3)) {
+    port = strtol(argv[1], NULL, 10);
+    port_short = (unsigned short)port;
+    printf("Server called on port %d\n", port_short);
+    if (argc == 3) {
+      if (strcmp(argv[2], "silent") == 0) {
+        silent = 1;
+      } else {
+        printf("Ignoring input option %s\n", argv[2]);
+      }
     }
-  } else if (argc > 2) {
-    printf("Too many options (at most one supported), ignoring all\n");
   }
-  socket_server_start(silent);
+  else {
+    printf("Incorrect options\nUsage:\nsocket_server PORT <\"silent\">");
+    return -1;
+  }
+  socket_server_start(port_short, silent);
   return 0;
 }

@@ -26,4 +26,4 @@ socket_server: socket_server.c
 	$(CC) ${CCFLAGS} socket_server.c -o socket_server ${LDFLAGS} 
 
 clean:
-	rm -f socket_server
+	del socket_server 2>nul
