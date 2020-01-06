@@ -150,7 +150,8 @@ static void socket_communication_evaluate(const char* host_name, const unsigned 
 
   /* Connect to the evaluator */
   if (connect(sock, (SOCKADDR *) &serv_addr, sizeof(serv_addr)) < 0) {
-    coco_error("socket_communication_evaluate(): Connection failed\nIs the server running?");
+    coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?",
+        host_name, port);
   }
 
   /* Send message */
@@ -189,7 +190,8 @@ static void socket_communication_evaluate(const char* host_name, const unsigned 
 
   /* Connect to the evaluator */
   if (connect(sock, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-    coco_error("socket_communication_evaluate(): Connection failed\nIs the server running?");
+    coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?",
+        host_name, port);
   }
 
   /* Send message */

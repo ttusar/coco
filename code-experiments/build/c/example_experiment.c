@@ -133,20 +133,20 @@ int main(void) {
    */
 
   /* 7251 (7252) is the default port for C (Python) evaluators */
-  example_experiment("rw-top-trumps", "", "bbob-new",
-      "port: 7251 result_folder: RS_on_rw-top-trumps", random_generator);
-  example_experiment("rw-top-trumps-biobj", "", "bbob-biobj",
-      "port: 7251 result_folder: RS_on_rw-top-trumps-biobj", random_generator);
+  example_experiment("toy-socket", "port: 7252", "bbob-new",
+      "result_folder: RS_on_toy-socket", random_generator);
+  example_experiment("toy-socket-biobj", "port: 7252", "bbob-biobj",
+      "result_folder: RS_on_toy-socket-biobj", random_generator);
 
-  example_experiment("toy-socket", "", "bbob-new",
-      "port: 7251 result_folder: RS_on_toy-socket", random_generator);
-  example_experiment("toy-socket-biobj", "", "bbob-biobj",
-      "port: 7251 result_folder: RS_on_toy-socket-biobj", random_generator);
+  example_experiment("rw-top-trumps", "port: 7251", "bbob-new",
+      "result_folder: RS_on_rw-top-trumps", random_generator);
+  example_experiment("rw-top-trumps-biobj", "port: 7251", "bbob-biobj",
+      "result_folder: RS_on_rw-top-trumps-biobj", random_generator);
 
-  example_experiment("mario-gan", "", "bbob-new",
-      "port: 7252 result_folder: RS_on_mario-gan", random_generator);
-  example_experiment("mario-gan-biobj", "", "bbob-biobj",
-      "port: 7252 result_folder: RS_on_mario-gan-biobj", random_generator);
+  example_experiment("mario-gan", "port: 7252", "bbob-new",
+      "result_folder: RS_on_mario-gan", random_generator);
+  example_experiment("mario-gan-biobj", "port: 7252", "bbob-biobj",
+      "result_folder: RS_on_mario-gan-biobj", random_generator);
 
   /**
    * For more details on how to change the default suite and observer options, see

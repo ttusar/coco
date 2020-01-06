@@ -33,21 +33,19 @@ if USE_CYTHON:
 else:
     print("NOTE: Using precompiled C file to build interface.")
     interface_file = 'cython/interface.c'
+
+extensions_kwargs = dict(sources=[interface_file, 'cython/coco.c'],
+                         include_dirs=[np.get_include()])
+
+EVALUATE_RW_TOP_TRUMPS = 0
+if EVALUATE_RW_TOP_TRUMPS:
+    extensions_kwargs.update({'libraries': ["rw_top_trumps"], 'extra_link_args': ["-L."]})
     
 if True or 'darwin' in sys.platform or 'linux' in sys.platform:
-    extensions.append(Extension('cocoex.interface',
-                                sources=[interface_file, 'cython/coco.c'],
-                                include_dirs=[np.get_include()],
-                                libraries=["rw_top_trumps"],
-                                extra_link_args=["-L."]
-                                ))
+    extensions.append(Extension('cocoex.interface', **extensions_kwargs))
+
 if 'linux' in sys.platform:
-    extensions.append(Extension('cocoex._interface',
-                                sources=[interface_file, 'cython/coco.c'],
-                                include_dirs=[np.get_include()],
-                                libraries=["rw_top_trumps"],
-                                extra_link_args=["-L."]
-                                ))
+    extensions.append(Extension('cocoex._interface', **extensions_kwargs))
 
 
 setup(

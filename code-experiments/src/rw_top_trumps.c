@@ -3,6 +3,7 @@
 #include "coco_platform.h"
 #include "socket_communication.c"
 
+#define EVALUATE_RW_TOP_TRUMPS 0              /* Value can be modified through do.py */
 
 /**
  * @brief Creates a single- or bi-objective rw-top-trumps problem.
@@ -21,9 +22,11 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_obj
         (unsigned long)number_of_objectives);
 
   problem = coco_problem_allocate(dimension, number_of_objectives, 0);
+#if EVALUATE_RW_TOP_TRUMPS > 0
   rw_top_trumps_bounds(instance, dimension,
       problem->smallest_values_of_interest,
       problem->largest_values_of_interest);
+#endif
 
   problem->number_of_integer_variables = dimension;
   problem->evaluate_function = socket_evaluate;

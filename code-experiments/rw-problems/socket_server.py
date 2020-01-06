@@ -6,6 +6,8 @@ can be used -- whether they are included or not depends on the values of the res
 (see the variables that start with EVALUATE_). These definitions can be modified directly or through
 do.py.
 
+If the server receives the message 'SHUTDOWN', it shuts down.
+
 Change code below to connect it to other evaluators (for other suites) -- see occurrences of
 'ADD HERE'.
 """
@@ -30,8 +32,6 @@ def evaluate_message(message):
     """Parses the message and calls an evaluator to compute the evaluation. Then constructs a
     response. Returns the response."""
     try:
-        # Make sure to remove and null endings
-        message = message.split('\x00', 1)[0]
         # Parse the message
         msg = message.split(' ')
         suite_name = msg[msg.index('n') + 1]
@@ -84,7 +84,7 @@ def socket_server_start(port, silent=False):
 
         # Start listening on socket
         s.listen(1)
-        print('Server ready, listening on port {}'.format(port))
+        print('Socket server (Python) ready, listening on port {}'.format(port))
 
         # Talk with the client
         while True:
@@ -102,8 +102,14 @@ def socket_server_start(port, silent=False):
             with conn:
                 # Read the message
                 message = conn.recv(MESSAGE_SIZE).decode("utf-8")
+                # Make sure to remove and null endings
+                message = message.split('\x00', 1)[0]
                 if not silent:
                     print('Received message: {}'.format(message))
+                # Check if the message is a request for shut down
+                if message == 'SHUTDOWN':
+                    print('Shutting down socket server (Python) ')
+                    return
                 # Parse the message and evaluate its contents using an evaluator
                 response = evaluate_message(message)
                 # Send the response
@@ -124,7 +130,7 @@ if __name__ == '__main__':
     port = None
     if 2 <= len(sys.argv) <= 3:
         port = int(sys.argv[1])
-        print('Server called on port {}'.format(port))
+        print('Socket server (Python) called on port {}'.format(port))
         if len(sys.argv) == 3:
             if sys.argv[2] == 'silent':
                 silent = True

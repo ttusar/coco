@@ -6,6 +6,8 @@
  * preprocessor directives (see the #define and #if directives below that start with EVALUATE_).
  * These definitions can be modified directly or through do.py.
  *
+ * If the server receives the message 'SHUTDOWN', it shuts down.
+ *
  * Change code below to connect it to other evaluators (for other suites) -- see occurrences
  * of 'ADD HERE'.
  */
@@ -172,7 +174,7 @@ void socket_server_start(unsigned short port, int silent) {
     fprintf(stderr, "socket_server_start(): Listen failed: %d", WSAGetLastError());
   }
 
-  printf("Server ready, listening on port %d\n", port);
+  printf("Socket server (C) ready, listening on port %d\n", port);
   address_size = sizeof(address);
 
   while (1) {
@@ -187,6 +189,13 @@ void socket_server_start(unsigned short port, int silent) {
     }
     if (silent == 0)
       printf("Received message: %s (length %d)\n", message, message_len);
+
+    /* Check if the message is a request for shut down */
+    if (strcmp(message, "SHUTDOWN") == 0) {
+      printf("Shutting down socket server (C)");
+      closesocket(new_sock);
+      return;
+    }
 
     /* Parse the message and evaluate its contents using an evaluator */
     response = evaluate_message(message);
@@ -232,7 +241,7 @@ void socket_server_start(unsigned short port, int silent) {
     exit(EXIT_FAILURE);
   }
 
-  printf("Server ready, listening on port %d\n", port);
+  printf("Socket server (C) ready, listening on port %d\n", port);
   address_size = sizeof(address);
 
   while (1) {
@@ -249,6 +258,13 @@ void socket_server_start(unsigned short port, int silent) {
     }
     if (silent == 0)
       printf("Received message: %s (length %ld)\n", message, message_len);
+
+    /* Check if the message is a request for shut down */
+    if (strcmp(message, "SHUTDOWN") == 0) {
+      printf("Shutting down socket server (C)");
+      close(new_sock);
+      return;
+    }
 
     /* Parse the message and evaluate its contents using an evaluator */
     response = evaluate_message(message);
@@ -273,7 +289,7 @@ int main(int argc, char* argv[])
   if ((argc >= 2) && (argc <= 3)) {
     port = strtol(argv[1], NULL, 10);
     port_short = (unsigned short)port;
-    printf("Server called on port %d\n", port_short);
+    printf("Socket server (C) called on port %d\n", port_short);
     if (argc == 3) {
       if (strcmp(argv[2], "silent") == 0) {
         silent = 1;

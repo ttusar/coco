@@ -16,6 +16,7 @@ import time
 import glob
 import signal
 import re
+import socket
 from multiprocessing import Process
 
 
@@ -741,8 +742,10 @@ def test_java():
 
 ################################################################################
 ## External evaluation using socket communication
+rw_evaluator_host = '127.0.0.1'
 rw_evaluator_port_c = 7251
 rw_evaluator_port_python = 7252
+rw_evaluator_ports = [rw_evaluator_port_c, rw_evaluator_port_python]
 rw_evaluator_top_trumps = 'EVALUATE_RW_TOP_TRUMPS'
 rw_evaluator_mario_gan = 'EVALUATE_RW_MARIO_GAN'
 rw_evaluators = [rw_evaluator_top_trumps, rw_evaluator_mario_gan]
@@ -762,16 +765,18 @@ def set_external_evaluator(evaluate_string, new_value):
             s = f.read()
             for find_string, replace_string in zip(find_strings, replace_strings):
                 found = re.findall(find_string, s)
-                if _build_verbosity and len(found) > 0:
-                    print('In file {} replacing {} with {}'.format(file_name, found, replace_string))
+                if _build_verbosity and len(found) > 0 and replace_string not in found:
+                    print('REPLACE {} with {} in {}'.format(found, replace_string, file_name))
                 s = re.sub(find_string, replace_string, s)
         with open(file_name, 'w') as f:
             f.write(s)
 
+    replace_in_file(os.path.join('code-experiments', 'src', 'rw_top_trumps.c'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'socket_server.c'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'Makefile.in'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'Makefile_win_gcc.in'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'socket_server.py'))
+    replace_in_file(os.path.join('code-experiments', 'build', 'python', 'setup.py.in'))
 
 
 def _build_socket_server_c():
@@ -782,21 +787,24 @@ def _build_socket_server_c():
 
 def _run_socket_server_c(port):
     """Run the socket server for external evaluation in C"""
-    try:
-        if port is None:
-            port = rw_evaluator_port_c
-        run(os.path.join('code-experiments', 'rw-problems'), ['./socket_server', '{}'.format(port)],
-            verbose=_verbosity)
-    except subprocess.CalledProcessError:
-        sys.exit(-1)
+    if port is None:
+        port = rw_evaluator_port_c
+    command = '{} {}'.format(
+        os.path.join('code-experiments', 'rw-problems', 'socket_server'),
+        port)
+    p = Process(target=subprocess.Popen, args=(command,))
+    p.start()
 
 
 def _run_socket_server_python(port):
     """Run the socket server for external evaluation in Python"""
     if port is None:
         port = rw_evaluator_port_python
-    python(os.path.join('code-experiments', 'rw-problems'), ['socket_server.py', '{}'.format(port)],
-           verbose=_verbosity)
+    command = 'python {} {}'.format(
+        os.path.join('code-experiments', 'rw-problems', 'socket_server.py'),
+        port)
+    p = Process(target=subprocess.Popen, args=(command,))
+    p.start()
 
 
 def build_toy_socket_server_c():
@@ -866,7 +874,7 @@ def build_rw_mario_gan_server():
             set_external_evaluator(rw_evaluator, 0)
 
 
-def build_all_rw_servers():
+def build_socket_servers():
     """Build the socket server with all available evaluators in C and Python"""
     # Build the top trumps library
     build_rw_top_trumps_lib()
@@ -900,41 +908,46 @@ def run_rw_mario_gan_server(port):
     _run_socket_server_python(port)
 
 
-def stop_socket_servers():
-    # TODO
-    pass
+def run_socket_servers():
+    """Run socket servers in C and Python"""
+    build_socket_servers()
+    _run_socket_server_c(rw_evaluator_port_c)
+    _run_socket_server_python(rw_evaluator_port_python)
 
 
-def test_socket_python(package_install_option=[]):
-    """ Tests the toy-socket suite in Python with the Python socket server """
-    # Run the Python socket server
-    call = ['python']
-    file = [os.path.join('code-experiments', 'rw-problems', 'socket_server.py')]
-    if 'win32' in sys.platform:
-        terminal = ['start']
-        command = terminal + call + file
-    else:
-        terminal_start = ['exec', 'xterm', '-e', '\"']
-        terminal_end = ['\"']
-        command = terminal_start + call + file + terminal_end
-    print('RUN\t' + ' '.join(command))
-    try:
-        server_process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-    except subprocess.CalledProcessError as e:
-        raise e
+def stop_socket_servers(port):
+    """Stop the socket servers running on the known ports as well as the given port"""
+    ports = rw_evaluator_ports
+    if port:
+        ports.append(port)
+    for p in ports:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create socket
+            try:
+                s.connect((rw_evaluator_host, p))  # Connect to the server
+            except socket.error:
+                print('No socket server found on port {}'.format(p))
+                continue
+            s.send('SHUTDOWN'.encode())  # Send request for shutdown
+            s.close()
+            print('Stopped socket sever on port {}'.format(p))
+        except (socket.error, Exception) as e:
+            print('Error stopping socket server on port {}: {}'.format(p, e))
+            sys.exit(-1)
+
+
+def test_toy_socket(port, package_install_option=[]):
+    """Test the toy-socket suite (run the socket server in C and the example experiment in Python)
+    """
+    # Run the socket server in C
+    run_toy_socket_server_c(port)
     # Build the Python example experiment
     build_python(package_install_option=package_install_option)
     # Run the Python example experiment with the toy-socket suite
-    try:
-        python(os.path.join('code-experiments', 'build', 'python'),
-               ['example_experiment.py', 'toy-socket'])
-        if 'win32' in sys.platform:
-            # Killing the proccess on Windows not yet working... TODO
-            subprocess.call(['taskkill', '/F', '/T', '/PID', str(server_process.pid)])
-        else:
-            os.kill(server_process.pid, signal.SIGTERM)
-    except subprocess.CalledProcessError as e:
-        raise e
+    python(os.path.join('code-experiments', 'build', 'python'),
+           ['example_experiment.py', 'toy-socket'])
+    # Stop the socket servers
+    stop_socket_servers(port)
 
 
 ################################################################################
@@ -1134,6 +1147,7 @@ Available commands for users:
   run-toy-socket-server-python   - Build and run the toy socket server in Python
   run-rw-top-trumps-server       - Build and run the rw_top_trumps server (external evaluator)
   run-rw-mario-gan-server        - Build and run the rw_mario_gan server (external evaluator) 
+  stop-socket-servers            - Stop all running socket servers
 
 Available commands for developers:
 
@@ -1170,7 +1184,7 @@ Available commands for developers:
   test-preprocessing      - Runs preprocessing tests [needs access to the
                             internet] (see NOTE below)
                             
-  test-socket-python      - Test the toy-socket suite in Python using the Python socket server
+  test-toy-socket         - Tests the toy-socket suite (server in C and experiment in Python)
   
 NOTE: These commands install Python packages to the global site packages by
       by default. This behavior can be modified by providing one of the
@@ -1240,12 +1254,14 @@ def main(args):
     elif cmd == 'build-toy-socket-server-python': build_toy_socket_server_python()
     elif cmd == 'build-rw-top-trumps-server': build_rw_top_trumps_server()
     elif cmd == 'build-rw-mario-gan-server': build_rw_mario_gan_server()
-    elif cmd == 'build-all-rw-servers': build_all_rw_servers()
+    elif cmd == 'build-socket-servers': build_socket_servers()
     elif cmd == 'run-toy-socket-server-c': run_toy_socket_server_c(port=port)
     elif cmd == 'run-toy-socket-server-python': run_toy_socket_server_python(port=port)
     elif cmd == 'run-rw-top-trumps-server': run_rw_top_trumps_server(port=port)
     elif cmd == 'run-rw-mario-gan-server': run_rw_mario_gan_server(port=port)
-    elif cmd == 'test-socket-python': test_socket_python(package_install_option=package_install_option)
+    elif cmd == 'run-socket-servers': run_socket_servers()
+    elif cmd == 'stop-socket-servers': stop_socket_servers(port=port)
+    elif cmd == 'test-toy-socket': test_toy_socket(port=port, package_install_option=package_install_option)
     else: help()
 
 
