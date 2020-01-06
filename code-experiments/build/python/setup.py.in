@@ -39,7 +39,7 @@ extensions_kwargs = dict(sources=[interface_file, 'cython/coco.c'],
 
 EVALUATE_RW_TOP_TRUMPS = 0
 if EVALUATE_RW_TOP_TRUMPS:
-    extensions_kwargs.update({'libraries': ["rw_top_trumps"], 'extra_link_args': ["-L."]})
+    extensions_kwargs.update({'libraries': ["rw_top_trumps"], 'library_dirs': ['.']})
     
 if True or 'darwin' in sys.platform or 'linux' in sys.platform:
     extensions.append(Extension('cocoex.interface', **extensions_kwargs))
