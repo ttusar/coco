@@ -749,11 +749,8 @@ rw_evaluators = [rw_evaluator_top_trumps, rw_evaluator_mario_gan]
 
 
 def set_external_evaluator(evaluate_string, new_value):
-    """Sets the value of the external evaluator given in the evaluate_string.
-
-    Replaces the value of the evaluate_string with the new_value in all files that are relevant
-    for external evaluation of solutions (C source files and make files).
-    """
+    """Set the external evaluator value in all the files required for compiling external
+    evaluators (C source files and make files)"""
     def replace_in_file(file_name):
         """Performs the replacement for the given file_name"""
         find_strings = ['{}{}{}'.format(prepend, evaluate_string, append) for prepend, append in
@@ -778,22 +775,26 @@ def set_external_evaluator(evaluate_string, new_value):
 
 
 def _build_socket_server_c():
-    """Builds the socket server for external evaluation in C"""
+    """Build the socket server for external evaluation in C"""
     make(os.path.join('code-experiments', 'rw-problems'), 'clean', verbose=_build_verbosity)
     make(os.path.join('code-experiments', 'rw-problems'), 'all', verbose=_build_verbosity)
 
 
-def _run_socket_server_c(port=rw_evaluator_port_c):
-    """Runs the socket server for external evaluation in C"""
+def _run_socket_server_c(port):
+    """Run the socket server for external evaluation in C"""
     try:
+        if port is None:
+            port = rw_evaluator_port_c
         run(os.path.join('code-experiments', 'rw-problems'), ['./socket_server', '{}'.format(port)],
             verbose=_verbosity)
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
 
-def _run_socket_server_python(port=rw_evaluator_port_python):
-    """Runs the socket server for external evaluation in Python"""
+def _run_socket_server_python(port):
+    """Run the socket server for external evaluation in Python"""
+    if port is None:
+        port = rw_evaluator_port_python
     python(os.path.join('code-experiments', 'rw-problems'), ['socket_server.py', '{}'.format(port)],
            verbose=_verbosity)
 
@@ -815,29 +816,38 @@ def build_toy_socket_server_python():
         set_external_evaluator(rw_evaluator, 0)
 
 
+def build_rw_top_trumps_lib():
+    """Build the top trumps library with the top trumps evaluator (in C)"""
+    try:
+        # Build the library
+        rw_library = 'rw_top_trumps'
+        copy_file('code-experiments/rw-problems/top_trumps/{}.h'.format(rw_library),
+                  'code-experiments/src/{}.h'.format(rw_library))
+        make('code-experiments/rw-problems/top_trumps', 'clean', verbose=_build_verbosity)
+        make('code-experiments/rw-problems/top_trumps', 'all', verbose=_build_verbosity)
+        if 'win32' in sys.platform:
+            rw_library += '.dll'
+        else:
+            rw_library = 'lib' + rw_library + '.so'
+        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+                  'code-experiments/rw-problems/{}'.format(rw_library))
+        # Make the library available to all languages
+        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+                  'code-experiments/build/c/{}'.format(rw_library))
+        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+                  'code-experiments/build/python/{}'.format(rw_library))
+        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+                  'code-experiments/build/java/{}'.format(rw_library))
+        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
+                  'code-experiments/build/matlab/{}'.format(rw_library))
+    except subprocess.CalledProcessError:
+        sys.exit(-1)
+
+
 def build_rw_top_trumps_server():
-    """Builds the top trumps library and the socket server with the top trumps evaluator (in C)"""
+    """Build the socket server with the top trumps evaluator (in C)"""
     # Build the library
-    rw_library = 'rw_top_trumps'
-    copy_file('code-experiments/rw-problems/top_trumps/{}.h'.format(rw_library),
-              'code-experiments/src/{}.h'.format(rw_library))
-    make('code-experiments/rw-problems/top_trumps', 'clean', verbose=_build_verbosity)
-    make('code-experiments/rw-problems/top_trumps', 'all', verbose=_build_verbosity)
-    if 'win32' in sys.platform:
-        rw_library += '.dll'
-    else:
-        rw_library = 'lib' + rw_library + '.so'
-    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-              'code-experiments/rw-problems/{}'.format(rw_library))
-    # Make the library available to all languages
-    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-              'code-experiments/build/c/{}'.format(rw_library))
-    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-              'code-experiments/build/python/{}'.format(rw_library))
-    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-              'code-experiments/build/java/{}'.format(rw_library))
-    copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-              'code-experiments/build/matlab/{}'.format(rw_library))
+    build_rw_top_trumps_lib()
     # Build the socket server that uses only the rw_top_trumps evaluator
     for rw_evaluator in rw_evaluators:
         if rw_evaluator == rw_evaluator_top_trumps:
@@ -848,7 +858,7 @@ def build_rw_top_trumps_server():
 
 
 def build_rw_mario_gan_server():
-    """Prepare the socket server with the mario gan evaluator in Python"""
+    """Set the socket server to use the mario gan evaluator in Python"""
     for rw_evaluator in rw_evaluators:
         if rw_evaluator == rw_evaluator_mario_gan:
             set_external_evaluator(rw_evaluator, 1)
@@ -858,34 +868,36 @@ def build_rw_mario_gan_server():
 
 def build_all_rw_servers():
     """Build the socket server with all available evaluators in C and Python"""
-    # TODO
+    # Build the top trumps library
+    build_rw_top_trumps_lib()
+    # Set the socket server to use all evaluators
     for rw_evaluator in rw_evaluators:
         set_external_evaluator(rw_evaluator, 1)
     _build_socket_server_c()
 
 
-def run_toy_socket_server_c():
+def run_toy_socket_server_c(port):
     """Build and run the socket server with the toy socket evaluator in C"""
     build_toy_socket_server_c()
-    _run_socket_server_c()
+    _run_socket_server_c(port)
 
 
-def run_toy_socket_server_python():
+def run_toy_socket_server_python(port):
     """Build and run the socket server with the toy socket evaluator in Python"""
     build_toy_socket_server_python()
-    _run_socket_server_python()
+    _run_socket_server_python(port)
 
 
-def run_rw_top_trumps_server():
+def run_rw_top_trumps_server(port):
     """Build and run the socket server with the top trumps evaluator (in C)"""
     build_rw_top_trumps_server()
-    _run_socket_server_c()
+    _run_socket_server_c(port)
 
 
-def run_rw_mario_gan_server():
+def run_rw_mario_gan_server(port):
     """Prepare and run the socket server with the mario gan evaluator (in Python)"""
     build_rw_mario_gan_server()
-    _run_socket_server_python()
+    _run_socket_server_python(port)
 
 
 def stop_socket_servers():
@@ -1179,6 +1191,7 @@ def main(args):
     cmd = args[0].replace('_', '-').lower()
     also_test_python = False
     package_install_option = []
+    port = None
     for arg in args[1:]:
         if arg == 'and-test':
             also_test_python = True
@@ -1186,6 +1199,8 @@ def main(args):
             package_install_option = ['--user']
         elif arg[:13] == 'install-home=':
             package_install_option = ['--home=' + arg[13:]]
+        elif arg[:5] == 'port=':
+            port = arg[5:]
     if cmd == 'build': build(package_install_option=package_install_option)
     elif cmd == 'run': run_all(package_install_option=package_install_option)
     elif cmd == 'test': test(package_install_option=package_install_option)
@@ -1226,10 +1241,10 @@ def main(args):
     elif cmd == 'build-rw-top-trumps-server': build_rw_top_trumps_server()
     elif cmd == 'build-rw-mario-gan-server': build_rw_mario_gan_server()
     elif cmd == 'build-all-rw-servers': build_all_rw_servers()
-    elif cmd == 'run-toy-socket-server-c': run_toy_socket_server_c()
-    elif cmd == 'run-toy-socket-server-python': run_toy_socket_server_python()
-    elif cmd == 'run-rw-top-trumps-server': run_rw_top_trumps_server()
-    elif cmd == 'run-rw-mario-gan-server': run_rw_mario_gan_server()
+    elif cmd == 'run-toy-socket-server-c': run_toy_socket_server_c(port=port)
+    elif cmd == 'run-toy-socket-server-python': run_toy_socket_server_python(port=port)
+    elif cmd == 'run-rw-top-trumps-server': run_rw_top_trumps_server(port=port)
+    elif cmd == 'run-rw-mario-gan-server': run_rw_mario_gan_server(port=port)
     elif cmd == 'test-socket-python': test_socket_python(package_install_option=package_install_option)
     else: help()
 

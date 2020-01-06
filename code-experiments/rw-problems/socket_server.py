@@ -17,7 +17,7 @@ HOST = ''            # Symbolic name, meaning all available interfaces
 MESSAGE_SIZE = 8000  # Should be large enough to contain a number of x-values
 PRECISION_Y = 16     # Precision used to write objective values
 
-EVALUATE_RW_MARIO_GAN = 1
+EVALUATE_RW_MARIO_GAN = 0
 if EVALUATE_RW_MARIO_GAN:
     from mario_gan.mario_gan_evaluator import evaluate_mario_gan
 # ADD HERE imports from other evaluators, for example
