@@ -789,10 +789,12 @@ def _run_socket_server_c(port):
     """Run the socket server for external evaluation in C"""
     if port is None:
         port = rw_evaluator_port_c
-    command = '{} {}'.format(
+    command = '{} {} silent'.format(
         os.path.join('code-experiments', 'rw-problems', 'socket_server'),
         port)
-    p = Process(target=subprocess.Popen, args=(command,))
+    if 'win32' not in sys.platform:
+        command = './' + command
+    p = Process(target=subprocess.Popen, args=(command,), kwargs=dict(shell=True))
     p.start()
 
 
@@ -800,7 +802,7 @@ def _run_socket_server_python(port):
     """Run the socket server for external evaluation in Python"""
     if port is None:
         port = rw_evaluator_port_python
-    command = 'python {} {}'.format(
+    command = 'python {} {} silent'.format(
         os.path.join('code-experiments', 'rw-problems', 'socket_server.py'),
         port)
     p = Process(target=subprocess.Popen, args=(command,))
@@ -919,7 +921,7 @@ def stop_socket_servers(port):
     """Stop the socket servers running on the known ports as well as the given port"""
     ports = rw_evaluator_ports
     if port:
-        ports.append(port)
+        ports.append(int(port))
     for p in ports:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create socket
