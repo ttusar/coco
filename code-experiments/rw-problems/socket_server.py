@@ -13,6 +13,7 @@ Change code below to connect it to other evaluators (for other suites) -- see oc
 """
 import sys
 import socket
+import time
 from toy_socket.toy_socket_evaluator import evaluate_toy_socket
 
 HOST = ''            # Symbolic name, meaning all available interfaces
@@ -77,6 +78,7 @@ def socket_server_start(port, silent=False):
 
         # Bind socket to local host and port
         try:
+            time.sleep(1)
             s.bind((HOST, port))
         except socket.error as e:
             print('Bind failed: {}'.format(e))
