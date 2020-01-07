@@ -191,7 +191,7 @@ void socket_server_start(unsigned short port, int silent) {
       printf("Received message: %s (length %d)\n", message, message_len);
 
     /* Check if the message is a request for shut down */
-    if (strcmp(message, "SHUTDOWN") == 0) {
+    if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
       printf("Shutting down socket server (C)");
       closesocket(new_sock);
       return;
@@ -260,7 +260,7 @@ void socket_server_start(unsigned short port, int silent) {
       printf("Received message: %s (length %ld)\n", message, message_len);
 
     /* Check if the message is a request for shut down */
-    if (strcmp(message, "SHUTDOWN") == 0) {
+    if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
       printf("Shutting down socket server (C)");
       close(new_sock);
       return;
