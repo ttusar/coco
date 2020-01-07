@@ -805,7 +805,7 @@ def _run_socket_server_python(port):
     command = 'python {} {} silent'.format(
         os.path.join('code-experiments', 'rw-problems', 'socket_server.py'),
         port)
-    p = Process(target=subprocess.Popen, args=(command,))
+    p = Process(target=subprocess.Popen, args=(command,), kwargs=dict(shell=True))
     p.start()
 
 
