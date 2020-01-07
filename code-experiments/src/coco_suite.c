@@ -23,8 +23,8 @@
 #include "suite_cons_bbob.c"
 #include "suite_toy_socket.c"
 #include "suite_toy_socket_biobj.c"
-#include "suite_mario_gan.c"
-#include "suite_mario_gan_biobj.c"
+#include "suite_rw_mario_gan.c"
+#include "suite_rw_mario_gan_biobj.c"
 #include "suite_rw_top_trumps.c"
 #include "suite_rw_top_trumps_biobj.c"
 
@@ -60,17 +60,17 @@ static coco_suite_t *coco_suite_intialize(const char *suite_name, const char *su
     suite = suite_toy_socket_initialize(suite_options);
   } else if (strcmp(suite_name, "toy-socket-biobj") == 0) {
     suite = suite_toy_socket_biobj_initialize(suite_options);
-  } else if (strcmp(suite_name, "mario-gan") == 0) {
-    suite = suite_mario_gan_initialize(suite_options);
-  } else if (strcmp(suite_name, "mario-gan-biobj") == 0) {
-    suite = suite_mario_gan_biobj_initialize(suite_options);
+  } else if (strcmp(suite_name, "rw-mario-gan") == 0) {
+    suite = suite_rw_mario_gan_initialize(suite_options);
+  } else if (strcmp(suite_name, "rw-mario-gan-biobj") == 0) {
+    suite = suite_rw_mario_gan_biobj_initialize(suite_options);
   } else if (strcmp(suite_name, "rw-top-trumps") == 0) {
     suite = suite_rw_top_trumps_initialize(suite_options);
   } else if (strcmp(suite_name, "rw-top-trumps-biobj") == 0) {
     suite = suite_rw_top_trumps_biobj_initialize(suite_options);
   }
   else {
-    coco_error("coco_suite_intialize(): suite '%s' unknown problem suite",  suite->suite_name);
+    coco_error("coco_suite_intialize(): suite '%s' unknown problem suite", suite_name);
     return NULL;
   }
 
@@ -102,10 +102,10 @@ static const char *coco_suite_get_instances_by_year(const coco_suite_t *suite, c
     year_string = suite_toy_socket_get_instances_by_year(year);
   } else if (strcmp(suite->suite_name, "toy-socket-biobj") == 0) {
     year_string = suite_toy_socket_biobj_get_instances_by_year(year);
-  } else if (strcmp(suite->suite_name, "mario-gan") == 0) {
-    year_string = suite_mario_gan_get_instances_by_year(year);
-  } else if (strcmp(suite->suite_name, "mario-gan-biobj") == 0) {
-    year_string = suite_mario_gan_biobj_get_instances_by_year(year);
+  } else if (strcmp(suite->suite_name, "rw-mario-gan") == 0) {
+    year_string = suite_rw_mario_gan_get_instances_by_year(year);
+  } else if (strcmp(suite->suite_name, "rw-mario-gan-biobj") == 0) {
+    year_string = suite_rw_mario_gan_biobj_get_instances_by_year(year);
   } else if (strcmp(suite->suite_name, "rw-top-trumps") == 0) {
     year_string = suite_rw_top_trumps_get_instances_by_year(year);
   } else if (strcmp(suite->suite_name, "rw-top-trumps-biobj") == 0) {
@@ -157,10 +157,10 @@ static coco_problem_t *coco_suite_get_problem_from_indices(coco_suite_t *suite,
     problem = suite_toy_socket_get_problem(suite, function_idx, dimension_idx, instance_idx);
   } else if (strcmp(suite->suite_name, "toy-socket-biobj") == 0) {
     problem = suite_toy_socket_biobj_get_problem(suite, function_idx, dimension_idx, instance_idx);
-  } else if (strcmp(suite->suite_name, "mario-gan") == 0) {
-    problem = suite_mario_gan_get_problem(suite, function_idx, dimension_idx, instance_idx);
-  } else if (strcmp(suite->suite_name, "mario-gan-biobj") == 0) {
-    problem = suite_mario_gan_biobj_get_problem(suite, function_idx, dimension_idx, instance_idx);
+  } else if (strcmp(suite->suite_name, "rw-mario-gan") == 0) {
+    problem = suite_rw_mario_gan_get_problem(suite, function_idx, dimension_idx, instance_idx);
+  } else if (strcmp(suite->suite_name, "rw-mario-gan-biobj") == 0) {
+    problem = suite_rw_mario_gan_biobj_get_problem(suite, function_idx, dimension_idx, instance_idx);
   } else if (strcmp(suite->suite_name, "rw-top-trumps") == 0) {
     problem = suite_rw_top_trumps_get_problem(suite, function_idx, dimension_idx, instance_idx);
   } else if (strcmp(suite->suite_name, "rw-top-trumps-biobj") == 0) {

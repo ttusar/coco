@@ -1,7 +1,7 @@
 /**
- * @file mario_gan.c
+ * @file rw_mario_gan.c
  *
- * @brief Implementation of mario gan functions
+ * @brief Implementation of Mario GAN functions
  */
 #include "coco.h"
 #include "coco_platform.h"
@@ -11,18 +11,18 @@
 /**
  * @brief Creates the mario-gan problem.
  */
-static coco_problem_t *mario_gan_problem_allocate(const size_t number_of_objectives,
-                                                   const size_t function,
-                                                   const size_t dimension,
-                                                   const size_t instance,
-                                                   const char *problem_id_template,
-                                                   const char *problem_name_template) {
+static coco_problem_t *rw_mario_gan_problem_allocate(const size_t number_of_objectives,
+                                                     const size_t function,
+                                                     const size_t dimension,
+                                                     const size_t instance,
+                                                     const char *problem_id_template,
+                                                     const char *problem_name_template) {
 
   coco_problem_t *problem = NULL;
   size_t i;
 
   if ((number_of_objectives != 1) && (number_of_objectives != 2))
-    coco_error("mario_gan_problem_allocate(): %lu objectives are not supported (only 1 or 2)",
+    coco_error("rw_mario_gan_problem_allocate(): %lu objectives are not supported (only 1 or 2)",
         (unsigned long)number_of_objectives);
 
   /* Provide the region of interest */
@@ -39,9 +39,9 @@ static coco_problem_t *mario_gan_problem_allocate(const size_t number_of_objecti
 
   if (((number_of_objectives == 1) && (function <= 10)) ||
       ((number_of_objectives == 2) && (function <= 2))) {
-    coco_problem_set_type(problem, "mario_gan_computed");
+    coco_problem_set_type(problem, "rw-mario-gan-computed");
   } else {
-    coco_problem_set_type(problem, "mario_gan_simulated");
+    coco_problem_set_type(problem, "rw-mario-gan-simulated");
   }
 
   if (number_of_objectives == 1) {

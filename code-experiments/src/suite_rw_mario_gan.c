@@ -1,12 +1,12 @@
 /**
- * @file suite_mario_gan.c
+ * @file suite_rw_mario_gan.c
  *
- * @brief Implementation of the single-objective suite MarioGAN. A bi-objective version can be
- * found in the file suite_mario_gan_biobj.c
+ * @brief Implementation of the single-objective suite Mario GAN. A bi-objective version can be
+ * found in the file suite_rw_mario_gan_biobj.c
  */
 
 #include "coco.h"
-#include "mario_gan.c"
+#include "rw_mario_gan.c"
 #include "socket_communication.c"
 
 static coco_suite_t *coco_suite_allocate(const char *suite_name,
@@ -17,15 +17,15 @@ static coco_suite_t *coco_suite_allocate(const char *suite_name,
 
 
 /**
- * @brief Sets the dimensions and default instances for the mario-gan suite.
+ * @brief Sets the dimensions and default instances for the rw-mario-gan suite.
  * Sets also the parameters needed for socket communication with the external evaluator.
  */
-static coco_suite_t *suite_mario_gan_initialize(const char *suite_options) {
+static coco_suite_t *suite_rw_mario_gan_initialize(const char *suite_options) {
 
   coco_suite_t *suite;
   const size_t dimensions[] = { 10, 20, 30, 40 };
 
-  suite = coco_suite_allocate("mario-gan", 28, 4, dimensions, "instances: 1-7");
+  suite = coco_suite_allocate("rw-mario-gan", 28, 4, dimensions, "instances: 1-7");
 
   suite->data = socket_communication_data_initialize(suite_options);
   suite->data_free_function = socket_communication_data_free;
@@ -35,12 +35,12 @@ static coco_suite_t *suite_mario_gan_initialize(const char *suite_options) {
 /**
  * @brief Sets the instances associated with years.
  */
-static const char *suite_mario_gan_get_instances_by_year(const int year) {
+static const char *suite_rw_mario_gan_get_instances_by_year(const int year) {
    if (year == 0) {
     return "1";
   }
   else {
-    coco_error("suite_mario_gan_get_instances_by_year(): year %d not defined for suite mario-gan", year);
+    coco_error("suite_rw_mario_gan_get_instances_by_year(): year %d not defined for suite rw-mario-gan", year);
     return NULL;
   }
 }
@@ -54,10 +54,10 @@ static const char *suite_mario_gan_get_instances_by_year(const int year) {
  * @param instance_idx Index of the instance (starting from 0).
  * @return The problem that corresponds to the given parameters.
  */
-static coco_problem_t *suite_mario_gan_get_problem(coco_suite_t *suite,
-                                                    const size_t function_idx,
-                                                    const size_t dimension_idx,
-                                                    const size_t instance_idx) {
+static coco_problem_t *suite_rw_mario_gan_get_problem(coco_suite_t *suite,
+                                                      const size_t function_idx,
+                                                      const size_t dimension_idx,
+                                                      const size_t instance_idx) {
 
   coco_problem_t *problem = NULL;
 
@@ -65,10 +65,10 @@ static coco_problem_t *suite_mario_gan_get_problem(coco_suite_t *suite,
   const size_t dimension = suite->dimensions[dimension_idx];
   const size_t instance = suite->instances[instance_idx];
 
-  const char *problem_id_template = "mario_gan_f%02lu_i%02lu_d%02lu";
-  const char *problem_name_template = "single-objective mario-gan suite problem f%lu instance %lu in %luD";
+  const char *problem_id_template = "rw-mario-gan_f%02lu_i%02lu_d%02lu";
+  const char *problem_name_template = "single-objective Mario GAN suite problem f%lu instance %lu in %luD";
 
-  problem = mario_gan_problem_allocate(1, function, dimension, instance,
+  problem = rw_mario_gan_problem_allocate(1, function, dimension, instance,
       problem_id_template, problem_name_template);
   assert(problem != NULL);
 

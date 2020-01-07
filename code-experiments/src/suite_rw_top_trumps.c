@@ -59,7 +59,7 @@ static coco_problem_t *suite_rw_top_trumps_get_problem(coco_suite_t *suite,
   const size_t instance = suite->instances[instance_idx];
     
   const char *problem_id_template = "rw-top-trumps_f%02lu_i%02lu_d%02lu";
-  const char *problem_name_template = "single-objective top trumps suite problem f%lu instance %lu in %luD";
+  const char *problem_name_template = "single-objective Top Trumps suite problem f%lu instance %lu in %luD";
 
   problem = rw_top_trumps_problem_allocate(1, function, dimension, instance, problem_id_template, problem_name_template);
   assert(problem != NULL);
