@@ -6,7 +6,10 @@ Socket communication is demonstrated on the example of two test suites, `toy-soc
 `toy-socket-biobj` – the first contains single-objective and the second bi-objective optimization problems.
 
 Other currently supported suites that use this kind of external evaluation of
-solutions are `rw-top-trumps(-biobj)` and `rw-mario-gan(-biobj)`. See below for more information.
+solutions are `rw-top-trumps(-biobj)` and `rw-mario-gan(-biobj)`. They are not included in the
+COCO repository directly, but are downloaded when invoked (they are then stored in the
+`top-trumps` and `mario-gan` folders of the `code-experiments/rw-problems` folder).
+See below for more information.
 
 An external evaluator is basically a server that listens for messages
 from the client (COCO). For each evaluation of the objectives or constraints
@@ -43,9 +46,9 @@ form the root directory of the repository, the following will happen:
 - the Python example experiment will be run on the `toy-socket` suite
 - when the example experiment will complete, the C socket server will be stopped
 
-See the folder `code-experiments\build\python\exdata` for the results of this experiment.
+See the folder `code-experiments/build/python/exdata` for the results of this experiment.
 
-### Starting/stopping the socket servers
+### Starting/stopping the socket server(s)
 
 Both socket servers configured so that they can call any available evaluator are started by calling
 
@@ -91,7 +94,7 @@ To stop these servers, simply call
 python do.py stop-socket-servers
 ````
 
-Note that the `python do.py run-*-server*` calls above change some of the files in the `code-experiments\rw-problems` folder
+Note that the `python do.py run-*-server*` calls above change some of the files in the `code-experiments/rw-problems` folder
 (this is needed to configure the builds). All changes are reverted by the call `python do.py stop-socket-servers`.
 
 ### Running custom experiments
