@@ -29,10 +29,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MESSAGE_SIZE 8000   /* Should be large enough to contain a number of x-values */
-#define RESPONSE_SIZE 256   /* Should be large enough to contain a couple of objective values */
-#define SUITE_NAME_SIZE 64  /* Should be large enough to contain the name of a suite */
-#define PRECISION_Y 16      /* Precision used to write objective values */
+#define MESSAGE_SIZE 8192   /* Large enough for the entire message */
+#define RESULT_PRECISION 16 /* Precision used to write objective values and constraint violations */
+#define RESPONSE_SIZE 1024  /* Large enough for the entire response (objective values or constraint violations) */
+#define STRING_SIZE 64      /* Large enough for a single string (the name of the suite etc.) */
+/* Types of the evaluation function */
+#define EVAL_TYPE_OBJ "objectives"
+#define EVAL_TYPE_CON "constraints"
 
 #include "toy_socket/toy_socket_evaluator.c"  /* Include the toy_evaluator for evaluation */
 
@@ -48,36 +51,38 @@
 */
 
 /**
- * This is an interface for the evaluation function that needs to be implemented by other
+ * This is an interface for the evaluation function that needs to be implemented by the external
  * evaluators.
  */
-typedef void (*evaluate_t)(char *suite_name, size_t number_of_objectives, size_t function,
-    size_t instance, size_t dimension, const double *x, double *y);
+typedef void (*evaluate_t)(char *suite_name, size_t number_of_values, size_t function,
+    size_t instance, size_t dimension, const double *x, double *values);
 
 /**
- * Parses the message and calls an evaluator to compute the evaluation. Then constructs a response.
- * Returns the response.
+ * Parses the message and calls an evaluator to compute the evaluation (can be used to evaluate
+ * objectives as well as constraints). Constructs and returns the response.
  */
 char *evaluate_message(char *message) {
 
-  char suite_name[SUITE_NAME_SIZE];
-  char *response = "";
-  size_t number_of_objectives, i;
+  char suite_name[STRING_SIZE];
+  char evaluation_type[STRING_SIZE];
+  size_t number_of_values, i;
   size_t function, instance, dimension;
-  double *x, *y;
+  double *x, *values;
+  char *response = "", *pointer;
   int read_count;
   int char_count, offset = 0;
-  evaluate_t evaluate_function;
+  evaluate_t evaluate_objectives = NULL;
+  evaluate_t evaluate_constraints = NULL;
 
   /* Parse the message
    *
    * char_count is used to count how many characters are read and offset moves the pointer
    * along the message accordingly
    */
-  if ((read_count = sscanf(message, "n %s o %lu f %lu i %lu d %lu x%*c%n",
-      suite_name, &number_of_objectives, &function, &instance, &dimension, &char_count)) != 5) {
+  if ((read_count = sscanf(message, "s %s t %s r %lu f %lu i %lu d %lu x%*c%n", suite_name,
+      evaluation_type, &number_of_values, &function, &instance, &dimension, &char_count)) != 6) {
     fprintf(stderr, "evaluate_message(): Failed to read beginning of the message %s", message);
-    fprintf(stderr, "(read %d instead of %d items)", read_count, 5);
+    fprintf(stderr, "(read %d instead of %d items)", read_count, 6);
     exit(EXIT_FAILURE);
   }
   x = malloc(dimension * sizeof(double));
@@ -91,39 +96,46 @@ char *evaluate_message(char *message) {
   }
 
   /* Choose the right function */
-  y = malloc(number_of_objectives * sizeof(double));
   if ((strcmp(suite_name, "toy-socket") == 0) || (strcmp(suite_name, "toy-socket-biobj") == 0)) {
-    evaluate_function = evaluate_toy_socket;
+    evaluate_objectives = evaluate_toy_socket_objectives;
+    evaluate_constraints = evaluate_toy_socket_constraints;
   }
 #if EVALUATE_RW_TOP_TRUMPS > 0
   else if ((strcmp(suite_name, "rw-top-trumps") == 0) || (strcmp(suite_name, "rw-top-trumps-biobj") == 0)) {
-    evaluate_function = evaluate_rw_top_trumps;
+    evaluate_objectives = evaluate_rw_top_trumps;
   }
 #endif
   /* ADD HERE the function for another evaluator, for example
   else if (strcmp(suite_name, "my-suite") == 0) {
-    evaluate_function = evaluate_my_suite;
+    evaluate_objectives = evaluate_my_suite_objectives;
+    evaluate_constraints = evaluate_my_suite_constraints;
   } */
   else {
     fprintf(stderr, "evaluate_message(): Suite %s not supported", suite_name);
     exit(EXIT_FAILURE);
   }
 
-  /* Evaluate x and save the result to y */
-  evaluate_function(suite_name, number_of_objectives, function, instance, dimension, x, y);
+  /* Evaluate x and save the result to values */
+  values = malloc(number_of_values * sizeof(double));
+  if ((strcmp(evaluation_type, EVAL_TYPE_OBJ) == 0))
+    evaluate_objectives(suite_name, number_of_values, function, instance, dimension, x, values);
+  else if ((strcmp(evaluation_type, EVAL_TYPE_CON) == 0))
+    evaluate_constraints(suite_name, number_of_values, function, instance, dimension, x, values);
+  else {
+    fprintf(stderr, "evaluate_message(): Evaluation type %s not supported", evaluation_type);
+    exit(EXIT_FAILURE);
+  }
   free(x);
 
-  /* Construct the response */
+  /* Construct the response (pointer keeps track of the current place in the response) */
   response = (char *) malloc(RESPONSE_SIZE);
-  if (number_of_objectives == 1) {
-    sprintf(response, "%.*e", PRECISION_Y, y[0]);
-  } else if (number_of_objectives == 2) {
-    sprintf(response, "%.*e %.*e", PRECISION_Y, y[0], PRECISION_Y, y[1]);
-  } else {
-    fprintf(stderr, "evaluate_message(): %lu objectives not supported (yet)", number_of_objectives);
+  pointer = response;
+  for (i = 0; i < number_of_values; i++) {
+    char_count = sprintf(pointer, "%.*e ", RESULT_PRECISION, values[i]);
+    pointer += char_count;
   }
-  free(y);
 
+  free(values);
   return response;
 }
 

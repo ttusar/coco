@@ -13,6 +13,7 @@
  * @brief Creates the toy-socket problem.
  */
 static coco_problem_t *toy_socket_problem_allocate(const size_t number_of_objectives,
+                                                   const size_t number_of_constraints,
                                                    const size_t function,
                                                    const size_t dimension,
                                                    const size_t instance,
@@ -27,13 +28,14 @@ static coco_problem_t *toy_socket_problem_allocate(const size_t number_of_object
         (unsigned long)number_of_objectives);
 
   /* Provide the region of interest */
-  problem = coco_problem_allocate(dimension, number_of_objectives, 0);
+  problem = coco_problem_allocate(dimension, number_of_objectives, number_of_constraints);
   for (i = 0; i < dimension; ++i) {
     problem->smallest_values_of_interest[i] = -1;
     problem->largest_values_of_interest[i] = 1;
   }
   problem->number_of_integer_variables = 0;
   problem->evaluate_function = socket_evaluate;
+  problem->evaluate_constraint = socket_evaluate;
 
   coco_problem_set_id(problem, problem_id_template, function, instance, dimension);
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);

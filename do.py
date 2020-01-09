@@ -742,7 +742,7 @@ def test_java():
 
 ################################################################################
 ## External evaluation using socket communication
-rw_evaluator_host = '127.0.0.1'
+rw_evaluator_host = '127.0.0.1'  # Local host
 rw_evaluator_port_c = 7251
 rw_evaluator_port_python = 7252
 rw_evaluator_ports = [rw_evaluator_port_c, rw_evaluator_port_python]
@@ -936,6 +936,9 @@ def stop_socket_servers(port):
         except (socket.error, Exception) as e:
             print('Error stopping socket server on port {}: {}'.format(p, e))
             sys.exit(-1)
+    # Reset the changes in the files regarding available external evaluators
+    for rw_evaluator in rw_evaluators:
+        set_external_evaluator(rw_evaluator, 0)
 
 
 def test_toy_socket(port, package_install_option=[]):

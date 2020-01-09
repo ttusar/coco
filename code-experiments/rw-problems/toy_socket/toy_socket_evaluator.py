@@ -1,35 +1,49 @@
 """
-An evaluator for problems from the toy-socket suite to demonstrate external evaluation in Python
+An evaluator for problems from the toy-socket suite to demonstrate external evaluation of
+objectives and constraints in Python
 """
 
 
-def evaluate_toy_socket(suite_name, num_objectives, func, instance, x):
-    if suite_name == 'toy-socket' and num_objectives == 1:
-        y = instance * 100.0
+def evaluate_toy_socket_objectives(suite_name, func, instance, x):
+    y0 = instance * 0.0
+    if suite_name == 'toy-socket':
         if func == 1:
-            # Function 1 is the sum of all values
-            for xi in x:
-                y += xi
-            return [y]
+            # Function 1 is the sum of the absolute x-values
+            return [y0 + sum([abs(xi) for xi in x])]
         elif func == 2:
-            # Function 2 is the sum of squares of all values
-            for xi in x:
-                y += xi * xi
-            return [y]
+            # Function 2 is the sum of squares of all x-values
+            return [y0 + sum([xi * xi for xi in x])]
         else:
-            raise('Suite {} has no function {}'.format(suite_name, func))
-    elif suite_name == 'toy-socket-biobj' and num_objectives == 2:
-        y1 = y2 = instance * 100.0
+            raise ValueError('Suite {} has no function {}'.format(suite_name, func))
+    elif suite_name == 'toy-socket-biobj':
         if func == 1:
-            # Objective 1 is the sum of all values
-            for xi in x:
-                y1 += xi
-            # Objective 2 is the sum of squares of all values
-            for xi in x:
-                y2 += xi * xi
+            # Objective 1 is the sum of the absolute x-values
+            y1 = y0 + sum([abs(xi) for xi in x])
+            # Objective 2 is the sum of squares of all x-values
+            y2 = y0 + sum([xi * xi for xi in x])
             return [y1, y2]
         else:
             raise ValueError('Suite {} has no function {}'.format(suite_name, func))
     else:
-        raise ValueError('Suite {} cannot have {} objectives'.format(suite_name, num_objectives))
+        raise ValueError('Suite {} not supported'.format(suite_name))
 
+
+def evaluate_toy_socket_constraints(suite_name, func, instance, x):
+    y0 = instance * 0.0
+    average = y0 + sum([abs(xi) for xi in x])
+    average = average / len(x)
+
+    if suite_name == 'toy-socket' and func == 1:
+        # Function 1 of the single-objective suite has two constraints
+        # Violation 1 is the difference between the 0.2 and the average of absolute x-values
+        y1 = -(0.2 - average) if average < 0.2 else 0
+        # Violation 2 is the difference between the average and 0.5
+        y2 = -(average - 0.5) if average > 0.5 else 0
+        return [y1, y2]
+    elif suite_name == 'toy-socket-biobj' and func == 1:
+        # Function 1 of the bi-objective suite has one constraint
+        # Violation 1 is the difference between the 0.2 and the average of absolute x-values
+        y1 = -(0.2 - average) if average < 0.2 else 0
+        return [y1]
+    else:
+        raise ValueError('Suite {} function {} does not have constraints'.format(suite_name, func))

@@ -3,15 +3,16 @@
 #include "coco_platform.h"
 #include "coco_string.c"
 
-#define RESPONSE_SIZE 256 /* Should be large enough to contain a couple of objective values */
+#define HOST "127.0.0.1"    /* Local host */
+#define RESPONSE_SIZE 1024  /* Large enough for objective and constraint values and additional information */
 
 /**
  * @brief Data type needed for socket communication (used by the suites that need it).
  */
 typedef struct {
-  unsigned short port;  /**< @brief The port for communication with the external evaluator. */
-  char *host_name;      /**< @brief The host name for communication with the external evaluator. */
-  int precision_x;      /**< @brief Precision used to write the x-values to the external evaluator. */
+  unsigned short port;       /**< @brief The port for communication with the external evaluator. */
+  char *host_name;           /**< @brief The host name for communication with the external evaluator. */
+  int precision_x;           /**< @brief Precision used to write the x-values to the external evaluator. */
 } socket_communication_data_t;
 
 /**
@@ -33,9 +34,9 @@ static socket_communication_data_t *socket_communication_data_initialize(const c
   socket_communication_data_t *data;
   data = (socket_communication_data_t *) coco_allocate_memory(sizeof(*data));
 
-  data->host_name = coco_strdup("127.0.0.1");
+  data->host_name = coco_strdup(HOST);
   if (coco_options_read_string(suite_options, "host_name", data->host_name) == 0) {
-    strcpy(data->host_name, "127.0.0.1");
+    strcpy(data->host_name, HOST);
   }
 
   data->port = 7251;
@@ -50,22 +51,25 @@ static socket_communication_data_t *socket_communication_data_initialize(const c
           data->precision_x);
     }
   }
+
   return data;
 }
 
 /**
  * Prepares and returns the message for the evaluator. The message has the following format:
- * n <n> o <o> f <f> i <i> d <d> x <x1> <x2> ... <xd>
+ * s <s> t <t> r <r> f <f> i <i> d <d> x <x1> <x2> ... <xd>
  * Where
- * <n> is the suite name (for example, "toy-socket")
- * <o> is the number of objectives
+ * <s> is the suite name (for example, "toy-socket")
+ * <t> is the type of evaluation (one of "objectives", "constraints", "add_info")
+ * <r> is the number of values to be returned
  * <f> is the function number
  * <i> is the instance number
  * <d> is the problem dimension
- * <xk> is the k-th value of x (there should be exactly d x values)
+ * <xi> is the i-th value of x (there should be exactly d x-values)
  */
 static char *socket_communication_get_message(const char *suite_name,
-                                              const size_t number_of_objectives,
+                                              const char *evaluation_type,
+                                              const size_t number_of_values,
                                               const size_t function,
                                               const size_t instance,
                                               const size_t dimension,
@@ -74,8 +78,8 @@ static char *socket_communication_get_message(const char *suite_name,
   char *message, *tmp_string;
   size_t i;
 
-  message = coco_strdupf("n %s o %lu f %lu i %lu d %lu x",
-      suite_name, number_of_objectives, function, instance, dimension);
+  message = coco_strdupf("s %s t %s r %lu f %lu i %lu d %lu x",
+      suite_name, evaluation_type, number_of_values, function, instance, dimension);
   for (i = 0; i < dimension; i++) {
     tmp_string = message;
     message = coco_strdupf("%s %.*e", message, precision_x, x[i]);
@@ -85,36 +89,34 @@ static char *socket_communication_get_message(const char *suite_name,
 }
 
 /**
- * Reads the evaluator response and saves it into y. The response should have the following format:
- * <y1> ... <ym>
- * Where
- * <yk> is the value of the k-th objective
+ * Reads the evaluator response and saves it into values. The response should have
+ * the following format:
+ * <v1> ... <vn>
+  * Where
+ * <vi> is the i-th value
+ * n is the expected number of values
  */
 static void socket_communication_save_response(const char *response,
                                                const long response_size,
-                                               const size_t expected_number_of_objectives,
-                                               double *y) {
+                                               const size_t expected_number_of_values,
+                                               double *values) {
+  size_t i;
+  int read_count, offset;
 
   if (response_size < 1) {
     coco_error("socket_communication_save_response(): Incorrect response %s (size %d)",
         response, response_size);
   }
 
-  if (expected_number_of_objectives == 1) {
-    if (sscanf(response, "%lf", &y[0]) != 1) {
-      coco_error("socket_communication_save_response(): Could not read 1 objective value");
+  offset = 0;
+  for (i = 0; i < expected_number_of_values; i++) {
+    if (sscanf(response + offset, "%lf%*c%n", &values[i], &read_count) != 1) {
+      fprintf(stderr, "socket_communication_save_response(): Failed to read response %s at %s",
+          response, response + offset);
+      exit(EXIT_FAILURE);
     }
+    offset += read_count;
   }
-  else if (expected_number_of_objectives == 2) {
-    if (sscanf(response, "%lf %lf", &y[0], &y[1]) != 2) {
-      coco_error("socket_communication_save_response(): Could not read 2 objective values");
-    }
-  }
-  else {
-    coco_error("socket_communication_save_response(): %lu objective not supported (yet)",
-        expected_number_of_objectives);
-  }
-
 }
 
 /**
@@ -123,9 +125,11 @@ static void socket_communication_save_response(const char *response,
  *
  * Should be working for different platforms.
  */
-static void socket_communication_evaluate(const char* host_name, const unsigned short port,
-    const char *message, const size_t expected_number_of_objectives, double *y) {
-
+static void socket_communication_evaluate(const char* host_name,
+                                          const unsigned short port,
+                                          const char *message,
+                                          const size_t expected_number_of_values,
+                                          double *values) {
   char response[RESPONSE_SIZE];
 
 #if WINSOCK
@@ -166,7 +170,7 @@ static void socket_communication_evaluate(const char* host_name, const unsigned 
   }
   coco_debug("Received response: %s (length %d)", response, response_len);
 
-  socket_communication_save_response(response, response_len, expected_number_of_objectives, y);
+  socket_communication_save_response(response, response_len, expected_number_of_values, values);
 
   closesocket(sock);
   WSACleanup();
@@ -204,21 +208,24 @@ static void socket_communication_evaluate(const char* host_name, const unsigned 
   response_len = read(sock, response, RESPONSE_SIZE);
   coco_debug("Received response: %s (length %ld)", response, response_len);
 
-  socket_communication_save_response(response, response_len, expected_number_of_objectives, y);
+  socket_communication_save_response(response, response_len, expected_number_of_values, values);
+
   close(sock);
 #endif
 }
 
 /**
- * @brief Calls the external evaluator to evaluate x.
+ * @brief Calls the external evaluator to evaluate the objective values for x.
  */
 static void socket_evaluate(coco_problem_t *problem, const double *x, double *y) {
 
   char *message;
+  const char evaluation_type[] = "objectives";
   socket_communication_data_t *data = (socket_communication_data_t *) problem->suite->data;
 
   message = socket_communication_get_message(
       problem->suite->suite_name,
+      evaluation_type,
       problem->number_of_objectives,
       problem->suite_dep_function,
       problem->suite_dep_instance,

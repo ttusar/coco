@@ -2,10 +2,11 @@
  * @file suite_toy_socket.c
  *
  * @brief Implementation of a single-objective suite containing two problems to show the
- * functioning of socket communication for function evaluation. A bi-objective version can be
- * found in the file suite_toy_socket_biobj.c
+ * functioning of socket communication for function and constraint evaluation. A bi-objective
+ * version can be found in the file suite_toy_socket_biobj.c
  *
- * The suite contains 2 problems with dimensions 2, 30 and 1 instance.
+ * The suite contains 2 functions (one with 2 constraints and one without them) with dimensions
+ * 2, 30 and 1 instance.
  */
 
 #include "coco.h"
@@ -71,7 +72,10 @@ static coco_problem_t *suite_toy_socket_get_problem(coco_suite_t *suite,
   const char *problem_id_template = "toy_socket_f%02lu_i%02lu_d%02lu";
   const char *problem_name_template = "single-objective toy socket suite problem f%lu instance %lu in %luD";
 
-  problem = toy_socket_problem_allocate(1, function, dimension, instance,
+  /* Only the first function has constraints */
+  size_t number_of_constraints = (function == 1) ? 2: 0;
+
+  problem = toy_socket_problem_allocate(1, number_of_constraints, function, dimension, instance,
       problem_id_template, problem_name_template);
   assert(problem != NULL);
 

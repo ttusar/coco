@@ -340,30 +340,32 @@ def getNetG(problem, inst, dim, c, json):
     return netG, dim
 
 
-def evaluate_mario_gan(suite_name, num_objectives, problem, inst, x):
+def evaluate_mario_gan(suite_name, problem, inst, x):
     available_dims = [10, 20, 30, 40]
     available_instances = [5641, 3854, 8370, 494, 1944, 9249, 2517]
     if len(x) not in available_dims:  # check Dimension available
         raise ValueError("x was dimension '{}', but is not available".format(len(x)))
-    if inst < 0 | inst > available_instances.count():
+    if inst < 0 | inst > len(available_instances):
         raise ValueError("asked for instance '{}', but is not available".format(inst))
-    if num_objectives not in [1,2]:
-        raise ValueError('Suite {} cannot have {} objectives'.format(suite_name, num_objectives))
 
     probs = [problem]
-    if suite_name == 'mario-gan-biobj' and num_objectives == 2:
+    if suite_name == 'mario-gan-biobj':
         probs = [j - 1 for j in biProbSplitter(problem)]
 
     out = [None] * len(probs)
     for i, prob in enumerate(probs):
-        c, json, fun = decodeProblem(prob-1) #-1 because COCO starts with index 1
-        netG, d = getNetG(prob-1, available_instances[inst-1], len(x), c, json) #-1 because COCO starts with index 1
+        c, json, fun = decodeProblem(prob - 1)  # -1 because COCO starts with index 1
+        netG, d = getNetG(prob - 1, available_instances[inst - 1], len(x), c, json)  # -1 because COCO starts with index 1
         out[i] = fun(x, netG, d)
-    
+
     return out
 
 
 if __name__ == '__main__':
-    out = evaluate_mario_gan("mario-gan", 1, 21, 1, [0.577396866201949, 0.7814522617215477, -0.4290037786827649, -0.7939910428259774, 0.4272655228644559, -0.4788319759161429, 0.7092257647567968, -0.7713656070501105, 0.751081985876608, -0.7008837870643055])
+    out = evaluate_mario_gan(
+        "mario-gan", 21, 1, [0.577396866201949, 0.7814522617215477, -0.4290037786827649,
+                             -0.7939910428259774, 0.4272655228644559, -0.4788319759161429,
+                             0.7092257647567968, -0.7713656070501105, 0.751081985876608,
+                             -0.7008837870643055])
     print(out)
 
