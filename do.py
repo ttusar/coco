@@ -771,12 +771,10 @@ def set_external_evaluator(evaluate_string, new_value):
         with open(file_name, 'w') as f:
             f.write(s)
 
-    replace_in_file(os.path.join('code-experiments', 'src', 'rw_top_trumps.c'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'socket_server.c'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'Makefile.in'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'Makefile_win_gcc.in'))
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'socket_server.py'))
-    replace_in_file(os.path.join('code-experiments', 'build', 'python', 'setup.py.in'))
 
 
 def _build_socket_server_c():
