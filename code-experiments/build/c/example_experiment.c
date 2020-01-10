@@ -19,7 +19,7 @@
  * The maximal budget for evaluations done by an optimization algorithm equals dimension * BUDGET_MULTIPLIER.
  * Increase the budget multiplier value gradually to see how it affects the runtime.
  */
-static const unsigned int BUDGET_MULTIPLIER = 2;
+static const unsigned int BUDGET_MULTIPLIER = 1000;
 
 /**
  * The maximal number of independent restarts allowed for an algorithm that restarts itself.
@@ -132,22 +132,25 @@ int main(void) {
    * to the settings, defined in example_experiment(...) below.
    */
 
-  /* 7251 (7252) is the default port for C (Python) evaluators */
+  /*example_experiment("rw-mario-gan", "function_indices: 1 dimensions: 10 instance_indices: 1", "bbob-new",
+      "result_folder: RS_on_mario-gan", random_generator);
+  example_experiment("rw-mario-gan-biobj", "function_indices: 1 dimensions: 10 instance_indices: 1", "bbob-biobj",
+      "result_folder: RS_on_mario-gan-biobj", random_generator);*/
 
-  example_experiment("rw-top-trumps", "port: 7251 function_indices: 1,5 dimensions: 88 instance_indices: 1", "bbob-new",
-      "result_folder: RS_on_rw-top-trumps", random_generator);
-  example_experiment("rw-top-trumps-biobj", "port: 7251 function_indices: 1,3 dimensions: 88 instance_indices: 1", "bbob-biobj",
+  example_experiment(
+      "rw-top-trumps",
+      "instance_indices: 7-15 precision_x: 0",
+      "rw",
+      "log_variables: none log_time: 1 log_discrete_as_int: 1 result_folder: RS_on_rw-top-trumps",
+      random_generator);
+
+  /*example_experiment("rw-top-trumps-biobj", "function_indices: 1,3 dimensions: 88 instance_indices: 1", "bbob-biobj",
       "result_folder: RS_on_rw-top-trumps-biobj", random_generator);
 
-  example_experiment("toy-socket", "port: 7251", "bbob-new",
+  example_experiment("toy-socket", "", "bbob-new",
       "result_folder: RS_on_toy-socket", random_generator);
-  example_experiment("toy-socket-biobj", "port: 7252", "bbob-biobj",
-      "result_folder: RS_on_toy-socket-biobj", random_generator);
-
-  example_experiment("rw-mario-gan", "port: 7252 function_indices: 1,28 dimensions: 10 instance_indices: 1", "bbob-new",
-      "result_folder: RS_on_mario-gan", random_generator);
-  example_experiment("rw-mario-gan-biobj", "port: 7252 function_indices: 1,10 dimensions: 10 instance_indices: 1", "bbob-biobj",
-      "result_folder: RS_on_mario-gan-biobj", random_generator);
+  example_experiment("toy-socket-biobj", "", "bbob-biobj",
+      "result_folder: RS_on_toy-socket-biobj", random_generator);*/
 
   /**
    * For more details on how to change the default suite and observer options, see
@@ -287,11 +290,17 @@ void my_random_search(evaluate_function_t evaluate_func,
 
     /* Construct x as a random point between the lower and upper bounds */
     for (j = 0; j < dimension; ++j) {
-      range = upper_bounds[j] - lower_bounds[j];
-      x[j] = lower_bounds[j] + coco_random_uniform(random_generator) * range;
-      /* Round the variable if integer */
-      if (j < number_of_integer_variables)
+      x[j] = coco_random_uniform(random_generator);
+      if (j < number_of_integer_variables) {
+        /* If integer, make sure teh bounds are interpreted correctly */
+        range = upper_bounds[j] - lower_bounds[j] + 1;
+        x[j] = lower_bounds[j] - 0.5 + x[j] * range;
         x[j] = floor(x[j] + 0.5);
+      }
+      else {
+        range = upper_bounds[j] - lower_bounds[j];
+        x[j] = lower_bounds[j] + x[j] * range;
+      }
     }
 
     /* Evaluate COCO's constraints function if problem is constrained */
