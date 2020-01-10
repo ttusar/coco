@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "coco_platform.h"
-#include "coco_string.c"
 
 #define HOST "127.0.0.1"    /* Local host */
-#define RESPONSE_SIZE 1024  /* Large enough for objective and constraint values and additional information */
+#define MESSAGE_SIZE 8192   /* Large enough for the entire message */
+#define RESPONSE_SIZE 1024  /* Large enough for the entire response (objective values or constraint violations) */
 
 /**
  * @brief Data type needed for socket communication (used by the suites that need it).
@@ -57,7 +57,7 @@ static socket_communication_data_t *socket_communication_data_initialize(
 }
 
 /**
- * Prepares and returns the message for the evaluator. The message has the following format:
+ * Creates the message for the evaluator. The message has the following format:
  * s <s> t <t> r <r> f <f> i <i> d <d> x <x1> <x2> ... <xd>
  * Where
  * <s> is the suite name (for example, "toy-socket")
@@ -68,23 +68,23 @@ static socket_communication_data_t *socket_communication_data_initialize(
  * <d> is the problem dimension
  * <xi> is the i-th value of x (there should be exactly d x-values)
  */
-static char *socket_communication_get_message(const char *suite_name,
-                                              const char *evaluation_type,
-                                              const size_t number_of_values,
-                                              const size_t function,
-                                              const size_t instance,
-                                              const size_t dimension,
-                                              const double *x,
-                                              const int precision_x) {
-  char *message, *tmp_string;
+static char *socket_communication_create_message(char *message,
+                                                 const char *suite_name,
+                                                 const char *evaluation_type,
+                                                 const size_t number_of_values,
+                                                 const size_t function,
+                                                 const size_t instance,
+                                                 const size_t dimension,
+                                                 const double *x,
+                                                 const int precision_x) {
   size_t i;
+  int write_count, offset;
 
-  message = coco_strdupf("s %s t %s r %lu f %lu i %lu d %lu x",
+  offset = sprintf(message, "s %s t %s r %lu f %lu i %lu d %lu x ",
       suite_name, evaluation_type, number_of_values, function, instance, dimension);
   for (i = 0; i < dimension; i++) {
-    tmp_string = message;
-    message = coco_strdupf("%s %.*e", message, precision_x, x[i]);
-    coco_free_memory(tmp_string);
+    write_count = sprintf(message + offset, "%.*e ", precision_x, x[i]);
+    offset += write_count;
   }
   return message;
 }
@@ -220,11 +220,12 @@ static void socket_communication_evaluate(const char* host_name,
  */
 static void socket_evaluate(coco_problem_t *problem, const double *x, double *y) {
 
-  char *message;
+  char message[MESSAGE_SIZE];
   const char evaluation_type[] = "objectives";
   socket_communication_data_t *data = (socket_communication_data_t *) problem->suite->data;
 
-  message = socket_communication_get_message(
+  socket_communication_create_message(
+      message,
       problem->suite->suite_name,
       evaluation_type,
       problem->number_of_objectives,
@@ -241,6 +242,5 @@ static void socket_evaluate(coco_problem_t *problem, const double *x, double *y)
       problem->number_of_objectives,
       y
   );
-  coco_free_memory(message);
 }
 
