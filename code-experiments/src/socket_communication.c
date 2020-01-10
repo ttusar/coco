@@ -29,7 +29,8 @@ static void socket_communication_data_free(void *stuff) {
   }
 }
 
-static socket_communication_data_t *socket_communication_data_initialize(const char *suite_options) {
+static socket_communication_data_t *socket_communication_data_initialize(
+    const char *suite_options, const unsigned short default_port) {
 
   socket_communication_data_t *data;
   data = (socket_communication_data_t *) coco_allocate_memory(sizeof(*data));
@@ -39,7 +40,7 @@ static socket_communication_data_t *socket_communication_data_initialize(const c
     strcpy(data->host_name, HOST);
   }
 
-  data->port = 7251;
+  data->port = default_port;
   if (coco_options_read(suite_options, "port", "%hu", &(data->port)) == 0) {
   }
 

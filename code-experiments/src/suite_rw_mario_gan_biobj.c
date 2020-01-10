@@ -25,7 +25,7 @@ static coco_suite_t *suite_rw_mario_gan_biobj_initialize(const char *suite_optio
 
   suite = coco_suite_allocate("rw-mario-gan-biobj", 10, 4, dimensions, "instances: 1-7");
 
-  suite->data = socket_communication_data_initialize(suite_options);
+  suite->data = socket_communication_data_initialize(suite_options, 7252);
   suite->data_free_function = socket_communication_data_free;
   return suite;
 }

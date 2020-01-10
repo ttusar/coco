@@ -17,7 +17,7 @@ static coco_suite_t *suite_rw_top_trumps_initialize(const char *suite_options) {
   const size_t dimensions[] = { 88, 128, 168, 208 };
 
   suite = coco_suite_allocate("rw-top-trumps", 5, 4, dimensions, "instances: 1-15");
-  suite->data = socket_communication_data_initialize(suite_options);
+  suite->data = socket_communication_data_initialize(suite_options, 7251);
   suite->data_free_function = socket_communication_data_free;
 
   return suite;
