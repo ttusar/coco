@@ -742,10 +742,10 @@ def test_java():
 
 ################################################################################
 ## External evaluation using socket communication
-rw_evaluator_host = '127.0.0.1'  # Local host
-rw_evaluator_port_c = 7251
-rw_evaluator_port_python = 7252
-rw_evaluator_ports = [rw_evaluator_port_c, rw_evaluator_port_python]
+socket_server_host = '127.0.0.1'  # Local host
+socket_server_port_c = 7251
+socket_server_port_python = 7252
+socket_server_ports = [socket_server_port_c, socket_server_port_python]
 rw_evaluator_top_trumps = 'EVALUATE_RW_TOP_TRUMPS'
 rw_evaluator_mario_gan = 'EVALUATE_RW_MARIO_GAN'
 rw_evaluators = [rw_evaluator_top_trumps, rw_evaluator_mario_gan]
@@ -786,7 +786,7 @@ def _build_socket_server_c():
 def _run_socket_server_c(port):
     """Run the socket server for external evaluation in C"""
     if port is None:
-        port = rw_evaluator_port_c
+        port = socket_server_port_c
     command = '{} {} silent'.format(
         os.path.join('code-experiments', 'rw-problems', 'socket_server'),
         port)
@@ -799,7 +799,7 @@ def _run_socket_server_c(port):
 def _run_socket_server_python(port):
     """Run the socket server for external evaluation in Python"""
     if port is None:
-        port = rw_evaluator_port_python
+        port = socket_server_port_python
     command = 'python {} {} silent'.format(
         os.path.join('code-experiments', 'rw-problems', 'socket_server.py'),
         port)
@@ -911,29 +911,34 @@ def run_rw_mario_gan_server(port):
 def run_socket_servers():
     """Run socket servers in C and Python"""
     build_socket_servers()
-    _run_socket_server_c(rw_evaluator_port_c)
-    _run_socket_server_python(rw_evaluator_port_python)
+    _run_socket_server_c(socket_server_port_c)
+    _run_socket_server_python(socket_server_port_python)
+
+
+def _stop_socket_server(port):
+    """Stop the socket server running on the given port"""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create socket
+        try:
+            s.connect((socket_server_host, port))  # Connect to the server
+        except socket.error:
+            print('No socket server found on port {}'.format(port))
+            return
+        s.send('SHUTDOWN'.encode())  # Send request for shutdown
+        s.close()
+        print('Stopped socket sever on port {}'.format(port))
+    except (socket.error, Exception) as e:
+        print('Error stopping socket server on port {}: {}'.format(port, e))
+        sys.exit(-1)
 
 
 def stop_socket_servers(port):
     """Stop the socket servers running on the known ports as well as the given port"""
-    ports = rw_evaluator_ports
+    ports = socket_server_ports
     if port:
         ports.append(int(port))
     for p in ports:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create socket
-            try:
-                s.connect((rw_evaluator_host, p))  # Connect to the server
-            except socket.error:
-                print('No socket server found on port {}'.format(p))
-                continue
-            s.send('SHUTDOWN'.encode())  # Send request for shutdown
-            s.close()
-            print('Stopped socket sever on port {}'.format(p))
-        except (socket.error, Exception) as e:
-            print('Error stopping socket server on port {}: {}'.format(p, e))
-            sys.exit(-1)
+        _stop_socket_server(p)
     # Reset the changes in the files regarding available external evaluators
     for rw_evaluator in rw_evaluators:
         set_external_evaluator(rw_evaluator, 0)
@@ -1144,12 +1149,13 @@ Available commands for users:
   build-toy-socket-server-python - Build the toy socket server in Python
   build-rw-top-trumps-server     - Build the rw_top_trumps server (external evaluator) 
   build-rw-mario-gan-server      - Build the rw_mario_gan server (external evaluator) 
-  build-all-rw-servers           - Build all the available servers (external evaluators)
+  build-socket-servers           - Build all the available servers (external evaluators)
 
   run-toy-socket-server-c        - Build and run the toy socket server in C
   run-toy-socket-server-python   - Build and run the toy socket server in Python
   run-rw-top-trumps-server       - Build and run the rw_top_trumps server (external evaluator)
   run-rw-mario-gan-server        - Build and run the rw_mario_gan server (external evaluator) 
+  run-socket-servers             - Run all socket servers
   stop-socket-servers            - Stop all running socket servers
 
 Available commands for developers:
