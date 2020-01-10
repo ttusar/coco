@@ -749,6 +749,7 @@ socket_server_ports = [socket_server_port_c, socket_server_port_python]
 rw_evaluator_top_trumps = 'EVALUATE_RW_TOP_TRUMPS'
 rw_evaluator_mario_gan = 'EVALUATE_RW_MARIO_GAN'
 rw_evaluators = [rw_evaluator_top_trumps, rw_evaluator_mario_gan]
+rw_evaluators_url = 'https://dis.ijs.si/tea/gbea/'
 
 
 def _set_external_evaluator(evaluate_string, new_value):
@@ -784,20 +785,12 @@ def _download_external_evaluator(name, force_download=False):
     import urllib.request
     import tarfile
     tgz_name = '{}.tgz'.format(name)
-    url_name = 'https://dis.ijs.si/tea/gbea/{}'.format(tgz_name)
+    url_name = '{}{}'.format(rw_evaluators_url, tgz_name)
     data_exists = os.path.isdir(os.path.join('code-experiments', 'rw-problems', name))
     if not data_exists or force_download:
         print('DOWNLOAD data for {}'.format(name))
         file_name, _ = urllib.request.urlretrieve(url_name)
         tar_file = tarfile.open(file_name, 'r:gz')
-        #for f in tar_file:
-        #    try:
-        #        tar_file.extract(f)
-        #    except IOError:
-        #        os.remove(f.name)
-        #        tar_file.extract(f)
-        #    finally:
-        #        os.chmod(f.name, f.mode)
         tar_file.extractall(os.path.join('code-experiments', 'rw-problems'))
         for root, dirs, files in os.walk(os.path.join('code-experiments', 'rw-problems', name),
                                          topdown=False):
