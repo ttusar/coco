@@ -139,7 +139,7 @@ int main(void) {
 
   example_experiment(
       "rw-top-trumps",
-      "instance_indices: 7-15 precision_x: 0",
+      "instance_indices: 7-15",
       "rw",
       "log_variables: none log_time: 1 log_discrete_as_int: 1 result_folder: RS_on_rw-top-trumps",
       random_generator);

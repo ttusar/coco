@@ -75,6 +75,7 @@ static char *socket_communication_create_message(char *message,
                                                  const size_t function,
                                                  const size_t instance,
                                                  const size_t dimension,
+                                                 const size_t number_of_integer_variables,
                                                  const double *x,
                                                  const int precision_x) {
   size_t i;
@@ -83,7 +84,10 @@ static char *socket_communication_create_message(char *message,
   offset = sprintf(message, "s %s t %s r %lu f %lu i %lu d %lu x ",
       suite_name, evaluation_type, number_of_values, function, instance, dimension);
   for (i = 0; i < dimension; i++) {
-    write_count = sprintf(message + offset, "%.*e ", precision_x, x[i]);
+    if (i < number_of_integer_variables)
+      write_count = sprintf(message + offset, "%d ", coco_double_to_int(x[i]));
+    else
+      write_count = sprintf(message + offset, "%.*e ", precision_x, x[i]);
     offset += write_count;
   }
   return message;
@@ -235,6 +239,7 @@ static void socket_evaluate(coco_problem_t *problem, const double *x, double *y)
       problem->suite_dep_function,
       problem->suite_dep_instance,
       problem->number_of_variables,
+      problem->number_of_integer_variables,
       x,
       data->precision_x
   );
