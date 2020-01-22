@@ -961,10 +961,9 @@ def _stop_socket_server(port):
 
 
 def stop_socket_servers(port):
-    """Stop the socket servers running on the known ports as well as the given port"""
-    ports = socket_server_ports
-    if port:
-        ports.append(int(port))
+    """Stop the socket servers running on the known ports (in case no port is given) or the given
+    port"""
+    ports = [int(port)] if port else socket_server_ports
     for p in ports:
         _stop_socket_server(p)
     # Reset the changes in the files regarding available external evaluators
