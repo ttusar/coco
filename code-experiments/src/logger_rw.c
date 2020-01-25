@@ -77,7 +77,7 @@ static void logger_rw_evaluate(coco_problem_t *problem, const double *x, double 
   /* Evaluate the constraints */
   if (problem->number_of_constraints > 0) {
     constraints = coco_allocate_vector(problem->number_of_constraints);
-    inner_problem->evaluate_constraint(inner_problem, x, constraints);
+    coco_evaluate_constraint(inner_problem, x, constraints);
   }
 
   /* Time the evaluations */
@@ -97,7 +97,8 @@ static void logger_rw_evaluate(coco_problem_t *problem, const double *x, double 
       for (i = 0; i < problem->number_of_variables; i++) {
         if ((i < problem->number_of_integer_variables) && (logger->log_discrete_as_int))
           fprintf(logger->out_file, " %d", coco_double_to_int(x[i]));
-        fprintf(logger->out_file, "%.*e\t", logger->precision_x, x[i]);
+        else
+          fprintf(logger->out_file, "%.*e\t", logger->precision_x, x[i]);
       }
     }
     if (logger->log_cons) {
