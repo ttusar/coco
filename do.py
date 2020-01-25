@@ -859,15 +859,6 @@ def _build_rw_top_trumps_lib():
             rw_library = 'lib' + rw_library + '.so'
         copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
                   'code-experiments/rw-problems/{}'.format(rw_library))
-        # Make the library available to all languages
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/c/{}'.format(rw_library))
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/python/{}'.format(rw_library))
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/java/{}'.format(rw_library))
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/matlab/{}'.format(rw_library))
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
