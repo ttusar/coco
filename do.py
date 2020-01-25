@@ -788,7 +788,7 @@ def _download_external_evaluator(name, force_download=False):
     url_name = '{}{}'.format(rw_evaluators_url, tgz_name)
     data_exists = os.path.isdir(os.path.join('code-experiments', 'rw-problems', name))
     if not data_exists or force_download:
-        print('DOWNLOAD data for {}'.format(name))
+        print('DOWNLOAD data for {} (can take a while)'.format(name))
         file_name, _ = urllib.request.urlretrieve(url_name)
         tar_file = tarfile.open(file_name, 'r:gz')
         tar_file.extractall(os.path.join('code-experiments', 'rw-problems'))
@@ -797,6 +797,7 @@ def _download_external_evaluator(name, force_download=False):
             for name in files:
                 # Change file permission so it can be deleted
                 os.chmod(join(root, name), 0o777)
+        print('DOWNLOAD completed')
 
 
 def _build_socket_server_c():
