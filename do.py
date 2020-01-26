@@ -860,8 +860,15 @@ def _build_rw_top_trumps_lib():
             rw_library += '.dll'
         else:
             rw_library = 'lib' + rw_library + '.so'
-        copy_file(os.path.join('code-experiments', 'rw-problems', 'top_trumps', rw_library),
-                  os.path.join('code-experiments', 'rw-problems', rw_library))
+            # Create a symlink to the library to be used at run-time
+            library_src = os.path.abspath(os.path.join('code-experiments', 'rw-problems',
+                                                       'top_trumps', rw_library))
+            library_des = '/usr/local/lib/' + rw_library
+            if os.path.lexists(library_des):
+                os.remove(library_des)
+            os.symlink(library_src, library_des)
+        # Copy the library so that the socket server finds it
+        copy_file(library_src, os.path.join('code-experiments', 'rw-problems', rw_library))
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
