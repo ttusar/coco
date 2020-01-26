@@ -37,11 +37,35 @@ static coco_problem_t *rw_mario_gan_problem_allocate(const size_t number_of_obje
   coco_problem_set_id(problem, problem_id_template, function, instance, dimension);
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
 
-  if (((number_of_objectives == 1) && (function <= 10)) ||
-      ((number_of_objectives == 2) && (function <= 2))) {
-    coco_problem_set_type(problem, "rw-mario-gan-computed");
-  } else {
-    coco_problem_set_type(problem, "rw-mario-gan-simulated");
+  /* Set type (for grouping) */
+  if (number_of_objectives == 1) {
+    if (function <= 10) {
+      if (function % 2 == 0)
+        coco_problem_set_type(problem, "direct-underground");
+      else
+        coco_problem_set_type(problem, "direct-overworld");
+    }
+    else if ((function == 11) || (function == 15) || (function == 17) ||
+        (function == 21) || (function == 23) || (function == 27))
+      coco_problem_set_type(problem, "simulated-overworld-single");
+    else if ((function == 12) || (function == 16) || (function == 18) ||
+        (function == 22) || (function == 24) || (function == 28))
+      coco_problem_set_type(problem, "simulated-underground-single");
+    else if ((function == 13) || (function == 19) || (function == 25))
+      coco_problem_set_type(problem, "simulated-overworld-concatenated");
+    else if ((function == 14) || (function == 20) || (function == 26))
+      coco_problem_set_type(problem, "simulated-underground-concatenated");
+  } else if (number_of_objectives == 2) {
+    if (function <= 2)
+      coco_problem_set_type(problem, "direct-underground");
+    else if (function <= 4)
+      coco_problem_set_type(problem, "simulated-overworld-single");
+    else if (function <= 6)
+      coco_problem_set_type(problem, "simulated-underground-single");
+    else if (function <= 8)
+      coco_problem_set_type(problem, "simulated-overworld-concatenated");
+    else if (function <= 10)
+      coco_problem_set_type(problem, "simulated-underground-concatenated");
   }
 
   if (number_of_objectives == 1) {

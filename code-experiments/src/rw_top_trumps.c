@@ -81,6 +81,19 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_obj
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
   coco_problem_set_type(problem, "rw-top-trumps");
 
+  /* Set type (for grouping) */
+  if (number_of_objectives == 1) {
+    if (function <= 2)
+      coco_problem_set_type(problem, "direct");
+    else
+      coco_problem_set_type(problem, "simulated");
+  } else if (number_of_objectives == 2) {
+    if (function == 1)
+      coco_problem_set_type(problem, "direct");
+    else
+      coco_problem_set_type(problem, "simulated");
+  }
+
   if (number_of_objectives == 1) {
     /* Unknown best_parameter and best_value */
     if (problem->best_parameter != NULL) {
