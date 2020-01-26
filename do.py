@@ -852,14 +852,16 @@ def _build_rw_top_trumps_lib():
     try:
         # Build the library
         rw_library = 'rw_top_trumps'
-        make('code-experiments/rw-problems/top_trumps', 'clean', verbose=_build_verbosity)
-        make('code-experiments/rw-problems/top_trumps', 'all', verbose=_build_verbosity)
+        make(os.path.join('code-experiments', 'rw-problems', 'top_trumps'), 'clean',
+             verbose=_build_verbosity)
+        make(os.path.join('code-experiments', 'rw-problems', 'top_trumps'), 'all',
+             verbose=_build_verbosity)
         if 'win32' in sys.platform:
             rw_library += '.dll'
         else:
             rw_library = 'lib' + rw_library + '.so'
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/rw-problems/{}'.format(rw_library))
+        copy_file(os.path.join('code-experiments', 'rw-problems', 'top_trumps', rw_library),
+                  os.path.join('code-experiments', 'rw-problems', rw_library))
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
