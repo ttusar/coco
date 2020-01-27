@@ -1,0 +1,8 @@
+% Direct
+1 deck hypervolume
+2 standard deviation of category averages
+
+% Simulation
+3 winrate of better player
+4 switches of trick winner
+5 trick difference at end of game
