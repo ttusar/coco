@@ -1242,7 +1242,7 @@ def main(args):
             package_install_option = ['--home=' + arg[13:]]
         elif arg[:5] == 'port=':
             port = arg[5:]
-        elif arg[:18] == 'force_rw_download=':
+        elif arg[:18] == 'force-rw-download=':
             force_rw_download = bool(arg[18:])
     if cmd == 'build': build(package_install_option=package_install_option)
     elif cmd == 'run': run_all(package_install_option=package_install_option)
