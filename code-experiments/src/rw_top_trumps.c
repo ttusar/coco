@@ -1,4 +1,3 @@
-#include "rw_top_trumps.h" /* File copied here during building of the top trumps problem */
 #include "coco.h"
 #include "coco_platform.h"
 #include "socket_communication.c"

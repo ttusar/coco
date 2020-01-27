@@ -19,7 +19,7 @@
  * The maximal budget for evaluations done by an optimization algorithm equals dimension * BUDGET_MULTIPLIER.
  * Increase the budget multiplier value gradually to see how it affects the runtime.
  */
-static const unsigned int BUDGET_MULTIPLIER = 1000;
+static const unsigned int BUDGET_MULTIPLIER = 2;
 
 /**
  * The maximal number of independent restarts allowed for an algorithm that restarts itself.
@@ -132,17 +132,18 @@ int main(void) {
    * to the settings, defined in example_experiment(...) below.
    */
 
-  /*example_experiment("rw-mario-gan", "function_indices: 1 dimensions: 10 instance_indices: 1", "bbob-new",
+  example_experiment("rw-mario-gan", "function_indices: 10-28 dimensions: 10 instance_indices: 1", "bbob-new",
       "result_folder: RS_on_mario-gan", random_generator);
-  example_experiment("rw-mario-gan-biobj", "function_indices: 1 dimensions: 10 instance_indices: 1", "bbob-biobj",
-      "result_folder: RS_on_mario-gan-biobj", random_generator);*/
 
   example_experiment(
       "rw-top-trumps",
-      "function_indices: 3-5 instance_indices: 7-15",
+      "function_indices: 3 instance_indices: 7 dimensions: 88",
       "rw",
-      "log_variables: all log_time: 1 log_discrete_as_int: 1 result_folder: RS_on_rw-top-trumps",
+      "log_variables: none log_time: 1 log_discrete_as_int: 1 result_folder: RS_on_rw-top-trumps",
       random_generator);
+
+  /*example_experiment("rw-mario-gan-biobj", "function_indices: 1 dimensions: 10 instance_indices: 1", "bbob-biobj",
+      "result_folder: RS_on_mario-gan-biobj", random_generator);*/
 
   /*example_experiment("rw-top-trumps-biobj", "function_indices: 1,3 dimensions: 88 instance_indices: 1", "bbob-biobj",
       "result_folder: RS_on_rw-top-trumps-biobj", random_generator);

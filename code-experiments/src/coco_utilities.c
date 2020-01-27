@@ -1056,23 +1056,6 @@ static int coco_is_feasible(coco_problem_t *problem,
 /**@{*/
 
 /**
- * @brief Waits for the given time in milliseconds
- */
-void coco_sleep_ms(unsigned int milliseconds)
-{
-#ifdef WIN32
-    Sleep(milliseconds);
-#elif _POSIX_C_SOURCE >= 199309L
-    struct timespec ts;
-    ts.tv_sec = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-#else
-    usleep(milliseconds * 1000);
-#endif
-}
-
-/**
  * @brief Returns the current time as a string.
  *
  * The caller is responsible for freeing the allocated memory using coco_free_memory().

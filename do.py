@@ -788,7 +788,7 @@ def _download_external_evaluator(name, force_download=False):
     url_name = '{}{}'.format(rw_evaluators_url, tgz_name)
     data_exists = os.path.isdir(os.path.join('code-experiments', 'rw-problems', name))
     if not data_exists or force_download:
-        print('DOWNLOAD data for {}'.format(name))
+        print('DOWNLOAD data for {} (can take a while)'.format(name))
         file_name, _ = urllib.request.urlretrieve(url_name)
         tar_file = tarfile.open(file_name, 'r:gz')
         tar_file.extractall(os.path.join('code-experiments', 'rw-problems'))
@@ -797,6 +797,7 @@ def _download_external_evaluator(name, force_download=False):
             for name in files:
                 # Change file permission so it can be deleted
                 os.chmod(join(root, name), 0o777)
+        print('DOWNLOAD completed')
 
 
 def _build_socket_server_c():
@@ -851,8 +852,6 @@ def _build_rw_top_trumps_lib():
     try:
         # Build the library
         rw_library = 'rw_top_trumps'
-        copy_file('code-experiments/rw-problems/top_trumps/{}.h'.format(rw_library),
-                  'code-experiments/src/{}.h'.format(rw_library))
         make('code-experiments/rw-problems/top_trumps', 'clean', verbose=_build_verbosity)
         make('code-experiments/rw-problems/top_trumps', 'all', verbose=_build_verbosity)
         if 'win32' in sys.platform:
@@ -861,15 +860,6 @@ def _build_rw_top_trumps_lib():
             rw_library = 'lib' + rw_library + '.so'
         copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
                   'code-experiments/rw-problems/{}'.format(rw_library))
-        # Make the library available to all languages
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/c/{}'.format(rw_library))
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/python/{}'.format(rw_library))
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/java/{}'.format(rw_library))
-        copy_file('code-experiments/rw-problems/top_trumps/{}'.format(rw_library),
-                  'code-experiments/build/matlab/{}'.format(rw_library))
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
