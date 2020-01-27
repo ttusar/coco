@@ -136,8 +136,6 @@ static void socket_communication_evaluate(const char* host_name,
                                           const size_t expected_number_of_values,
                                           double *values) {
   char response[RESPONSE_SIZE];
-  const unsigned int timeout = 500;
-  size_t i, max_tries = 5;
 
 #if WINSOCK
   WSADATA wsa;
@@ -161,17 +159,8 @@ static void socket_communication_evaluate(const char* host_name,
 
   /* Connect to the evaluator */
   if (connect(sock, (SOCKADDR *) &serv_addr, sizeof(serv_addr)) < 0) {
-    /* Wait a bit and try again (up to max_tries times) */
-    for (i = 0; i < max_tries; i++) {
-      coco_info("socket_communication_evaluate(): Connection failed (%lu-th time), trying again in %lu ms", i + 1, timeout);
-      coco_sleep_ms(timeout);
-      if (connect(sock, (SOCKADDR *) &serv_addr, sizeof(serv_addr)) < 0) {
-        if (i == max_tries - 1)
-          coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?\nMessage: %s",
-              host_name, port, message);
-      }
-      else break;
-    }
+    coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?\nMessage: %s",
+        host_name, port, message);
   }
 
   /* Send message */
@@ -210,17 +199,8 @@ static void socket_communication_evaluate(const char* host_name,
 
   /* Connect to the evaluator */
   if (connect(sock, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-    /* Wait a bit and try again (up to max_tries times) */
-    for (i = 0; i < max_tries; i++) {
-      coco_info("socket_communication_evaluate(): Connection failed (%lu-th time), trying again in %lu ms", i + 1, timeout);
-      coco_sleep_ms(timeout);
-      if (connect(sock, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        if (i == max_tries - 1)
-          coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?\nMessage: %s",
-              host_name, port, message);
-      }
-      else break;
-    }
+    coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?\nMessage: %s",
+        host_name, port, message);
   }
 
   /* Send message */
@@ -242,7 +222,7 @@ static void socket_communication_evaluate(const char* host_name,
 /**
  * @brief Calls the external evaluator to evaluate the objective values for x.
  */
-static void socket_evaluate(coco_problem_t *problem, const double *x, double *y) {
+static void socket_evaluate_function(coco_problem_t *problem, const double *x, double *y) {
 
   char message[MESSAGE_SIZE];
   const char evaluation_type[] = "objectives";
@@ -267,5 +247,37 @@ static void socket_evaluate(coco_problem_t *problem, const double *x, double *y)
       problem->number_of_objectives,
       y
   );
+  coco_warning("objective message %s", message);
+}
+
+/**
+ * @brief Calls the external evaluator to evaluate the contraint violations for x.
+ */
+static void socket_evaluate_constraint(coco_problem_t *problem, const double *x, double *y) {
+
+  char message[MESSAGE_SIZE];
+  const char evaluation_type[] = "constraints";
+  socket_communication_data_t *data = (socket_communication_data_t *) problem->suite->data;
+
+  socket_communication_create_message(
+      message,
+      problem->suite->suite_name,
+      evaluation_type,
+      problem->number_of_constraints,
+      problem->suite_dep_function,
+      problem->suite_dep_instance,
+      problem->number_of_variables,
+      problem->number_of_integer_variables,
+      x,
+      data->precision_x
+  );
+  socket_communication_evaluate(
+      data->host_name,
+      data->port,
+      message,
+      problem->number_of_constraints,
+      y
+  );
+  coco_warning("constraint message %s", message);
 }
 

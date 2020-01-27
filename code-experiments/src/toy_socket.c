@@ -34,8 +34,8 @@ static coco_problem_t *toy_socket_problem_allocate(const size_t number_of_object
     problem->largest_values_of_interest[i] = 1;
   }
   problem->number_of_integer_variables = 0;
-  problem->evaluate_function = socket_evaluate;
-  problem->evaluate_constraint = socket_evaluate;
+  problem->evaluate_function = socket_evaluate_function;
+  problem->evaluate_constraint = socket_evaluate_constraint;
 
   coco_problem_set_id(problem, problem_id_template, function, instance, dimension);
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);

@@ -55,7 +55,7 @@ def evaluate_message(message):
         func = int(msg[msg.index('f') + 1])
         dimension = int(msg[msg.index('d') + 1])
         instance = int(msg[msg.index('i') + 1])
-        x = [float(m) for m in msg[msg.index('x') + 1:]]
+        x = [float(m) for m in msg[msg.index('x') + 1:] if m != '']
         if len(x) != dimension:
             raise ValueError('Number of x values {} does not match dimension {}'.format(len(x),
                                                                                         dimension))
@@ -96,7 +96,7 @@ def evaluate_message(message):
             response += '{:.{p}e} '.format(value, p=RESULT_PRECISION)
         return str.encode(response)
     except Exception as e:
-        print('Error within message evaluation: {}'.format(e))
+        print('Error within message evaluation: {} \nMessage = {}'.format(e, message))
         raise e
 
 

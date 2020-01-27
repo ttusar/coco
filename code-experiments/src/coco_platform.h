@@ -72,15 +72,6 @@ static const char *coco_path_separator = "/";
 #error COCO_PATH_MAX undefined
 #endif
 
-/* Definitions needed for a cross-platform sleep function */
-#ifdef WIN32
-#include <windows.h>
-#elif _POSIX_C_SOURCE >= 199309L
-#include <time.h>   // for nanosleep
-#else
-#include <unistd.h> // for usleep
-#endif
-
 /* Definitions needed for creating and removing directories */
 /* Separately handle the special case of Microsoft Visual Studio 2008 with x86_64-w64-mingw32-gcc */
 #if _MSC_VER
