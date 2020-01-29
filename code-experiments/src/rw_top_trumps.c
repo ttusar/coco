@@ -74,11 +74,25 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_obj
   rw_top_trumps_set_bounds(problem, instance);
 
   problem->number_of_integer_variables = dimension;
-  problem->evaluate_function = socket_evaluate;
+  problem->evaluate_function = socket_evaluate_function;
+  problem->evaluate_constraint = socket_evaluate_constraint;
 
   coco_problem_set_id(problem, problem_id_template, function, instance, dimension);
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
   coco_problem_set_type(problem, "rw-top-trumps");
+
+  /* Set type (for grouping) */
+  if (number_of_objectives == 1) {
+    if (function <= 2)
+      coco_problem_set_type(problem, "direct");
+    else
+      coco_problem_set_type(problem, "simulated");
+  } else if (number_of_objectives == 2) {
+    if (function == 1)
+      coco_problem_set_type(problem, "direct");
+    else
+      coco_problem_set_type(problem, "simulated");
+  }
 
   if (number_of_objectives == 1) {
     /* Unknown best_parameter and best_value */

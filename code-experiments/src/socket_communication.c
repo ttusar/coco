@@ -222,7 +222,7 @@ static void socket_communication_evaluate(const char* host_name,
 /**
  * @brief Calls the external evaluator to evaluate the objective values for x.
  */
-static void socket_evaluate(coco_problem_t *problem, const double *x, double *y) {
+static void socket_evaluate_function(coco_problem_t *problem, const double *x, double *y) {
 
   char message[MESSAGE_SIZE];
   const char evaluation_type[] = "objectives";
@@ -247,5 +247,37 @@ static void socket_evaluate(coco_problem_t *problem, const double *x, double *y)
       problem->number_of_objectives,
       y
   );
+  coco_warning("objective message %s", message);
+}
+
+/**
+ * @brief Calls the external evaluator to evaluate the contraint violations for x.
+ */
+static void socket_evaluate_constraint(coco_problem_t *problem, const double *x, double *y) {
+
+  char message[MESSAGE_SIZE];
+  const char evaluation_type[] = "constraints";
+  socket_communication_data_t *data = (socket_communication_data_t *) problem->suite->data;
+
+  socket_communication_create_message(
+      message,
+      problem->suite->suite_name,
+      evaluation_type,
+      problem->number_of_constraints,
+      problem->suite_dep_function,
+      problem->suite_dep_instance,
+      problem->number_of_variables,
+      problem->number_of_integer_variables,
+      x,
+      data->precision_x
+  );
+  socket_communication_evaluate(
+      data->host_name,
+      data->port,
+      message,
+      problem->number_of_constraints,
+      y
+  );
+  coco_warning("constraint message %s", message);
 }
 
