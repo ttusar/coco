@@ -14,9 +14,9 @@
 
 LDFLAGS += -lm
 CCFLAGS = -g -ggdb -std=c89 -pedantic -Wall -Wextra -Wstrict-prototypes -Wshadow -Wno-sign-compare -Wconversion
-LDFLAGS += '-Wl,-rpath,$$ORIGIN' -L.
+LDFLAGS += '-Wl,-rpath,$$ORIGIN'
 ifeq ($(OS),Windows_NT)
-    LDFLAGS += -l -lwsock32
+    LDFLAGS += -L. -lwsock32
 endif
 
 ########################################################################
