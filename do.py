@@ -855,6 +855,9 @@ def _build_rw_top_trumps_lib():
              verbose=_build_verbosity)
         if 'win32' in sys.platform:
             rw_library += '.dll'
+            # Copy the library so that the socket server finds it
+            copy_file(os.path.join('code-experiments', 'rw-problems', 'top_trumps', rw_library),
+                      os.path.join('code-experiments', 'rw-problems', rw_library))
         else:
             rw_library = 'lib' + rw_library + '.so'
             # Create a symlink to the library to be used at run-time
@@ -864,8 +867,8 @@ def _build_rw_top_trumps_lib():
             if os.path.lexists(library_des):
                 os.remove(library_des)
             os.symlink(library_src, library_des)
-        # Copy the library so that the socket server finds it
-        copy_file(library_src, os.path.join('code-experiments', 'rw-problems', rw_library))
+            # Copy the library so that the socket server finds it
+            copy_file(library_src, os.path.join('code-experiments', 'rw-problems', rw_library))
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
