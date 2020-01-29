@@ -749,7 +749,6 @@ socket_server_ports = [socket_server_port_c, socket_server_port_python]
 rw_evaluator_top_trumps = 'EVALUATE_RW_TOP_TRUMPS'
 rw_evaluator_mario_gan = 'EVALUATE_RW_MARIO_GAN'
 rw_evaluators = [rw_evaluator_top_trumps, rw_evaluator_mario_gan]
-rw_evaluators_url = 'https://dis.ijs.si/tea/gbea/'
 
 
 def _set_external_evaluator(evaluate_string, new_value):
@@ -778,20 +777,18 @@ def _set_external_evaluator(evaluate_string, new_value):
     replace_in_file(os.path.join('code-experiments', 'rw-problems', 'socket_server.py'))
 
 
-def _download_external_evaluator(name, force_download=False):
+def _download_external_evaluator(name, url_name, force_download=False):
     """Downloads the data of the external evaluator with the given name if it is not present yet.
     If force_download, the download will happen regardless of the previous existence of the data
     in the same destination folder"""
     import urllib.request
     import tarfile
-    tgz_name = '{}.tgz'.format(name)
-    url_name = '{}{}'.format(rw_evaluators_url, tgz_name)
     data_exists = os.path.isdir(os.path.join('code-experiments', 'rw-problems', name))
     if not data_exists or force_download:
         print('DOWNLOAD data for {} (can take a while)'.format(name))
         file_name, _ = urllib.request.urlretrieve(url_name)
         tar_file = tarfile.open(file_name, 'r:gz')
-        tar_file.extractall(os.path.join('code-experiments', 'rw-problems'))
+        tar_file.extractall(os.path.join('code-experiments', 'rw-problems', name))
         for root, dirs, files in os.walk(os.path.join('code-experiments', 'rw-problems', name),
                                          topdown=False):
             for name in files:
@@ -867,7 +864,8 @@ def _build_rw_top_trumps_lib():
 def build_rw_top_trumps_server(force_download=False, exclusive_evaluator=True):
     """Download and build the socket server with the top trumps evaluator (in C)"""
     # Download the data
-    _download_external_evaluator('top_trumps', force_download=force_download)
+    url_name = 'https://github.com/ttusar/top-trumps/raw/master/dist/top-trumps.tar.gz'
+    _download_external_evaluator('top_trumps', url_name, force_download=force_download)
     # Build the library
     _build_rw_top_trumps_lib()
     if exclusive_evaluator:
@@ -883,7 +881,8 @@ def build_rw_top_trumps_server(force_download=False, exclusive_evaluator=True):
 def build_rw_mario_gan_server(force_download=False, exclusive_evaluator=True):
     """Download data and prepare the socket server to use the mario gan evaluator in Python"""
     # Download the data
-    _download_external_evaluator('mario_gan', force_download=force_download)
+    url_name = 'https://dis.ijs.si/tea/gbea/mario-gan.tar.gz'
+    _download_external_evaluator('mario_gan', url_name, force_download=force_download)
     if exclusive_evaluator:
         # Set the socket server to use only the rw_gan_mario evaluator
         for rw_evaluator in rw_evaluators:
