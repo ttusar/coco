@@ -134,16 +134,23 @@ int main(void) {
 
   example_experiment(
       "rw-mario-gan",
-      "function_indices: 1-28 dimensions: 10 instance_indices: 1",
+      "function_indices: 1,11,15 dimensions: 10 instance_indices: 1",
       "bbob-new",
       "result_folder: RS_on_mario-gan",
       random_generator);
 
   example_experiment(
       "rw-top-trumps",
-      "function_indices: 1-5 dimensions: 88 instance_indices: 1",
+      "function_indices: 1,3 dimensions: 88 instance_indices: 1",
       "bbob-new",
-      "log_variables: none log_time: 1 log_discrete_as_int: 1 result_folder: RS_on_rw-top-trumps",
+      "result_folder: RS_on_rw-top-trumps",
+      random_generator);
+
+  example_experiment(
+      "toy-socket",
+      "",
+      "bbob-new",
+      "result_folder: RS_on_toy-socket",
       random_generator);
 
   /*example_experiment("rw-mario-gan-biobj", "function_indices: 1 dimensions: 10 instance_indices: 1", "bbob-biobj",
