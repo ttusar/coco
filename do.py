@@ -869,6 +869,10 @@ def _build_rw_top_trumps_lib():
             os.symlink(library_src, library_des)
             # Copy the library so that the socket server finds it
             copy_file(library_src, os.path.join('code-experiments', 'rw-problems', rw_library))
+    except PermissionError as e:
+        print('Encountered a permission error, the rw-top-trumps library is probably used by the'
+              'server. Stop the socket server and try again. \nError: {}'.format(e))
+        sys.exit(-1)
     except subprocess.CalledProcessError:
         sys.exit(-1)
 
