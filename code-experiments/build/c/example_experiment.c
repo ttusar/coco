@@ -293,7 +293,7 @@ void my_random_search(evaluate_function_t evaluate_func,
     for (j = 0; j < dimension; ++j) {
       x[j] = coco_random_uniform(random_generator);
       if (j < number_of_integer_variables) {
-        /* If integer, make sure teh bounds are interpreted correctly */
+        /* If integer, make sure the bounds are interpreted correctly */
         range = upper_bounds[j] - lower_bounds[j] + 1;
         x[j] = lower_bounds[j] - 0.5 + x[j] * range;
         x[j] = floor(x[j] + 0.5);
@@ -305,7 +305,7 @@ void my_random_search(evaluate_function_t evaluate_func,
     }
 
     /* Evaluate COCO's constraints function if problem is constrained */
-    if (number_of_constraints > 0 )
+    if (number_of_constraints > 0)
       evaluate_cons(x, constraints_values);
 
     /* Call COCO's evaluate function where all the logging is performed */
