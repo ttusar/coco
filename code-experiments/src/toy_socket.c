@@ -41,19 +41,21 @@ static coco_problem_t *toy_socket_problem_allocate(const size_t number_of_object
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
   coco_problem_set_type(problem, "toy_socket");
 
+  /* Unknown best_parameter */
+  if (problem->best_parameter != NULL) {
+    coco_free_memory(problem->best_parameter);
+    problem->best_parameter = NULL;
+  }
+
   if (number_of_objectives == 1) {
-    /* Example of unknown best_parameter and best_value */
-    if (problem->best_parameter != NULL) {
-      coco_free_memory(problem->best_parameter);
-      problem->best_parameter = NULL;
-    }
+    /* Since best value is unknown, provide a reference point */
     if (problem->best_value != NULL) {
-      coco_free_memory(problem->best_value);
-      problem->best_value = NULL;
+      assert(problem->best_value);
+      problem->best_value[0] = 0.0;
     }
   }
-  /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
   else if (number_of_objectives == 2) {
+    /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
     problem->best_value[0] = -1000;
     problem->best_value[1] = -1000;
     problem->nadir_value[0] = 1000;

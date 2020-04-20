@@ -13,7 +13,8 @@ static coco_suite_t *coco_suite_allocate(const char *suite_name,
                                          const size_t number_of_functions,
                                          const size_t number_of_dimensions,
                                          const size_t *dimensions,
-                                         const char *default_instances);
+                                         const char *default_instances,
+                                         const int known_optima);
 
 
 /**
@@ -25,7 +26,7 @@ static coco_suite_t *suite_rw_mario_gan_initialize(const char *suite_options) {
   coco_suite_t *suite;
   const size_t dimensions[] = { 10, 20, 30, 40 };
 
-  suite = coco_suite_allocate("rw-mario-gan", 28, 4, dimensions, "instances: 1-7");
+  suite = coco_suite_allocate("rw-mario-gan", 28, 4, dimensions, "instances: 1-7", 0);
 
   suite->data = socket_communication_data_initialize(suite_options, 7252);
   suite->data_free_function = socket_communication_data_free;

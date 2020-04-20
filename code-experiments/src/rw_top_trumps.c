@@ -94,19 +94,19 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_obj
       coco_problem_set_type(problem, "simulated");
   }
 
-  if (number_of_objectives == 1) {
-    /* Unknown best_parameter and best_value */
-    if (problem->best_parameter != NULL) {
-      coco_free_memory(problem->best_parameter);
-      problem->best_parameter = NULL;
-    }
-    if (problem->best_value != NULL) {
-      coco_free_memory(problem->best_value);
-      problem->best_value = NULL;
-    }
+  /* Unknown best_parameter */
+  if (problem->best_parameter != NULL) {
+    coco_free_memory(problem->best_parameter);
+    problem->best_parameter = NULL;
   }
-  /* Need to provide estimation for the ideal and nadir points in the bi-objective case */
-  else if (number_of_objectives == 2) {
+
+  if (number_of_objectives == 1) {
+    /* Since best value is unknown, provide a reference point */
+    assert(problem->best_value);
+    problem->best_value[0] = 0.0;
+  }
+  else if (number_of_objectives == 2) { /* TODO Vanessa */
+    /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
     problem->best_value[0] = -1;
     problem->best_value[1] = -1;
     problem->nadir_value[0] = 0;

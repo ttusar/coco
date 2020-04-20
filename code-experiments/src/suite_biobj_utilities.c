@@ -530,18 +530,6 @@ static void suite_biobj_get_best_hyp_value(const int known_optima,
     coco_free_memory(curr_key);
     return;
   }
-  else if (strcmp(suite_name, "toy-socket-biobj") == 0) {
-    *value = default_value;
-    return -1;
-  }
-  else if (strcmp(suite_name, "mario-gan-biobj") == 0) {
-    *value = default_value;
-    return -1;
-  }
-  else if (strcmp(suite_name, "rw-top-trumps-biobj") == 0) {
-    *value = default_value;
-    return -1;
-  }
   else {
     *value = default_value;
     return;

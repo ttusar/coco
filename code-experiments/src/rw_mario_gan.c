@@ -9,7 +9,7 @@
 
 
 /**
- * @brief Creates the mario-gan problem.
+ * @brief Creates the rw-mario-gan problem.
  */
 static coco_problem_t *rw_mario_gan_problem_allocate(const size_t number_of_objectives,
                                                      const size_t function,
@@ -68,20 +68,19 @@ static coco_problem_t *rw_mario_gan_problem_allocate(const size_t number_of_obje
       coco_problem_set_type(problem, "simulated-underground-concatenated");
   }
 
-  if (number_of_objectives == 1) {
-    /* Unknown best_parameter and best_value */
-    if (problem->best_parameter != NULL) {
-      coco_free_memory(problem->best_parameter);
-      problem->best_parameter = NULL;
-    }
-    if (problem->best_value != NULL) {
-      coco_free_memory(problem->best_value);
-      problem->best_value = NULL;
-    }
+  /* Unknown best_parameter */
+  if (problem->best_parameter != NULL) {
+    coco_free_memory(problem->best_parameter);
+    problem->best_parameter = NULL;
   }
 
-  /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
+  if (number_of_objectives == 1) {
+    /* Since best value is unknown, provide a reference point */
+    assert(problem->best_value);
+    problem->best_value[0] = 0.0;
+  }
   else if (number_of_objectives == 2) { /* TODO Vanessa */
+    /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
     problem->best_value[0] = -1000;
     problem->best_value[1] = -1000;
     problem->nadir_value[0] = 1000;

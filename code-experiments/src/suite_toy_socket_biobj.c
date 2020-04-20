@@ -16,7 +16,8 @@ static coco_suite_t *coco_suite_allocate(const char *suite_name,
                                          const size_t number_of_functions,
                                          const size_t number_of_dimensions,
                                          const size_t *dimensions,
-                                         const char *default_instances);
+                                         const char *default_instances,
+                                         const int known_optima);
 
 /**
  * @brief Sets the dimensions and default instances for the toy-socket-biobj suite.
@@ -26,7 +27,7 @@ static coco_suite_t *suite_toy_socket_biobj_initialize(const char *suite_options
   coco_suite_t *suite;
   const size_t dimensions[] = { 2, 30 };
 
-  suite = coco_suite_allocate("toy-socket-biobj", 1, 2, dimensions, "instances: 1");
+  suite = coco_suite_allocate("toy-socket-biobj", 1, 2, dimensions, "instances: 1", 0);
 
   suite->data = socket_communication_data_initialize(suite_options, 7252);
   suite->data_free_function = socket_communication_data_free;
