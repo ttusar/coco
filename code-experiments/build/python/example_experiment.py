@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""Python script for the COCO experimentation module `cocoex`.
+"""DEPRECATED: use rather `example_experiment2.py`
+
+A Python script for the COCO experimentation module `cocoex`.
 
 Usage from a system shell::
 
@@ -32,6 +34,8 @@ runs the 2nd of 300 batches with budget 5 * dimension and at most 9 restarts.
 
 Calling `example_experiment` without parameters prints this
 help and the available suite names.
+
+DEPRECATED: use rather `example_experiment2.py`
 """
 from __future__ import absolute_import, division, print_function
 try: range = xrange
@@ -107,7 +111,7 @@ def batch_loop(solver, suite, observer, budget,
             continue
         observer.observe(problem)
         short_info.print(problem) if verbose else None
-        runs = coco_optimize(solver, problem, budget * problem.dimension,
+        runs = coco_optimize(solver, problem, budget * problem.dimension, observer,
                              max_runs)
         if verbose:
             print_flush("!" if runs > 2 else ":" if runs > 1 else ".")
@@ -127,7 +131,7 @@ def batch_loop(solver, suite, observer, budget,
 #===============================================
 # interface: ADD AN OPTIMIZER BELOW
 #===============================================
-def coco_optimize(solver, fun, max_evals, max_runs=1e9):
+def coco_optimize(solver, fun, max_evals, observer, max_runs=1e9):
     """`fun` is a callable, to be optimized by `solver`.
 
     The `solver` is called repeatedly with different initial solutions
@@ -144,6 +148,8 @@ def coco_optimize(solver, fun, max_evals, max_runs=1e9):
               fun.evaluations)
 
     for restarts in range(int(max_runs)):
+        observer.signal_restart(fun)
+
         remaining_evals = max_evals - fun.evaluations - fun.evaluations_constraints
         x0 = center + (restarts > 0) * 0.8 * range_ * (
                 np.random.rand(fun.dimension) - 0.5)

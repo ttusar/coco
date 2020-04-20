@@ -18,7 +18,7 @@ def regression_test_match_words(old_word, new_word, accuracy=1e-6):
 
     If they don't, checks whether they match as floats with the given accuracy
     """
-    exceptions = {'bbob': 'bbob-new'}
+    exceptions = {'bbob-old': 'bbob'}
 
     old_word = old_word.strip('\'')
     new_word = new_word.strip('\'')
@@ -83,7 +83,7 @@ def regression_test_match_logger_output(old_data_folder, new_data_folder):
     """Checks whether the contents of the two folders match.
 
     The check includes only the '.info', '.dat', '.tdat', and '.adat' files, i.e., ignores and
-    `.rdat` and other files.
+    `.rdat`, `.mdat` and other files.
     """
     endings = ('.info', '.dat', '.tdat', '.adat')
     print('\nComparing the contents of {} and {}'.format(old_data_folder, new_data_folder))
@@ -94,6 +94,8 @@ def regression_test_match_logger_output(old_data_folder, new_data_folder):
 
     for (old_root, old_dirs, old_files), (new_root, new_dirs, new_files) in \
             zip(os.walk(old_data_folder), os.walk(new_data_folder)):
+        old_files = [f for f in old_files if f.endswith(endings)]
+        new_files = [f for f in new_files if f.endswith(endings)]
         # Iterate over files in both folders sorted by name
         for old_fname, new_fname in zip(sorted(old_files), sorted(new_files)):
             if old_fname.endswith(endings) and new_fname.endswith(endings):
@@ -113,8 +115,8 @@ if __name__ == "__main__":
     os.chdir(dir_path)
 
     path = os.path.join('create', 'exdata')
-    comparisons = [['bbob_bbob_def', 'bbob_bbob-new_def'],
-                   ['bbob-constrained_bbob_def', 'bbob-constrained_bbob-new_def']]
+    comparisons = [['bbob_bbob-old_def', 'bbob_bbob_def'],
+                   ['bbob-constrained_bbob-old_def', 'bbob-constrained_bbob_def']]
 
     exception_count = 0
     try:

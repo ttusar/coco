@@ -177,6 +177,10 @@ static int coco_file_exists(const char *path) {
 static int coco_mkdir(const char *path) {
   int result = 0;
 
+  /* Do not create the path if is of the form "C:" (two letters, of which the second is a colon)*/
+  if ((strlen(path) == 2) && (path[1] == ':'))
+    return 1;
+
 #if _MSC_VER
   result = _mkdir(path);
 #elif defined(__MINGW32__) || defined(__MINGW64__)
@@ -621,22 +625,51 @@ static void coco_option_keys_add(coco_option_keys_t **basic_option_keys,
  * separated by colons.
  *
  * @note Relies heavily on the "key: value" format and might fail if the number of colons doesn't match the
- * number of keys.
+ * number of keys. Values that are strings surrounded by quotation marks should work as long as they come
+ * in pairs.
  */
 static coco_option_keys_t *coco_option_keys(const char *option_string) {
 
   size_t i;
   char **keys;
   coco_option_keys_t *option_keys = NULL;
-  char *string_to_parse, *key;
+  char *string_to_parse, *key, *string_pointer;
+  char *cleaned_option_string = NULL;
+  const char *replacement_string = "STR";
 
   /* Check for empty string */
   if ((option_string == NULL) || (strlen(option_string) == 0)) {
 	    return NULL;
   }
 
+  /* Construct the cleaned_option_string by replacing any string between two quotation marks with "STR"*/
+  keys = coco_string_split(option_string, '\"');
+  if (keys) {
+    for (i = 0; *(keys + i); i++) {
+      if (i == 0)
+        cleaned_option_string = coco_strdupf(*(keys + i));
+      else {
+        string_pointer = cleaned_option_string;
+        if (i % 2 == 0) {
+          /* This is outside of a pair of quotation marks */
+          cleaned_option_string = coco_strconcat(string_pointer, *(keys + i));
+        }
+        else {
+          /* This is inside of a pair of quotation marks */
+          cleaned_option_string = coco_strconcat(string_pointer, replacement_string);
+        }
+        coco_free_memory(string_pointer);
+      }
+    }
+  }
+  /* Free the keys */
+  for (i = 0; *(keys + i); i++) {
+    coco_free_memory(*(keys + i));
+  }
+  coco_free_memory(keys);
+
   /* Split the options w.r.t ':' */
-  keys = coco_string_split(option_string, ':');
+  keys = coco_string_split(cleaned_option_string, ':');
 
   if (keys) {
     /* Keys now contain something like this: "values_of_previous_key this_key" except for the first, which
@@ -677,6 +710,8 @@ static coco_option_keys_t *coco_option_keys(const char *option_string) {
     }
     coco_free_memory(keys);
   }
+
+  coco_free_memory(cleaned_option_string);
 
   return option_keys;
 }
@@ -863,6 +898,13 @@ static int coco_options_read_values(const char *options, const char *name, char 
 /**@{*/
 
 /**
+ * @brief  Returns 1 if |a - b| < precision and 0 otherwise.
+ */
+static int coco_double_almost_equal(const double a, const double b, const double precision) {
+  return (fabs(a - b) < precision);
+}
+
+/**
  * @brief Rounds the given double to the nearest integer.
  */
 static double coco_double_round(const double number) {
@@ -871,10 +913,24 @@ static double coco_double_round(const double number) {
 
 /**
  * @brief Rounds the given double up to the nearest double value with the given precision.
+ *
+ * @note The implementation is (probably unnecessarily) complex, but this was the only way to make
+ * sure it works also for edge cases due to float precision issue.
  */
 static double coco_double_round_up_with_precision(const double number, const double precision) {
-  assert(precision > 0);
-  return ceil((number / precision) - 0.1 * precision) * precision;
+  double rounded_up, rounded;
+  double min_precision = 1e-12;
+  assert(precision > min_precision);
+  rounded_up = ceil(number / precision) * precision;
+  rounded = coco_double_round(number / precision) * precision;
+  if (coco_double_almost_equal(rounded, rounded_up, precision))
+    return rounded_up;
+  else {
+    if (coco_double_almost_equal(number - rounded, 0, min_precision))
+      return rounded;
+    else
+      return rounded_up;
+  }
 }
 
 /**
@@ -926,13 +982,6 @@ static int coco_double_to_int(const double number) {
   else {
     return (int)(number + 0.5);
   }
-}
-
-/**
- * @brief  Returns 1 if |a - b| < precision and 0 otherwise.
- */
-static int coco_double_almost_equal(const double a, const double b, const double precision) {
-  return (fabs(a - b) < precision);
 }
 
 /**@}*/
@@ -1011,8 +1060,8 @@ static int coco_vector_isfinite(const double *x, const size_t dim) {
  * @param constraint_values Vector of contraints values resulting from evaluation.
  */
 static int coco_is_feasible(coco_problem_t *problem,
-                     const double *x,
-                     double *constraint_values) {
+                            const double *x,
+                            double *constraint_values) {
 
   size_t i;
   double *cons_values = constraint_values;

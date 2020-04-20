@@ -44,6 +44,13 @@ typedef void (*coco_evaluate_function_t)(coco_problem_t *problem, const double *
 typedef void (*coco_recommend_function_t)(coco_problem_t *problem, const double *x);
 
 /**
+ * @brief The restart function type.
+ *
+ * This is a template for functions that signal an algorithm restart for the problem.
+ */
+typedef void (*coco_restart_function_t)(coco_problem_t *problem);
+
+/**
  * @brief The allocate logger function type.
  *
  * This is a template for functions that allocate a logger (wrap a logger around the given problem and return
@@ -138,7 +145,9 @@ struct coco_problem_s {
                                        before any continuous ones). */
 
   double *initial_solution;            /**< @brief Initial feasible solution. */
-  double *best_value;                  /**< @brief Optimal (smallest) function value */
+  int is_opt_known;                    /**< @brief Whether the optimal (best) value is actually known for this problem. */
+  double *best_value;                  /**< @brief Optimal (smallest) function value if known, otherwise a reference
+                                       valued defined in the problem construction. */
   double *nadir_value;                 /**< @brief The nadir point (defined when number_of_objectives > 1) */
   double *best_parameter;              /**< @brief Optimal decision vector (defined only when unique) */
 
@@ -186,8 +195,7 @@ struct coco_observer_s {
   size_t number_target_triggers;
                                 /**< @brief The number of targets between each 10**i and 10**(i+1). */
   double log_target_precision;  /**< @brief The minimal precision used for logarithmic targets. */
-  double unif_target_precision; /**< @brief The minimal precision used for uniform targets. */
-  int unif_target_trigger;      /**< @brief Whether the uniform targets should also trigger logging */
+  double lin_target_precision;  /**< @brief The minimal precision used for linear targets. */
   size_t number_evaluation_triggers;
                                 /**< @brief The number of triggers between each 10**i and 10**(i+1) evaluation number. */
   char *base_evaluation_triggers;
@@ -201,6 +209,7 @@ struct coco_observer_s {
   coco_data_free_function_t data_free_function;             /**< @brief  The function for freeing this observer. */
   coco_logger_allocate_function_t logger_allocate_function; /**< @brief  The function for allocating the logger. */
   coco_logger_free_function_t logger_free_function;         /**< @brief  The function for freeing the logger. */
+  coco_restart_function_t restart_function;                 /**< @brief  The function for signaling algorithm restart. */
 };
 
 /**
@@ -224,6 +233,8 @@ struct coco_suite_s {
   size_t number_of_instances;      /**< @brief Number of instances contained in the suite. */
   char *default_instances;         /**< @brief The instances contained in the suite by default. */
   size_t *instances;               /**< @brief The instances contained in the suite. */
+
+  int known_optima;                /**< @brief Whether the problems of the suite have known optimal values */
 
   coco_problem_t *current_problem; /**< @brief Pointer to the currently tackled problem. */
   long current_dimension_idx;      /**< @brief The dimension index of the currently tackled problem. */

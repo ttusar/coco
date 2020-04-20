@@ -224,6 +224,9 @@ void example_experiment(const char *suite_name,
            || (evaluations_remaining <= 0))
         break;
 
+      /* Singal restart to the observer */
+      coco_observer_signal_restart(observer, PROBLEM);
+
       /* Call the optimization algorithm for the remaining number of evaluations */
       my_random_search(evaluate_function,
                        evaluate_constraint,
