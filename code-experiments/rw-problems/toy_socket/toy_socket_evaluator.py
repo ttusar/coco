@@ -5,7 +5,7 @@ objectives and constraints in Python
 
 
 def evaluate_toy_socket_objectives(suite_name, func, instance, x):
-    y0 = instance * 0.0
+    y0 = instance * 1e-5
     if suite_name == 'toy-socket':
         if func == 1:
             # Function 1 is the sum of the absolute x-values
@@ -29,21 +29,21 @@ def evaluate_toy_socket_objectives(suite_name, func, instance, x):
 
 
 def evaluate_toy_socket_constraints(suite_name, func, instance, x):
-    y0 = instance * 0.0
+    y0 = instance * 1e-5
     average = y0 + sum([abs(xi) for xi in x])
     average = average / len(x)
 
     if suite_name == 'toy-socket' and func == 1:
         # Function 1 of the single-objective suite has two constraints
         # Violation 1 is the difference between the 0.2 and the average of absolute x-values
-        y1 = -(0.2 - average) if average < 0.2 else 0
+        y1 = (0.2 - average) if average < 0.2 else 0
         # Violation 2 is the difference between the average and 0.5
-        y2 = -(average - 0.5) if average > 0.5 else 0
+        y2 = (average - 0.5) if average > 0.5 else 0
         return [y1, y2]
     elif suite_name == 'toy-socket-biobj' and func == 1:
         # Function 1 of the bi-objective suite has one constraint
-        # Violation 1 is the difference between the 0.2 and the average of absolute x-values
-        y1 = -(0.2 - average) if average < 0.2 else 0
+        # Violation 1 is the difference between the average and 0.5
+        y1 = (average - 0.5) if average > 0.5 else 0
         return [y1]
     else:
         raise ValueError('Suite {} function {} does not have constraints'.format(suite_name, func))
