@@ -247,7 +247,7 @@ static void socket_evaluate_function(coco_problem_t *problem, const double *x, d
       problem->number_of_objectives,
       y
   );
-  coco_warning("objective message %s", message);
+  coco_debug("objective message %s", message);
 }
 
 /**
@@ -278,6 +278,6 @@ static void socket_evaluate_constraint(coco_problem_t *problem, const double *x,
       problem->number_of_constraints,
       y
   );
-  coco_warning("constraint message %s", message);
+  coco_debug("constraint message %s", message);
 }
 
