@@ -41,6 +41,7 @@ static coco_problem_t *toy_socket_problem_allocate(const size_t number_of_object
   coco_problem_set_name(problem, problem_name_template, function, instance, dimension);
   coco_problem_set_type(problem, "toy_socket");
 
+  problem->is_opt_known = 0;
   /* Unknown best_parameter */
   if (problem->best_parameter != NULL) {
     coco_free_memory(problem->best_parameter);

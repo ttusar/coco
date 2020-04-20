@@ -68,6 +68,7 @@ static coco_problem_t *rw_mario_gan_problem_allocate(const size_t number_of_obje
       coco_problem_set_type(problem, "simulated-underground-concatenated");
   }
 
+  problem->is_opt_known = 0;
   /* Unknown best_parameter */
   if (problem->best_parameter != NULL) {
     coco_free_memory(problem->best_parameter);

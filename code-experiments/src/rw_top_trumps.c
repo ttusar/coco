@@ -94,6 +94,7 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_obj
       coco_problem_set_type(problem, "simulated");
   }
 
+  problem->is_opt_known = 0;
   /* Unknown best_parameter */
   if (problem->best_parameter != NULL) {
     coco_free_memory(problem->best_parameter);
