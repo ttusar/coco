@@ -22,6 +22,7 @@ from toy_socket.toy_socket_evaluator import evaluate_toy_socket_constraints
 HOST = '127.0.0.1'        # Local host
 MESSAGE_SIZE = 8192       # Large enough for a number of x-values
 RESULT_PRECISION = 16     # Precision used to write objective and constraint values
+DELAY_SOCKET_BIND = 2     # Seconds to delay socket binding
 # Types of the evaluation function
 EVAL_TYPE_OBJ = 'objectives'
 EVAL_TYPE_CON = 'constraints'
@@ -103,51 +104,56 @@ def evaluate_message(message):
 def socket_server_start(port, silent=False):
     s = None
     try:
-        # Create socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        # Bind socket to local host and port
-        try:
-            time.sleep(1)
-            s.bind((HOST, port))
-        except socket.error as e:
-            print('Bind failed: {}'.format(e))
-            raise e
-
-        # Start listening on socket
-        s.listen(1)
-        print('Socket server (Python) ready, listening on port {}'.format(port))
-
-        # Talk with the client
         while True:
+            # Create socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            # Bind socket to local host and port
+            try:
+                time.sleep(DELAY_SOCKET_BIND)
+                s.bind((HOST, port))
+            except socket.error as e:
+                print('Bind failed: {}'.format(e))
+                raise e
+
+            # Start listening on socket
+            s.listen(1)
+            print('Socket server (Python) ready, listening on port {}'.format(port))
+
             try:
                 # Wait to accept a connection - blocking call
                 conn, addr = s.accept()
             except socket.error as e:
                 print('Accept failed: {}'.format(e))
                 raise e
-            except KeyboardInterrupt or SystemExit:
-                print('Server terminated')
-                if s is not None:
-                    s.close()
-                return 0
-            with conn:
-                # Read the message
-                message = conn.recv(MESSAGE_SIZE).decode("utf-8")
-                # Make sure to remove and null endings
-                message = message.split('\x00', 1)[0]
-                if not silent:
-                    print('Received message: {}'.format(message))
-                # Check if the message is a request for shut down
-                if message == 'SHUTDOWN':
-                    print('Shutting down socket server (Python) ')
-                    return
-                # Parse the message and evaluate its contents using an evaluator
-                response = evaluate_message(message)
-                # Send the response
-                conn.sendall(response)
-                if not silent:
-                    print('Sent response: {}'.format(response.decode("utf-8")))
+
+            # Talk with the client
+            while True:
+                try:
+                    # Read the message
+                    message = conn.recv(MESSAGE_SIZE).decode("utf-8")
+                    # Make sure to remove and null endings
+                    message = message.split('\x00', 1)[0]
+                    if not silent:
+                        print('Received message: {}'.format(message))
+                    # Check if the message is a request for reset
+                    if message == 'RESET':
+                        print('Resetting the socket server (Python) ')
+                        s.close()
+                        break
+                    # Check if the message is a request for shut down
+                    if message == 'SHUTDOWN':
+                        print('Shutting down socket server (Python) ')
+                        return
+                    # Parse the message and evaluate its contents using an evaluator
+                    response = evaluate_message(message)
+                    # Send the response
+                    conn.sendall(response)
+                    if not silent:
+                        print('Sent response: {}'.format(response.decode("utf-8")))
+                except KeyboardInterrupt or SystemExit:
+                    print('Server terminated')
+                    return 
     except Exception as e:
         print('Error: {}'.format(e))
         raise e
