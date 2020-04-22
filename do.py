@@ -787,13 +787,18 @@ def _download_external_evaluator(name, url_name, force_download=False):
     If force_download, the download will happen regardless of the previous existence of the data
     in the same destination folder"""
     import urllib.request
-    import tarfile
+    import zipfile
     data_exists = os.path.isdir(os.path.join('code-experiments', 'rw-problems', name))
     if not data_exists or force_download:
+        if data_exists:
+            shutil.rmtree(os.path.join('code-experiments', 'rw-problems', name))
         print('DOWNLOAD data for {} (can take a while)'.format(name))
         file_name, _ = urllib.request.urlretrieve(url_name)
-        tar_file = tarfile.open(file_name, 'r:gz')
-        tar_file.extractall(os.path.join('code-experiments', 'rw-problems', name))
+        zip_file = zipfile.ZipFile(file_name, 'r')
+        zip_file.extractall(os.path.join('code-experiments', 'rw-problems'))
+        # Make sure the folder is named as expected
+        os.rename(os.path.join('code-experiments', 'rw-problems', zip_file.filelist[0].filename),
+                  os.path.join('code-experiments', 'rw-problems', name))
         for root, dirs, files in os.walk(os.path.join('code-experiments', 'rw-problems', name),
                                          topdown=False):
             for name in files:
@@ -903,7 +908,7 @@ def build_rw_top_trumps_server(force_download=False, exclusive_evaluator=True):
 def build_rw_mario_gan_server(force_download=False, exclusive_evaluator=True):
     """Download data and prepare the socket server to use the mario gan evaluator in Python"""
     # Download the data
-    url_name = 'https://dis.ijs.si/tea/gbea/mario-gan.tar.gz'
+    url_name = 'https://github.com/TheHedgeify/mario-gan/archive/master.zip'
     _download_external_evaluator('mario_gan', url_name, force_download=force_download)
     if exclusive_evaluator:
         # Set the socket server to use only the rw_gan_mario evaluator
