@@ -220,6 +220,7 @@ void socket_server_start(unsigned short port, int silent) {
     free(response);
     closesocket(new_sock);
   }
+  closesocket(new_sock);
 #else
   int sock, new_sock;
   struct sockaddr_in address;
@@ -289,6 +290,7 @@ void socket_server_start(unsigned short port, int silent) {
     free(response);
     close(new_sock);
   }
+  close(new_sock);
 #endif
 }
 
