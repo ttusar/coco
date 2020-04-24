@@ -31,7 +31,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define DELAY_SOCKET_BIND 2 /* Seconds to delay socket binding */
 #define MESSAGE_SIZE 8192   /* Large enough for the entire message */
 #define RESULT_PRECISION 16 /* Precision used to write objective values and constraint violations */
 #define RESPONSE_SIZE 1024  /* Large enough for the entire response (objective values or constraint violations) */
@@ -59,15 +58,6 @@
  */
 typedef void (*evaluate_t)(char *suite_name, size_t number_of_values, size_t function,
     size_t instance, size_t dimension, const double *x, double *values);
-
-
-/**
- * Wait for secs seconds.
- */
-void wait_in_seconds(time_t secs) {
-    time_t retTime = time(0) + secs;
-    while (time(0) < retTime);
-}
 
 /**
  * Parses the message and calls an evaluator to compute the evaluation (can be used to evaluate
@@ -169,45 +159,44 @@ void socket_server_start(unsigned short port, int silent) {
   int message_len;
   char yes = 0;
 
+  /* Initialize Winsock */
+  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+    fprintf(stderr, "socket_server_start(): Winsock initialization failed: %d", WSAGetLastError());
+    return;
+  }
+
+  /* Create a socket file descriptor */
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+    fprintf(stderr, "socket_server_start(): Could not create socket: %d", WSAGetLastError());
+    return;
+  }
+
+  /* Forcefully attach socket to the port */
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))) {
+    fprintf(stderr, "socket_server_start(): Socket could not be attached to the port: %d", WSAGetLastError());
+    return;
+  }
+
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = INADDR_ANY; /* "any address" in IPV4 */
+  address.sin_port = htons(port);
+
+  /* Bind */
+  if (bind(sock, (SOCKADDR *) &address, sizeof(address)) < 0) {
+    fprintf(stderr, "socket_server_start(): Bind failed: %d", WSAGetLastError());
+    return;
+  }
+
+  /* Listen */
+  if (listen(sock, 3) < 0) {
+    fprintf(stderr, "socket_server_start(): Listen failed: %d", WSAGetLastError());
+    return;
+  }
+
+  printf("Socket server (C) ready, listening on port %d\n", port);
+  address_size = sizeof(address);
+
   while (1) {
-    /* Initialize Winsock */
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-      fprintf(stderr, "socket_server_start(): Winsock initialization failed: %d", WSAGetLastError());
-      return;
-    }
-
-    /* Create a socket file descriptor */
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
-      fprintf(stderr, "socket_server_start(): Could not create socket: %d", WSAGetLastError());
-      return;
-    }
-
-    wait_in_seconds(DELAY_SOCKET_BIND);
-    /* Forcefully attach socket to the port */
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))) {
-      fprintf(stderr, "socket_server_start(): Socket could not be attached to the port: %d", WSAGetLastError());
-      return;
-    }
-
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY; /* "any address" in IPV4 */
-    address.sin_port = htons(port);
-
-    /* Bind */
-    if (bind(sock, (SOCKADDR *) &address, sizeof(address)) < 0) {
-      fprintf(stderr, "socket_server_start(): Bind failed: %d", WSAGetLastError());
-      return;
-    }
-
-    /* Listen */
-    if (listen(sock, 3) < 0) {
-      fprintf(stderr, "socket_server_start(): Listen failed: %d", WSAGetLastError());
-      return;
-    }
-
-    printf("Socket server (C) ready, listening on port %d\n", port);
-    address_size = sizeof(address);
-
     /* Accept an incoming connection */
     if ((new_sock = accept(sock, (SOCKADDR *) &address, &address_size)) == INVALID_SOCKET) {
       fprintf(stderr, "socket_server_start(): Accept failed: %d", WSAGetLastError());
@@ -255,38 +244,37 @@ void socket_server_start(unsigned short port, int silent) {
   long message_len;
   int yes = 0;
 
+  /* Create a socket file descriptor */
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    perror("socket_server_start(): Socket creation error");
+    exit(EXIT_FAILURE);
+  }
+
+  /* Forcefully attach socket to the port */
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))) {
+    perror("socket_server_start(): Socket could not be attached to the port");
+    exit(EXIT_FAILURE);
+  }
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = INADDR_ANY; /* "any address" in IPV4 */
+  address.sin_port = htons(port);
+
+  /* Bind */
+  if (bind(sock, (struct sockaddr*) &address, sizeof(address)) < 0) {
+    perror("socket_server_start(): Bind failed");
+    exit(EXIT_FAILURE);
+  }
+
+  /* Listen */
+  if (listen(sock, 3) < 0) {
+    perror("socket_server_start(): Listen failed");
+    exit(EXIT_FAILURE);
+  }
+
+  printf("Socket server (C) ready, listening on port %d\n", port);
+  address_size = sizeof(address);
+
   while (1) {
-    /* Create a socket file descriptor */
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      perror("socket_server_start(): Socket creation error");
-      exit(EXIT_FAILURE);
-    }
-
-    wait_in_seconds(DELAY_SOCKET_BIND);
-    /* Forcefully attach socket to the port */
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))) {
-      perror("socket_server_start(): Socket could not be attached to the port");
-      exit(EXIT_FAILURE);
-    }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY; /* "any address" in IPV4 */
-    address.sin_port = htons(port);
-
-    /* Bind */
-    if (bind(sock, (struct sockaddr*) &address, sizeof(address)) < 0) {
-      perror("socket_server_start(): Bind failed");
-      exit(EXIT_FAILURE);
-    }
-
-    /* Listen */
-    if (listen(sock, 3) < 0) {
-      perror("socket_server_start(): Listen failed");
-      exit(EXIT_FAILURE);
-    }
-
-    printf("Socket server (C) ready, listening on port %d\n", port);
-    address_size = sizeof(address);
-
     /* Accept an incoming connection */
     if ((new_sock = accept(sock, (struct sockaddr*) &address, (socklen_t*) &address_size)) < 0) {
       perror("socket_server_start(): Accept failed");
@@ -297,6 +285,7 @@ void socket_server_start(unsigned short port, int silent) {
       /* Read the message */
       if ((message_len = read(new_sock, message, MESSAGE_SIZE)) < 0) {
         perror("socket_server_start(): Receive failed");
+        close(new_sock);
         exit(EXIT_FAILURE);
       }
       if (silent == 0)
@@ -327,7 +316,6 @@ void socket_server_start(unsigned short port, int silent) {
       free(response);
     }
   }
-  close(new_sock);
 #endif
 }
 

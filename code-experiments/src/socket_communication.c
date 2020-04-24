@@ -6,7 +6,6 @@
 #define HOST "127.0.0.1"    /* Local host */
 #define MESSAGE_SIZE 8192   /* Large enough for the entire message */
 #define RESPONSE_SIZE 1024  /* Large enough for the entire response (objective values or constraint violations) */
-#define DELAY_SOCKET_BIND 3 /* Seconds of delay to allow for socket binding */
 
 /**
  * @brief Data type needed for socket communication (used by the suites that need it).
@@ -27,14 +26,6 @@ typedef struct {
   struct sockaddr_in serv_addr;  /**< @brief Server address on non-Windows platforms. */
 #endif
 } socket_communication_data_t;
-
-/**
- * Wait for secs seconds.
- */
-static void wait_in_seconds(time_t secs) {
-    time_t retTime = time(0) + secs;
-    while (time(0) < retTime);
-}
 
 /**
  * @brief Frees the memory of a socket_communication_data_t object.
@@ -65,7 +56,6 @@ static void socket_communication_data_finalize(void *stuff) {
 
   /* Tell the socket server to reset */
   send(data->sock, "RESET", strlen("RESET") + 1, 0);
-  wait_in_seconds(DELAY_SOCKET_BIND);
 #if WINSOCK
   closesocket(data->sock);
   WSACleanup();
@@ -227,25 +217,25 @@ static char* socket_communication_get_response(const socket_communication_data_t
   if (send(data->sock, message, (int)strlen(message) + 1, 0) < 0) {
     coco_error("socket_communication_evaluate(): Send failed: %d", WSAGetLastError());
   }
-  coco_warning("Sent message: %s", message);
+  coco_debug("Sent message: %s", message);
 
   /* Receive the response */
   if ((response_len = (size_t) recv(data->sock, response, RESPONSE_SIZE, 0)) == SOCKET_ERROR) {
     coco_error("socket_communication_evaluate(): Receive failed: %d", WSAGetLastError());
   }
   response[response_len] = '\0';
-  coco_warning("Received response: %s (length %d)", response, response_len);
+  coco_debug("Received response: %s (length %d)", response, response_len);
 #else
   /* Send message */
   if (send(data->sock, message, strlen(message) + 1, 0) < 0) {
     coco_error("socket_communication_evaluate(): Send failed");
   }
-  coco_warning("Sent message: %s", message);
+  coco_debug("Sent message: %s", message);
 
   /* Receive the response */
   response_len = read(data->sock, response, RESPONSE_SIZE);
   response[response_len] = '\0';
-  coco_warning("Received response: %s (length %ld)", response, response_len);
+  coco_debug("Received response: %s (length %ld)", response, response_len);
 #endif
   return coco_strdup(response);
 }
