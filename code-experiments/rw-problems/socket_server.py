@@ -1,21 +1,17 @@
 """
 The socket server in Python.
-
 Uses the toy_socket_evaluator to evaluate problems from the toy-socket suite. Additional evaluators
 can be used -- whether they are included or not depends on the values of the respective variables
 (see the variables that start with EVALUATE_). These definitions can be modified directly or through
 do.py.
-
+If the server receives the message 'RESET', it closes the current socket and opens a new one.
 If the server receives the message 'SHUTDOWN', it shuts down.
-
 Change code below to connect it to other evaluators (for other suites) -- see occurrences of
 'ADD HERE'.
-
 Note that separate functions are used for evaluating objectives and constraints.
 """
 import sys
 import socket
-import time
 from toy_socket.toy_socket_evaluator import evaluate_toy_socket_objectives
 from toy_socket.toy_socket_evaluator import evaluate_toy_socket_constraints
 
@@ -42,7 +38,6 @@ if EVALUATE_RW_MARIO_GAN:
 def evaluate_message(message):
     """Parses the message and calls an evaluator to compute the evaluation. Then constructs a
     response. Returns the response.
-
     If the number of objectives ('o') is greater than 0, invokes evaluation of objectives.
     If the number of constraints ('c') is greater than 0, invokes evaluation of constraints.
     """
@@ -108,7 +103,6 @@ def socket_server_start(port, silent=False):
 
         # Bind socket to local host and port
         try:
-            time.sleep(1)
             s.bind((HOST, port))
         except socket.error as e:
             print('Bind failed: {}'.format(e))
@@ -126,28 +120,31 @@ def socket_server_start(port, silent=False):
             except socket.error as e:
                 print('Accept failed: {}'.format(e))
                 raise e
-            except KeyboardInterrupt or SystemExit:
-                print('Server terminated')
-                if s is not None:
-                    s.close()
-                return 0
             with conn:
-                # Read the message
-                message = conn.recv(MESSAGE_SIZE).decode("utf-8")
-                # Make sure to remove and null endings
-                message = message.split('\x00', 1)[0]
-                if not silent:
-                    print('Received message: {}'.format(message))
-                # Check if the message is a request for shut down
-                if message == 'SHUTDOWN':
-                    print('Shutting down socket server (Python) ')
-                    return
-                # Parse the message and evaluate its contents using an evaluator
-                response = evaluate_message(message)
-                # Send the response
-                conn.sendall(response)
-                if not silent:
-                    print('Sent response: {}'.format(response.decode("utf-8")))
+                while True:
+                    # Read the message
+                    message = conn.recv(MESSAGE_SIZE).decode("utf-8")
+                    # Make sure to remove and null endings
+                    message = message.split('\x00', 1)[0]
+                    if not silent:
+                        print('Received message: {}'.format(message))
+                    # Check if the message is a request for reset
+                    if message == 'RESET':
+                        print('Resetting the socket server (Python) ')
+                        break
+                    # Check if the message is a request for shut down
+                    if message == 'SHUTDOWN':
+                        print('Shutting down socket server (Python) ')
+                        return
+                    # Parse the message and evaluate its contents using an evaluator
+                    response = evaluate_message(message)
+                    # Send the response
+                    conn.sendall(response)
+                    if not silent:
+                        print('Sent response: {}'.format(response.decode("utf-8")))
+    except KeyboardInterrupt or SystemExit as e:
+        print('Server terminated: {}'.format(e))
+        raise e
     except Exception as e:
         print('Error: {}'.format(e))
         raise e

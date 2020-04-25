@@ -6,6 +6,7 @@
  * preprocessor directives (see the #define and #if directives below that start with EVALUATE_).
  * These definitions can be modified directly or through do.py.
  *
+ * If the server receives the message 'RESET', it closes the current socket and opens a new one.
  * If the server receives the message 'SHUTDOWN', it shuts down.
  *
  * Change code below to connect it to other evaluators (for other suites) -- see occurrences
@@ -25,6 +26,7 @@
 #include <unistd.h>
 #define WINSOCK 0
 #endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -160,16 +162,19 @@ void socket_server_start(unsigned short port, int silent) {
   /* Initialize Winsock */
   if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
     fprintf(stderr, "socket_server_start(): Winsock initialization failed: %d", WSAGetLastError());
+    return;
   }
 
   /* Create a socket file descriptor */
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
     fprintf(stderr, "socket_server_start(): Could not create socket: %d", WSAGetLastError());
+    return;
   }
 
   /* Forcefully attach socket to the port */
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))) {
     fprintf(stderr, "socket_server_start(): Socket could not be attached to the port: %d", WSAGetLastError());
+    return;
   }
 
   address.sin_family = AF_INET;
@@ -179,11 +184,13 @@ void socket_server_start(unsigned short port, int silent) {
   /* Bind */
   if (bind(sock, (SOCKADDR *) &address, sizeof(address)) < 0) {
     fprintf(stderr, "socket_server_start(): Bind failed: %d", WSAGetLastError());
+    return;
   }
 
   /* Listen */
   if (listen(sock, 3) < 0) {
     fprintf(stderr, "socket_server_start(): Listen failed: %d", WSAGetLastError());
+    return;
   }
 
   printf("Socket server (C) ready, listening on port %d\n", port);
@@ -193,32 +200,43 @@ void socket_server_start(unsigned short port, int silent) {
     /* Accept an incoming connection */
     if ((new_sock = accept(sock, (SOCKADDR *) &address, &address_size)) == INVALID_SOCKET) {
       fprintf(stderr, "socket_server_start(): Accept failed: %d", WSAGetLastError());
-    }
-
-    /* Read the message */
-    if ((message_len = recv(new_sock, message, MESSAGE_SIZE, 0)) == SOCKET_ERROR) {
-      fprintf(stderr, "socket_server_start(): Receive failed: %d", WSAGetLastError());
-    }
-    if (silent == 0)
-      printf("Received message: %s (length %d)\n", message, message_len);
-
-    /* Check if the message is a request for shut down */
-    if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
-      printf("Shutting down socket server (C)");
-      closesocket(new_sock);
       return;
     }
 
-    /* Parse the message and evaluate its contents using an evaluator */
-    response = evaluate_message(message);
+    while (1) {
+      /* Read the message */
+      if ((message_len = recv(new_sock, message, MESSAGE_SIZE, 0)) == SOCKET_ERROR) {
+        fprintf(stderr, "socket_server_start(): Receive failed: %d", WSAGetLastError());
+        closesocket(new_sock);
+        return;
+      }
+      if (silent == 0)
+        printf("Received message: %s (length %d)\n", message, message_len);
 
-    /* Send the response */
-    send(new_sock, response, (int)strlen(response) + 1, 0);
-    if (silent == 0)
-      printf("Sent response %s (length %ld)\n", response, strlen(response));
+      /* Check if the message is a request for reset */
+      if (strncmp(message, "RESET", strlen("RESET")) == 0) {
+        printf("Resetting the socket server (C)");
+        closesocket(new_sock);
+        break;
+      }
 
-    free(response);
-    closesocket(new_sock);
+      /* Check if the message is a request for shut down */
+      if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
+        printf("Shutting down socket server (C)");
+        closesocket(new_sock);
+        return;
+      }
+
+      /* Parse the message and evaluate its contents using an evaluator */
+      response = evaluate_message(message);
+
+      /* Send the response */
+      send(new_sock, response, (int)strlen(response) + 1, 0);
+      if (silent == 0)
+        printf("Sent response %s (length %ld)\n", response, strlen(response));
+
+      free(response);
+    }
   }
   closesocket(new_sock);
 #else
@@ -264,31 +282,40 @@ void socket_server_start(unsigned short port, int silent) {
       exit(EXIT_FAILURE);
     }
 
-    /* Read the message */
-    if ((message_len = read(new_sock, message, MESSAGE_SIZE)) < 0) {
-      perror("socket_server_start(): Receive failed");
-      exit(EXIT_FAILURE);
+    while (1) {
+      /* Read the message */
+      if ((message_len = read(new_sock, message, MESSAGE_SIZE)) < 0) {
+        perror("socket_server_start(): Receive failed");
+        close(new_sock);
+        exit(EXIT_FAILURE);
+      }
+      if (silent == 0)
+        printf("Received message: %s (length %ld)\n", message, message_len);
+
+      /* Check if the message is a request for reset */
+      if (strncmp(message, "RESET", strlen("RESET")) == 0) {
+        printf("Resetting the socket server (C)");
+        close(new_sock);
+        break;
+      }
+
+      /* Check if the message is a request for shut down */
+      if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
+        printf("Shutting down socket server (C)");
+        close(new_sock);
+        return;
+      }
+
+      /* Parse the message and evaluate its contents using an evaluator */
+      response = evaluate_message(message);
+
+      /* Send the response */
+      send(new_sock, response, strlen(response) + 1, 0);
+      if (silent == 0)
+        printf("Sent response %s (length %ld)\n", response, strlen(response));
+
+      free(response);
     }
-    if (silent == 0)
-      printf("Received message: %s (length %ld)\n", message, message_len);
-
-    /* Check if the message is a request for shut down */
-    if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
-      printf("Shutting down socket server (C)");
-      close(new_sock);
-      return;
-    }
-
-    /* Parse the message and evaluate its contents using an evaluator */
-    response = evaluate_message(message);
-
-    /* Send the response */
-    send(new_sock, response, strlen(response) + 1, 0);
-    if (silent == 0)
-      printf("Sent response %s (length %ld)\n", response, strlen(response));
-
-    free(response);
-    close(new_sock);
   }
   close(new_sock);
 #endif
