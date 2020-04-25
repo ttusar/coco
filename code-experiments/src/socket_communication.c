@@ -10,15 +10,26 @@
  * @brief Data type needed for socket communication (used by the suites that need it).
  */
 typedef struct {
-  unsigned short port;       /**< @brief The port for communication with the external evaluator. */
-  char *host_name;           /**< @brief The host name for communication with the external evaluator. */
-  int precision_x;           /**< @brief Precision used to write the x-values to the external evaluator. */
+  unsigned short port;           /**< @brief The port for communication with the external evaluator. */
+  char *host_name;               /**< @brief The host name for communication with the external evaluator. */
+  int precision_x;               /**< @brief Precision used to write the x-values to the external evaluator. */
+  char* prev_message_obj;        /**< @brief Message of the previous evaluation of objectives */
+  char* prev_response_obj;       /**< @brief Response of the previous evaluation of objectives */
+  char* prev_message_con;        /**< @brief Message of the previous evaluation of constraints */
+  char* prev_response_con;       /**< @brief Response of the previous evaluation of constraints */
+#if WINSOCK
+  SOCKET sock;                   /**< @brief Socket on Windows. */
+  SOCKADDR_IN serv_addr;         /**< @brief Server address on Windows. */
+#else
+  int sock;                      /**< @brief Socket on non-Windows platforms. */
+  struct sockaddr_in serv_addr;  /**< @brief Server address on non-Windows platforms. */
+#endif
 } socket_communication_data_t;
 
 /**
  * @brief Frees the memory of a socket_communication_data_t object.
  */
-static void socket_communication_data_free(void *stuff) {
+static void socket_communication_data_finalize(void *stuff) {
 
   socket_communication_data_t *data;
 
@@ -27,10 +38,35 @@ static void socket_communication_data_free(void *stuff) {
   if (data->host_name != NULL) {
     coco_free_memory(data->host_name);
   }
+
+  /* Free the strings */
+  if (data->prev_message_obj != NULL) {
+    coco_free_memory(data->prev_message_obj);
+  }
+  if (data->prev_response_obj != NULL) {
+    coco_free_memory(data->prev_response_obj);
+  }
+  if (data->prev_message_con != NULL) {
+    coco_free_memory(data->prev_message_con);
+  }
+  if (data->prev_response_con != NULL) {
+    coco_free_memory(data->prev_response_con);
+  }
+
+  /* Tell the socket server to reset */
+  send(data->sock, "RESET", strlen("RESET") + 1, 0);
+#if WINSOCK
+  closesocket(data->sock);
+  WSACleanup();
+#else
+  close(data->sock);
+#endif
 }
 
 static socket_communication_data_t *socket_communication_data_initialize(
     const char *suite_options, const unsigned short default_port) {
+
+  WSADATA wsa;
 
   socket_communication_data_t *data;
   data = (socket_communication_data_t *) coco_allocate_memory(sizeof(*data));
@@ -53,6 +89,50 @@ static socket_communication_data_t *socket_communication_data_initialize(
     }
   }
 
+#if WINSOCK
+  /* Initialize Winsock */
+  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+    coco_error("socket_communication_data_initialize(): Winsock initialization failed: %d", WSAGetLastError());
+  }
+
+  /* Create a socket */
+  if ((data->sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+    coco_error("socket_communication_data_initialize(): Could not create socket: %d", WSAGetLastError());
+  }
+
+  (data->serv_addr).sin_addr.s_addr = inet_addr(data->host_name);
+  (data->serv_addr).sin_family = AF_INET;
+  (data->serv_addr).sin_port = htons(data->port);
+
+  /* Connect to the evaluator */
+  if (connect(data->sock, (SOCKADDR *) &(data->serv_addr), sizeof(data->serv_addr)) < 0) {
+    coco_error("socket_communication_data_initialize(): Connection failed (host = %s, port = %d)\nIs the server running?",
+        data->host_name, data->port);
+  }
+#else
+  /* Create a socket */
+  if ((data->sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    coco_error("socket_communication_data_initialize(): Socket creation error");
+  }
+
+  (data->serv_addr).sin_family = AF_INET;
+  (data->serv_addr).sin_port = htons(data->port);
+
+  /* Convert IPv4 and IPv6 addresses from text to binary form */
+  if (inet_pton(AF_INET, data->host_name, &((data->).sin_addr)) <= 0) {
+    coco_error("socket_communication_data_initialize(): Invalid address / Address not supported");
+  }
+
+  /* Connect to the evaluator */
+  if (connect(data->sock, (struct sockaddr*) &(data->serv_addr), sizeof(data->serv_addr)) < 0) {
+    coco_error("socket_communication_data_initialize(): Connection failed (host = %s, port = %d)\nIs the server running?",
+        data->host_name, data->port);
+  }
+#endif
+  data->prev_message_obj = coco_strdup("");
+  data->prev_response_obj = coco_strdup("");
+  data->prev_message_con = coco_strdup("");
+  data->prev_response_con = coco_strdup("");
   return data;
 }
 
@@ -68,29 +148,30 @@ static socket_communication_data_t *socket_communication_data_initialize(
  * <d> is the problem dimension
  * <xi> is the i-th value of x (there should be exactly d x-values)
  */
-static char *socket_communication_create_message(char *message,
-                                                 const char *suite_name,
-                                                 const char *evaluation_type,
-                                                 const size_t number_of_values,
-                                                 const size_t function,
-                                                 const size_t instance,
-                                                 const size_t dimension,
-                                                 const size_t number_of_integer_variables,
-                                                 const double *x,
-                                                 const int precision_x) {
+static void socket_communication_create_message(char *message,
+                                                const char *evaluation_type,
+                                                const size_t number_of_values,
+                                                const double *x,
+                                                const coco_problem_t *problem) {
   size_t i;
   int write_count, offset;
+  socket_communication_data_t *data;
+  coco_suite_t *suite = problem->suite;
+
+  assert(suite);
+  data = (socket_communication_data_t *) suite->data;
+  assert(data);
 
   offset = sprintf(message, "s %s t %s r %lu f %lu i %lu d %lu x ",
-      suite_name, evaluation_type, number_of_values, function, instance, dimension);
-  for (i = 0; i < dimension; i++) {
-    if (i < number_of_integer_variables)
+      suite->suite_name, evaluation_type, number_of_values,
+      problem->suite_dep_function, problem->suite_dep_instance, problem->number_of_variables);
+  for (i = 0; i < problem->number_of_variables; i++) {
+    if (i < problem->number_of_integer_variables)
       write_count = sprintf(message + offset, "%d ", coco_double_to_int(x[i]));
     else
-      write_count = sprintf(message + offset, "%.*e ", precision_x, x[i]);
+      write_count = sprintf(message + offset, "%.*e ", data->precision_x, x[i]);
     offset += write_count;
   }
-  return message;
 }
 
 /**
@@ -102,18 +183,11 @@ static char *socket_communication_create_message(char *message,
  * n is the expected number of values
  */
 static void socket_communication_save_response(const char *response,
-                                               const long response_size,
                                                const size_t expected_number_of_values,
                                                double *values) {
   size_t i;
-  int read_count, offset;
+  int read_count, offset = 0;
 
-  if (response_size < 1) {
-    coco_error("socket_communication_save_response(): Incorrect response %s (size %d)",
-        response, response_size);
-  }
-
-  offset = 0;
   for (i = 0; i < expected_number_of_values; i++) {
     if (sscanf(response + offset, "%lf%*c%n", &values[i], &read_count) != 1) {
       fprintf(stderr, "socket_communication_save_response(): Failed to read response %s at %s",
@@ -126,97 +200,43 @@ static void socket_communication_save_response(const char *response,
 
 /**
  * Sends the message to the external evaluator through sockets. The external evaluator must be running
- * a server using the same port.
+ * a server using the same port. Returns the response.
  *
  * Should be working for different platforms.
  */
-static void socket_communication_evaluate(const char* host_name,
-                                          const unsigned short port,
-                                          const char *message,
-                                          const size_t expected_number_of_values,
-                                          double *values) {
+static char* socket_communication_get_response(const socket_communication_data_t *data,
+                                               const char *message) {
+
   char response[RESPONSE_SIZE];
+  size_t response_len;
+  assert(data->sock);
 
 #if WINSOCK
-  WSADATA wsa;
-  SOCKET sock;
-  SOCKADDR_IN serv_addr;
-  int response_len;
-
-  /* Initialize Winsock */
-  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-    coco_error("socket_communication_evaluate(): Winsock initialization failed: %d", WSAGetLastError());
-  }
-
-  /* Create a socket */
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
-    coco_error("socket_communication_evaluate(): Could not create socket: %d", WSAGetLastError());
-  }
-
-  serv_addr.sin_addr.s_addr = inet_addr(host_name);
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
-
-  /* Connect to the evaluator */
-  if (connect(sock, (SOCKADDR *) &serv_addr, sizeof(serv_addr)) < 0) {
-    coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?\nMessage: %s",
-        host_name, port, message);
-  }
-
   /* Send message */
-  if (send(sock, message, (int)strlen(message) + 1, 0) < 0) {
+  if (send(data->sock, message, (int)strlen(message) + 1, 0) < 0) {
     coco_error("socket_communication_evaluate(): Send failed: %d", WSAGetLastError());
   }
   coco_debug("Sent message: %s", message);
 
   /* Receive the response */
-  if ((response_len = recv(sock, response, RESPONSE_SIZE, 0)) == SOCKET_ERROR) {
+  if ((response_len = (size_t) recv(data->sock, response, RESPONSE_SIZE, 0)) == SOCKET_ERROR) {
     coco_error("socket_communication_evaluate(): Receive failed: %d", WSAGetLastError());
   }
+  response[response_len] = '\0';
   coco_debug("Received response: %s (length %d)", response, response_len);
-
-  socket_communication_save_response(response, response_len, expected_number_of_values, values);
-
-  closesocket(sock);
-  WSACleanup();
 #else
-  int sock;
-  struct sockaddr_in serv_addr;
-  long response_len;
-
-  /* Create a socket */
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    coco_error("socket_communication_evaluate(): Socket creation error");
-  }
-
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
-
-  /* Convert IPv4 and IPv6 addresses from text to binary form */
-  if (inet_pton(AF_INET, host_name, &serv_addr.sin_addr) <= 0) {
-    coco_error("socket_communication_evaluate(): Invalid address / Address not supported");
-  }
-
-  /* Connect to the evaluator */
-  if (connect(sock, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-    coco_error("socket_communication_evaluate(): Connection failed (host = %s, port = %d)\nIs the server running?\nMessage: %s",
-        host_name, port, message);
-  }
-
   /* Send message */
-  if (send(sock, message, strlen(message) + 1, 0) < 0) {
+  if (send(data->sock, message, strlen(message) + 1, 0) < 0) {
     coco_error("socket_communication_evaluate(): Send failed");
   }
   coco_debug("Sent message: %s", message);
 
   /* Receive the response */
-  response_len = read(sock, response, RESPONSE_SIZE);
+  response_len = read(data->sock, response, RESPONSE_SIZE);
+  response[response_len] = '\0';
   coco_debug("Received response: %s (length %ld)", response, response_len);
-
-  socket_communication_save_response(response, response_len, expected_number_of_values, values);
-
-  close(sock);
 #endif
+  return coco_strdup(response);
 }
 
 /**
@@ -226,58 +246,48 @@ static void socket_evaluate_function(coco_problem_t *problem, const double *x, d
 
   char message[MESSAGE_SIZE];
   const char evaluation_type[] = "objectives";
-  socket_communication_data_t *data = (socket_communication_data_t *) problem->suite->data;
+  socket_communication_data_t *data;
+  coco_suite_t *suite = problem->suite;
 
-  socket_communication_create_message(
-      message,
-      problem->suite->suite_name,
-      evaluation_type,
-      problem->number_of_objectives,
-      problem->suite_dep_function,
-      problem->suite_dep_instance,
-      problem->number_of_variables,
-      problem->number_of_integer_variables,
-      x,
-      data->precision_x
-  );
-  socket_communication_evaluate(
-      data->host_name,
-      data->port,
-      message,
-      problem->number_of_objectives,
-      y
-  );
+  assert(suite);
+  data = (socket_communication_data_t *) suite->data;
+  assert(data);
+
+  socket_communication_create_message(message, evaluation_type, problem->number_of_objectives, x, problem);
+  if (strcmp(message, data->prev_message_obj) != 0) {
+    /* Get the response from the socket server */
+    coco_free_memory(data->prev_message_obj);
+    data->prev_message_obj = coco_strdup(message);
+    coco_free_memory(data->prev_response_obj);
+    data->prev_response_obj = socket_communication_get_response(data, message);
+  }
+  socket_communication_save_response(data->prev_response_obj, problem->number_of_objectives, y);
   coco_debug("objective message %s", message);
 }
 
 /**
- * @brief Calls the external evaluator to evaluate the contraint violations for x.
+ * @brief Calls the external evaluator to evaluate the constraint violations for x.
  */
 static void socket_evaluate_constraint(coco_problem_t *problem, const double *x, double *y) {
 
   char message[MESSAGE_SIZE];
   const char evaluation_type[] = "constraints";
-  socket_communication_data_t *data = (socket_communication_data_t *) problem->suite->data;
+  socket_communication_data_t *data;
+  coco_suite_t *suite = problem->suite;
 
-  socket_communication_create_message(
-      message,
-      problem->suite->suite_name,
-      evaluation_type,
-      problem->number_of_constraints,
-      problem->suite_dep_function,
-      problem->suite_dep_instance,
-      problem->number_of_variables,
-      problem->number_of_integer_variables,
-      x,
-      data->precision_x
-  );
-  socket_communication_evaluate(
-      data->host_name,
-      data->port,
-      message,
-      problem->number_of_constraints,
-      y
-  );
+  assert(suite);
+  data = (socket_communication_data_t *) suite->data;
+  assert(data);
+
+  socket_communication_create_message(message, evaluation_type, problem->number_of_constraints, x, problem);
+  if (strcmp(message, data->prev_message_con) != 0) {
+    /* Get the response from the socket server */
+    coco_free_memory(data->prev_message_con);
+    data->prev_message_con = coco_strdup(message);
+    coco_free_memory(data->prev_response_con);
+    data->prev_response_con = socket_communication_get_response(data, message);
+  }
+  socket_communication_save_response(data->prev_response_con, problem->number_of_constraints, y);
   coco_debug("constraint message %s", message);
 }
 

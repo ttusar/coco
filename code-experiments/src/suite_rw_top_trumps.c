@@ -19,7 +19,7 @@ static coco_suite_t *suite_rw_top_trumps_initialize(const char *suite_options) {
 
   suite = coco_suite_allocate("rw-top-trumps", 5, 4, dimensions, "instances: 1-15", 0);
   suite->data = socket_communication_data_initialize(suite_options, 7251);
-  suite->data_free_function = socket_communication_data_free;
+  suite->data_free_function = socket_communication_data_finalize;
 
   return suite;
 }
