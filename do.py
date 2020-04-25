@@ -891,7 +891,7 @@ def _build_rw_top_trumps_lib():
 def build_rw_top_trumps_server(force_download=False, exclusive_evaluator=True):
     """Download and build the socket server with the top trumps evaluator (in C)"""
     # Download the data
-    url_name = 'https://github.com/ttusar/top-trumps/raw/master/dist/top-trumps.tar.gz'
+    url_name = 'https://github.com/ttusar/top-trumps/archive/master.zip'
     _download_external_evaluator('top_trumps', url_name, force_download=force_download)
     # Build the library
     _build_rw_top_trumps_lib()
