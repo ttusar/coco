@@ -6,6 +6,7 @@
  * preprocessor directives (see the #define and #if directives below that start with EVALUATE_).
  * These definitions can be modified directly or through do.py.
  *
+ * If the server receives the message 'RESET', it closes the current socket and opens a new one.
  * If the server receives the message 'SHUTDOWN', it shuts down.
  *
  * Change code below to connect it to other evaluators (for other suites) -- see occurrences
@@ -29,7 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 
 #define MESSAGE_SIZE 8192   /* Large enough for the entire message */
 #define RESULT_PRECISION 16 /* Precision used to write objective values and constraint violations */

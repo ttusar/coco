@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include "coco_platform.h"
 
 #define HOST "127.0.0.1"    /* Local host */
