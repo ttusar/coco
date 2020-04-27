@@ -3,7 +3,7 @@
 Socket communication between COCO and an external evaluator can be used to ease inclusion 
 of new suites of problems into COCO, for example, those that implement real-world problems. 
 Socket communication is demonstrated on the example of two test suites, `toy-socket` and 
-`toy-socket-biobj` – the first contains single-objective and the second bi-objective optimization problems.
+`toy-socket-biobj`; the first contains single-objective and the second bi-objective optimization problems.
 
 Other currently supported suites that use this kind of external evaluation of
 solutions are `rw-top-trumps(-biobj)` and `rw-mario-gan(-biobj)`. They are not included in the

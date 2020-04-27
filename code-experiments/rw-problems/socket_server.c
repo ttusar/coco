@@ -215,14 +215,14 @@ void socket_server_start(unsigned short port, int silent) {
 
       /* Check if the message is a request for reset */
       if (strncmp(message, "RESET", strlen("RESET")) == 0) {
-        printf("Resetting the socket server (C)");
+        printf("Resetting the socket server (C)\n");
         closesocket(new_sock);
         break;
       }
 
       /* Check if the message is a request for shut down */
       if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
-        printf("Shutting down socket server (C)");
+        printf("Shutting down socket server (C)\n");
         closesocket(new_sock);
         return;
       }
@@ -294,14 +294,14 @@ void socket_server_start(unsigned short port, int silent) {
 
       /* Check if the message is a request for reset */
       if (strncmp(message, "RESET", strlen("RESET")) == 0) {
-        printf("Resetting the socket server (C)");
+        printf("Resetting the socket server (C)\n");
         close(new_sock);
         break;
       }
 
       /* Check if the message is a request for shut down */
       if (strncmp(message, "SHUTDOWN", strlen("SHUTDOWN")) == 0) {
-        printf("Shutting down socket server (C)");
+        printf("Shutting down socket server (C)\n");
         close(new_sock);
         return;
       }
