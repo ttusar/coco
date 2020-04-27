@@ -27,7 +27,7 @@ static coco_suite_t *suite_toy_socket_biobj_initialize(const char *suite_options
   coco_suite_t *suite;
   const size_t dimensions[] = { 2, 30 };
 
-  suite = coco_suite_allocate("toy-socket-biobj", 1, 2, dimensions, "instances: 1", 0);
+  suite = coco_suite_allocate("toy-socket-biobj", 2, 2, dimensions, "instances: 1", 0);
 
   suite->data = socket_communication_data_initialize(suite_options, 7251);
   suite->data_free_function = socket_communication_data_finalize;
@@ -70,7 +70,10 @@ static coco_problem_t *suite_toy_socket_biobj_get_problem(coco_suite_t *suite,
   const char *problem_id_template = "toy_socket_biobj_f%02lu_i%02lu_d%02lu";
   const char *problem_name_template = "bi-objective toy socket suite problem f%lu instance %lu in %luD";
 
-  problem = toy_socket_problem_allocate(2, 1, function, dimension, instance,
+  /* Only the second function has constraints */
+  size_t number_of_constraints = (function == 2) ? 1: 0;
+
+  problem = toy_socket_problem_allocate(2, number_of_constraints, function, dimension, instance,
       problem_id_template, problem_name_template);
   assert(problem != NULL);
 

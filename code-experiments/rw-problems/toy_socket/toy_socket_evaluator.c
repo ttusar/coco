@@ -34,7 +34,7 @@ void evaluate_toy_socket_objectives(char *suite_name, size_t number_of_objective
       exit(EXIT_FAILURE);
     }
   } else if ((strcmp(suite_name, "toy-socket-biobj") == 0) && (number_of_objectives == 2)) {
-    if (function == 1) {
+    if ((function == 1) || (function == 2)) {
       /* Objective 1 is the sum of the absolute x-values */
       value = 1e-5 * (double)instance;
       for (i = 0; i < dimension; i++) {
@@ -84,8 +84,8 @@ void evaluate_toy_socket_constraints(char *suite_name, size_t number_of_constrai
     constraints[0] = (average < 0.2) ? (0.2 - average) : 0;
     /* Constraint violation 2 is the difference between the average and 0.5 */
     constraints[1] = (average > 0.5) ? (average - 0.5) : 0;
-  } else if ((strcmp(suite_name, "toy-socket-biobj") == 0) && (function == 1) && (number_of_constraints == 1)) {
-    /* Function 1 of the bi-objective suite has one constraint */
+  } else if ((strcmp(suite_name, "toy-socket-biobj") == 0) && (function == 2) && (number_of_constraints == 1)) {
+    /* Function 2 of the bi-objective suite has one constraint */
     /* Constraint violation 1 is the difference between the average and 0.5 */
     constraints[0] = (average > 0.5) ? (average - 0.5) : 0;
   } else {
