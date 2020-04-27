@@ -299,23 +299,20 @@ void my_random_search(evaluate_function_t evaluate_func,
   if (number_of_constraints > 0 )
     constraints_values = coco_allocate_vector(number_of_constraints);
 
-  coco_problem_get_initial_solution(PROBLEM, x);
-  evaluate_func(x, functions_values);
+  for (i = 0; i < max_budget; ++i) {
 
-  for (i = 1; i < max_budget; ++i) {
-
-    /* Construct x as a random point between the lower and upper bounds */
-    for (j = 0; j < dimension; ++j) {
-      x[j] = coco_random_uniform(random_generator);
-      if (j < number_of_integer_variables) {
-        /* If integer, make sure the bounds are interpreted correctly */
-        range = upper_bounds[j] - lower_bounds[j] + 1;
-        x[j] = lower_bounds[j] - 0.5 + x[j] * range;
-        x[j] = floor(x[j] + 0.5);
-      }
-      else {
+    if (i == 0) {
+      /* Use the initial solution as the first x */
+      coco_problem_get_initial_solution(PROBLEM, x);
+    }
+    else {
+      /* Construct x as a random point between the lower and upper bounds */
+      for (j = 0; j < dimension; ++j) {
         range = upper_bounds[j] - lower_bounds[j];
-        x[j] = lower_bounds[j] + x[j] * range;
+        x[j] = lower_bounds[j] + coco_random_uniform(random_generator) * range;
+        /* Round the variable if integer */
+        if (j < number_of_integer_variables)
+          x[j] = floor(x[j] + 0.5);
       }
     }
 
