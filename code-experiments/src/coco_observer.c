@@ -717,6 +717,16 @@ coco_observer_t *coco_observer(const char *observer_name, const char *observer_o
     observer_bbob(observer, observer_options, &additional_option_keys);
   } else if (0 == strcmp(observer_name, "bbob-biobj-mixint")) {
     observer_biobj(observer, observer_options, &additional_option_keys);
+  } else if (
+      (0 == strcmp(observer_name, "toy-socket")) ||
+      (0 == strcmp(observer_name, "rw-top-trumps")) ||
+      (0 == strcmp(observer_name, "rw-mario-gan"))) {
+    observer_bbob(observer, observer_options, &additional_option_keys);
+  } else if (
+      (0 == strcmp(observer_name, "toy-socket-biobj")) ||
+      (0 == strcmp(observer_name, "rw-top-trumps-biobj")) ||
+      (0 == strcmp(observer_name, "rw-mario-gan-biobj"))) {
+    observer_biobj(observer, observer_options, &additional_option_keys);
   } else if (0 == strcmp(observer_name, "rw")) {
     observer_rw(observer, observer_options, &additional_option_keys);
   } else {
