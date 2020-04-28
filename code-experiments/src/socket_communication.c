@@ -53,12 +53,14 @@ static void socket_communication_data_finalize(void *stuff) {
     coco_free_memory(data->prev_response_con);
   }
 
-  /* Tell the socket server to reset */
-  send(data->sock, "RESET", strlen("RESET") + 1, 0);
 #if WINSOCK
+  /* Tell the socket server to reset */
+  send(data->sock, "RESET", (int)strlen("RESET") + 1, 0);
   closesocket(data->sock);
   WSACleanup();
 #else
+  /* Tell the socket server to reset */
+  send(data->sock, "RESET", strlen("RESET") + 1, 0);
   close(data->sock);
 #endif
 }
@@ -163,8 +165,11 @@ static void socket_communication_create_message(char *message,
   assert(data);
 
   offset = sprintf(message, "s %s t %s r %lu f %lu i %lu d %lu x ",
-      suite->suite_name, evaluation_type, number_of_values,
-      problem->suite_dep_function, problem->suite_dep_instance, problem->number_of_variables);
+      suite->suite_name, evaluation_type,
+      (unsigned long) number_of_values,
+      (unsigned long) problem->suite_dep_function,
+      (unsigned long) problem->suite_dep_instance,
+      (unsigned long) problem->number_of_variables);
   for (i = 0; i < problem->number_of_variables; i++) {
     if (i < problem->number_of_integer_variables)
       write_count = sprintf(message + offset, "%d ", coco_double_to_int(x[i]));
@@ -263,6 +268,7 @@ static void socket_evaluate_function(coco_problem_t *problem, const double *x, d
   }
   socket_communication_save_response(data->prev_response_obj, problem->number_of_objectives, y);
   coco_debug("objective message %s", message);
+  problem->evaluations += 1;
 }
 
 /**
@@ -289,5 +295,6 @@ static void socket_evaluate_constraint(coco_problem_t *problem, const double *x,
   }
   socket_communication_save_response(data->prev_response_con, problem->number_of_constraints, y);
   coco_debug("constraint message %s", message);
+  problem->evaluations_constraints += 1;
 }
 
