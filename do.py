@@ -1015,11 +1015,11 @@ def test_socket(package_install_option=[], args=[]):
         # Parse the arguments
         for arg in args:
             if arg[:11] == 'start_port=':
-                start_port = arg[5:]
+                start_port = arg[11:]
             elif arg[:6] == 'batch=':
-                current_batch = bool(arg[6:])
+                current_batch = arg[6:]
             elif arg[:6] == 'suite=':
-                suite_name = bool(arg[6:])
+                suite_name = arg[6:]
         # Get the right port for this suite
         port = _get_socket_port(suite_name, start_port, current_batch)
         # Build and run the right socket server for this suite

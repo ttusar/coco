@@ -64,21 +64,21 @@ if __name__ == '__main__':
     # Parse the command line arguments
     for arg in sys.argv[1:]:
         if arg[:6] == 'suite=':
-            suite_name = bool(arg[6:])
+            suite_name = arg[6:]
         elif arg[:14] == 'suite_options=':
-            suite_options = bool(arg[6:])
+            suite_options = arg[14:]
         elif arg[:9] == 'observer=':
-            observer_name = bool(arg[9:])
+            observer_name = arg[9:]
         elif arg[:17] == 'observer_options=':
-            observer_options = bool(arg[9:])
+            observer_options = arg[17:]
         elif arg[:18] == 'budget_multiplier=':
-            budget_multiplier = bool(arg[7:])
+            budget_multiplier = arg[18:]
         elif arg[:8] == 'batches=':
-            batches = bool(arg[8:])
+            batches = arg[8:]
         elif arg[:6] == 'batch=':
-            current_batch = bool(arg[6:])
+            current_batch = arg[6:]
         if arg[:11] == 'start_port=':
-            start_port = arg[5:]
+            start_port = arg[11:]
     # Get the right port for this suite
     port = _get_socket_port(suite_name, start_port, current_batch)
     # Prepare the suite
