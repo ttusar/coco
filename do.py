@@ -987,18 +987,57 @@ def stop_socket_servers(port):
         _set_external_evaluator(rw_evaluator, 0)
 
 
-def test_toy_socket(port, package_install_option=[]):
-    """Test the toy-socket suite (run the socket server in C and the example experiment in Python)
+def _get_socket_port(suite_name, start_port, current_batch):
+    """Returns the used port based on the given parameters
+    The same function is used in rw_example_experiment.py. If this one changes, the other has to
+    change too.
     """
-    # Run the socket server in C
-    run_toy_socket_server_c(port)
-    # Build the Python example experiment
-    build_python(package_install_option=package_install_option)
-    # Run the Python example experiment with the toy-socket suite
-    python(os.path.join('code-experiments', 'build', 'python'),
-           ['example_experiment.py', 'toy-socket'])
-    # Stop the socket servers
-    stop_socket_servers(port)
+    port_py_inc = 200
+    if ('toy-socket' in suite_name) or ('rw-top-trumps' in suite_name):
+        return start_port + current_batch
+    elif 'rw-mario-gan' in suite_name:
+        return start_port + port_py_inc + current_batch
+    else:
+        raise ValueError('Suite {} not supported'.format(suite_name))
+
+
+def test_socket(package_install_option=[], args=[]):
+    """Test the given suite that uses sockets for evaluation ('toy-socket' by default).
+
+    First run the socket server, then the real-world example experiment in Python and finally stop
+    the socket server.
+    """
+    # These defaults should match those from rw_example_experiment.py
+    suite_name = 'toy-socket'
+    current_batch = 1
+    port = start_port = 7000
+    try:
+        # Parse the arguments
+        for arg in args:
+            if arg[:11] == 'start_port=':
+                start_port = arg[5:]
+            elif arg[:6] == 'batch=':
+                current_batch = bool(arg[6:])
+            elif arg[:6] == 'suite=':
+                suite_name = bool(arg[6:])
+        # Get the right port for this suite
+        port = _get_socket_port(suite_name, start_port, current_batch)
+        # Build and run the right socket server for this suite
+        if 'toy-socket' in suite_name:
+            run_toy_socket_server_c(port=port)
+        elif 'rw-top-trumps' in suite_name:
+            run_rw_top_trumps_server(port=port)
+        elif 'rw-mario-gan' in suite_name:
+            run_rw_mario_gan_server(port=port)
+        else:
+            raise ValueError('Suite {} not supported'.format(suite_name))
+        # Build Python and run the real-world example experiment with the given arguments
+        build_python(package_install_option=package_install_option)
+        python(os.path.join('code-experiments', 'build', 'python'),
+               ['rw_example_experiment.py'] + args)
+    finally:
+        # Stop the socket servers
+        stop_socket_servers(port=port)
 
 
 ################################################################################
@@ -1316,7 +1355,7 @@ def main(args):
     elif cmd == 'run-rw-mario-gan-server': run_rw_mario_gan_server(port=port, force_download=force_rw_download)
     elif cmd == 'run-socket-servers': run_socket_servers(force_download=force_rw_download)
     elif cmd == 'stop-socket-servers': stop_socket_servers(port=port)
-    elif cmd == 'test-toy-socket': test_toy_socket(port=port, package_install_option=package_install_option)
+    elif cmd == 'test-socket': test_socket(package_install_option=package_install_option, args=args[1:])
     else: help()
 
 
