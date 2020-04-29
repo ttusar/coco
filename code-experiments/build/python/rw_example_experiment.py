@@ -116,6 +116,7 @@ if __name__ == '__main__':
         while (problem.evaluations < problem.dimension * budget_multiplier
                and not problem.final_target_hit):
             for observer in observers:
-                observer.signal_restart(problem)
+                if b'bbob' in observer.name:
+                    observer.signal_restart(problem)
             solver(problem, lb, ub, budget=budget_multiplier * problem.dimension / 2)
         minimal_print(problem, final=problem.index == len(suite) - 1)
