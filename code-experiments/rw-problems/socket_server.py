@@ -130,11 +130,11 @@ def socket_server_start(port, silent=False):
                         print('Received message: {}'.format(message))
                     # Check if the message is a request for reset
                     if message == 'RESET':
-                        print('Resetting the socket server (Python) ')
+                        print('Socket server (Python) reset')
                         break
                     # Check if the message is a request for shut down
                     if message == 'SHUTDOWN':
-                        print('Shutting down socket server (Python) ')
+                        print('Socket server (Python) shut down')
                         return
                     # Parse the message and evaluate its contents using an evaluator
                     response = evaluate_message(message)
@@ -143,14 +143,13 @@ def socket_server_start(port, silent=False):
                     if not silent:
                         print('Sent response: {}'.format(response.decode("utf-8")))
     except KeyboardInterrupt or SystemExit as e:
-        print('Server terminated: {}'.format(e))
+        print('Socket server (Python) terminated: {}'.format(e))
         raise e
     except Exception as e:
-        print('Error: {}'.format(e))
+        print('Socket server (Python) error: {}'.format(e))
         raise e
     finally:
         if s is not None:
-            print('Closing socket')
             s.close()
 
 
