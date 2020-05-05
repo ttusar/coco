@@ -60,7 +60,7 @@ if __name__ == '__main__':
     observer_options = ''
     budget_multiplier = 10
     batches = 1
-    solver = random_search
+    solver = random_search  # COCO's random search only evaluates feasible solutions
     # Parse the command line arguments
     for arg in sys.argv[1:]:
         if arg[:6] == 'suite=':
