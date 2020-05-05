@@ -104,7 +104,7 @@ static coco_problem_t *rw_top_trumps_problem_allocate(const size_t number_of_obj
   if (number_of_objectives == 1) {
     /* Since best value is unknown, provide a reference point */
     assert(problem->best_value);
-    problem->best_value[0] = 0.0;
+    problem->best_value[0] = -1;
   }
   else if (number_of_objectives == 2) { /* TODO Vanessa */
     /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
