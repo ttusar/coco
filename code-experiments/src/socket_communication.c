@@ -273,7 +273,7 @@ static void socket_evaluate_function(coco_problem_t *problem, const double *x, d
 /**
  * @brief Calls the external evaluator to evaluate the constraint violations for x.
  */
-static void socket_evaluate_constraint(coco_problem_t *problem, const double *x, double *y) {
+static void socket_evaluate_constraint(coco_problem_t *problem, const double *x, double *y, int update_counter) {
 
   char message[MESSAGE_SIZE];
   const char evaluation_type[] = "constraints";
@@ -294,5 +294,6 @@ static void socket_evaluate_constraint(coco_problem_t *problem, const double *x,
   }
   socket_communication_save_response(data->prev_response_con, problem->number_of_constraints, y);
   coco_debug("constraint message %s", message);
+  (void) update_counter; /* To silence the compiler */
 }
 
