@@ -12,7 +12,10 @@ def random_search(fun, lbounds, ubounds, budget):
     dim, x_min, f_min = len(lbounds), None, None
     max_chunk_size = 1 + 4e4 / dim
     while budget > 0:
-        chunk = int(max([1, min([budget, max_chunk_size])]))
+        if fun.number_of_constraints > 0:
+            chunk = 1
+        else:
+            chunk = int(max([1, min([budget, max_chunk_size])]))
         # about five times faster than "for k in range(budget):..."
         X = lbounds + (ubounds - lbounds) * np.random.rand(chunk, dim)
         if fun.number_of_constraints > 0:
