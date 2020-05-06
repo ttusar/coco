@@ -72,12 +72,12 @@ if __name__ == '__main__':
         elif arg[:17] == 'observer_options=':
             observer_options = arg[17:]
         elif arg[:18] == 'budget_multiplier=':
-            budget_multiplier = arg[18:]
+            budget_multiplier = int(arg[18:])
         elif arg[:8] == 'batches=':
-            batches = arg[8:]
+            batches = int(arg[8:])
         elif arg[:6] == 'batch=':
-            current_batch = arg[6:]
-        if arg[:11] == 'start_port=':
+            current_batch = int(arg[6:])
+        elif arg[:11] == 'start_port=':
             start_port = arg[11:]
     # Get the right port for this suite
     port = _get_socket_port(suite_name, start_port, current_batch)
@@ -94,6 +94,15 @@ if __name__ == '__main__':
         raise ValueError('Observer name {} not supported'.format(observer_name))
     observers = [cocoex.Observer(observer_n, 'result_folder: {}-{}'.format(suite_name, observer_n))
                  for observer_n in observer_names]
+    # Print out the options
+    print('RW experiment ran with the following options:')
+    print('suite = {}'.format(suite_name))
+    print('suite_options = {}'.format(suite_options))
+    print('observer = {}'.format(observer_name))
+    print('observer_options = {}'.format(observer_options))
+    print('budget_multiplier = {}'.format(budget_multiplier))
+    print('batches = {}'.format(batches))
+    print('current_batch = {}'.format(current_batch))
     # Use minimal printing
     minimal_print = cocoex.utilities.MiniPrint()
 
