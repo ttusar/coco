@@ -78,7 +78,7 @@ def parse_arguments(argv):
         elif arg[:6] == 'batch=':
             current_batch = int(arg[6:])
         elif arg[:11] == 'start_port=':
-            start_port = arg[11:]
+            start_port = int(arg[11:])
     # Get the right port for this suite
     port = _get_socket_port(suite_name, start_port, current_batch)
     # Print out the options
