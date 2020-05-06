@@ -119,8 +119,9 @@ if __name__ == '__main__':
         observer_names = ['rw', 'bbob'] if num_obj == 1 else ['rw', 'bbob-biobj']
     else:
         raise ValueError('Observer name {} not supported'.format(observer_name))
-    observers = [cocoex.Observer(observer_n, '{} result_folder: {}-{}'.format(
-        observer_options, suite_name, observer_n)) for observer_n in observer_names]
+    observers = [cocoex.Observer(observer_n, '{} result_folder: {}-{}{}'.format(
+        observer_options, suite_name, observer_n,
+        '-batch-{}'.format(current_batch) if batches > 1 else '')) for observer_n in observer_names]
 
     # Use minimal printing
     minimal_print = cocoex.utilities.MiniPrint()
@@ -150,5 +151,5 @@ if __name__ == '__main__':
                 # Only the bbob(-biobj) observer support signaling restarts
                 if b'bbob' in observer.name:
                     observer.signal_restart(problem)
-            solver(problem, lb, ub, budget=budget_multiplier * problem.dimension / 2)
+            solver(problem, lb, ub, budget=budget_multiplier * problem.dimension)
         minimal_print(problem, final=problem.index == len(suite) - 1)
