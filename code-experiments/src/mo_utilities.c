@@ -40,12 +40,17 @@ static double mo_get_norm(const double *first, const double *second, const size_
 }
 
 /**
- * @brief Creates a rounded normalized version of the given solution w.r.t. the given ROI.
+ * @brief Creates normalized version of the given solution w.r.t. the given ROI.
  *
- * If the solution seems to be better than the extremes it is corrected (2 objectives are assumed).
+ * If the optimum is known and the solution seems to be better than the extremes, it is
+ * corrected (2 objectives are assumed).
  * The caller is responsible for freeing the allocated memory using coco_free_memory().
  */
-static double *mo_normalize(const double *y, const double *ideal, const double *nadir, const size_t num_obj) {
+static double *mo_normalize(const double *y,
+                            const double *ideal,
+                            const double *nadir,
+                            const size_t num_obj,
+                            const int is_opt_known) {
 
   size_t i;
   double *normalized_y = coco_allocate_vector(num_obj);
@@ -54,7 +59,7 @@ static double *mo_normalize(const double *y, const double *ideal, const double *
     assert((nadir[i] - ideal[i]) > mo_discretization);
     normalized_y[i] = (y[i] - ideal[i]) / (nadir[i] - ideal[i]);
     normalized_y[i] = coco_double_round(normalized_y[i] / mo_discretization) * mo_discretization;
-    if (normalized_y[i] < 0) {
+    if ((is_opt_known) && (normalized_y[i] < 0)) {
       coco_warning("mo_normalize(): Adjusting %.15e to %.15e", y[i], ideal[i]);
       normalized_y[i] = 0;
     }
@@ -62,7 +67,7 @@ static double *mo_normalize(const double *y, const double *ideal, const double *
 
   for (i = 0; i < num_obj; i++) {
     assert(num_obj == 2);
-    if (coco_double_almost_equal(normalized_y[i], 0, mo_precision) && (normalized_y[1-i] < 1)) {
+    if ((is_opt_known) && coco_double_almost_equal(normalized_y[i], 0, mo_precision) && (normalized_y[1-i] < 1)) {
       coco_warning("mo_normalize(): Adjusting %.15e to %.15e", y[1-i], nadir[1-i]);
       normalized_y[1-i] = 1;
     }

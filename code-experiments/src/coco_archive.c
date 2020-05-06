@@ -52,13 +52,14 @@ static coco_archive_avl_item_t* coco_archive_node_item_create(const double *y,
                                                               const double *ideal,
                                                               const double *nadir,
                                                               const size_t num_obj,
-                                                              const char *text) {
+                                                              const char *text,
+                                                              const int is_opt_known) {
 
   /* Allocate memory to hold the data structure coco_archive_avl_item_t */
   coco_archive_avl_item_t *item = (coco_archive_avl_item_t*) coco_allocate_memory(sizeof(*item));
 
   /* Compute the normalized y */
-  item->normalized_y = mo_normalize(y, ideal, nadir, num_obj);
+  item->normalized_y = mo_normalize(y, ideal, nadir, num_obj, is_opt_known);
 
   item->text = coco_strdup(text);
   return item;
@@ -186,7 +187,7 @@ int coco_archive_add_solution(coco_archive_t *archive, const double y1, const do
   y[0] = y1;
   y[1] = y2;
   insert_item = coco_archive_node_item_create(y, archive->ideal, archive->nadir,
-      archive->number_of_objectives, text);
+      archive->number_of_objectives, text, 1);
   coco_free_memory(y);
 
   /* Find the first point that is not worse than the new point (NULL if such point does not exist) */

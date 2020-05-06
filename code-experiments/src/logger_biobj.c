@@ -197,7 +197,7 @@ static logger_biobj_avl_item_t* logger_biobj_node_create(const coco_problem_t *p
     item->y[i] = y[i];
 
   /* Compute the normalized y */
-  item->normalized_y = mo_normalize(item->y, problem->best_value, problem->nadir_value, num_obj);
+  item->normalized_y = mo_normalize(item->y, problem->best_value, problem->nadir_value, num_obj, problem->is_opt_known);
   item->within_ROI = mo_is_within_ROI(item->normalized_y, num_obj);
 
   item->evaluation_number = evaluation_number;
