@@ -1240,6 +1240,7 @@ Available commands for users:
   run-rw-mario-gan-server        - Build and run the rw_mario_gan server (will download data if not yet present)  
   run-socket-servers             - Build and run all socket servers (will download data if not yet present) 
   stop-socket-servers            - Stop all running socket servers
+  run-rw-experiment              - Build and run the experiment with sockets (will download data if not yet present) 
 
 Available commands for developers:
 
@@ -1275,8 +1276,6 @@ Available commands for developers:
                             below)
   test-preprocessing      - Runs preprocessing tests [needs access to the
                             internet] (see NOTE below)
-                            
-  test-toy-socket         - Tests the toy-socket suite (server in C and experiment in Python)
   
 NOTE: These commands install Python packages to the global site packages by
       by default. This behavior can be modified by providing one of the
