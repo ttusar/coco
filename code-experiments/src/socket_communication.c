@@ -122,7 +122,7 @@ static socket_communication_data_t *socket_communication_data_initialize(
   (data->serv_addr).sin_port = htons(data->port);
 
   /* Convert IPv4 and IPv6 addresses from text to binary form */
-  if (inet_pton(AF_INET, data->host_name, &(data->sin_addr)) <= 0) {
+  if (inet_pton(AF_INET, data->host_name, &(data->serv_addr).sin_addr) <= 0) {
     coco_error("socket_communication_data_initialize(): Invalid address / Address not supported");
   }
 
