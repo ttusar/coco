@@ -80,12 +80,12 @@ static coco_problem_t *rw_mario_gan_problem_allocate(const size_t number_of_obje
     assert(problem->best_value);
     problem->best_value[0] = 0.0;
   }
-  else if (number_of_objectives == 2) { /* TODO Vanessa */
+  else if (number_of_objectives == 2) {
     /* Need to provide estimation of the ideal and nadir points for all bi-objective problem instances */
-    problem->best_value[0] = -1000;
-    problem->best_value[1] = -1000;
-    problem->nadir_value[0] = 1000;
-    problem->nadir_value[1] = 1000;
+    problem->best_value[0] = 0;
+    problem->best_value[1] = 0;
+    problem->nadir_value[0] = 1;
+    problem->nadir_value[1] = 1;
   }
   return problem;
 }
