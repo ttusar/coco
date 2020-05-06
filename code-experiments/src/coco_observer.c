@@ -861,9 +861,7 @@ const char *coco_observer_get_result_folder(const coco_observer_t *observer) {
     return;
   }
 
-  if (observer->restart_function == NULL)
-    coco_info("coco_observer_signal_restart(): Restart signaling not supported for observer %s",
-        observer->observer_name);
-  else
+  if (observer->restart_function != NULL)
     observer->restart_function(problem);
+  /* If a restart function does not exists, do nothing (warnings pollute the output) */
 }
