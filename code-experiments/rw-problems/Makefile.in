@@ -14,9 +14,9 @@ endif
 
 ## rw_top_trumps
 EVALUATE_RW_TOP_TRUMPS = 0
-ifeq ($(EVALUATE_RW_TOP_TRUMPS), 1)
+ifneq ($(EVALUATE_RW_TOP_TRUMPS), 0)
 ## Include rw_top_trumps
-	LNAME := rw_top_trumps
+	LNAME := rw_top_trumps$(EVALUATE_RW_TOP_TRUMPS)
 	LDFLAGS += -L. -l$(LNAME)
 endif
 

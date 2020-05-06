@@ -854,8 +854,9 @@ def build_toy_socket_server_python():
         _set_external_evaluator(rw_evaluator, 0)
 
 
-def _build_rw_top_trumps_lib():
-    """Build the top trumps library with the top trumps evaluator (in C)"""
+def _build_rw_top_trumps_lib(batch=1):
+    """Build the top trumps library with the top trumps evaluator (in C) and make a copy with the
+    number corresponding to the batch"""
     try:
         # Build the library
         rw_library = 'rw_top_trumps'
@@ -867,18 +868,20 @@ def _build_rw_top_trumps_lib():
             rw_library += '.dll'
             # Copy the library so that the socket server finds it
             copy_file(os.path.join('code-experiments', 'rw-problems', 'top_trumps', rw_library),
-                      os.path.join('code-experiments', 'rw-problems', rw_library))
+                      os.path.join('code-experiments', 'rw-problems',
+                                   rw_library.replace('.dll', '{}.dll'.format(batch))))
         else:
             rw_library = 'lib' + rw_library + '.so'
-            # Create a symlink to the library to be used at run-time
             library_src = os.path.abspath(os.path.join('code-experiments', 'rw-problems',
                                                        'top_trumps', rw_library))
             # Copy the library so that the socket server finds it
-            copy_file(library_src, os.path.join('code-experiments', 'rw-problems', rw_library))
+            copy_file(library_src, os.path.join('code-experiments', 'rw-problems',
+                                                rw_library.replace('.so', '{}.so'.format(batch))))
             if 'darwin' in sys.platform:
-                library_des = '/usr/local/lib/' + rw_library
+                library_des = '/usr/local/lib/' + rw_library.replace('.so', '{}.so'.format(batch))
                 if os.path.lexists(library_des):
                     os.remove(library_des)
+                # Create a symlink to the library to be used at run-time
                 os.symlink(library_src, library_des)
     except PermissionError as e:
         print('Encountered a permission error, the rw-top-trumps library is probably used by the'
@@ -888,18 +891,18 @@ def _build_rw_top_trumps_lib():
         sys.exit(-1)
 
 
-def build_rw_top_trumps_server(force_download=False, exclusive_evaluator=True):
+def build_rw_top_trumps_server(force_download=False, exclusive_evaluator=True, batch=1):
     """Download and build the socket server with the top trumps evaluator (in C)"""
     # Download the data
     url_name = 'https://github.com/ttusar/top-trumps/archive/master.zip'
     _download_external_evaluator('top_trumps', url_name, force_download=force_download)
     # Build the library
-    _build_rw_top_trumps_lib()
+    _build_rw_top_trumps_lib(batch=batch)
     if exclusive_evaluator:
         # Build the socket server that uses only the rw_top_trumps evaluator
         for rw_evaluator in rw_evaluators:
             if rw_evaluator == rw_evaluator_top_trumps:
-                _set_external_evaluator(rw_evaluator, 1)
+                _set_external_evaluator(rw_evaluator, batch)
             else:
                 _set_external_evaluator(rw_evaluator, 0)
     _build_socket_server_c()
@@ -919,12 +922,12 @@ def build_rw_mario_gan_server(force_download=False, exclusive_evaluator=True):
                 _set_external_evaluator(rw_evaluator, 0)
 
 
-def build_socket_servers(force_download=False):
+def build_socket_servers(force_download=False, batch=1):
     """Build the socket server with all available evaluators in C and Python"""
     # Set the socket server to use all evaluators
     for rw_evaluator in rw_evaluators:
         _set_external_evaluator(rw_evaluator, 1)
-    build_rw_top_trumps_server(force_download=force_download, exclusive_evaluator=False)
+    build_rw_top_trumps_server(force_download=force_download, exclusive_evaluator=False, batch=batch)
     build_rw_mario_gan_server(force_download=force_download, exclusive_evaluator=False)
 
 
@@ -940,9 +943,9 @@ def run_toy_socket_server_python(port):
     _run_socket_server_python(port)
 
 
-def run_rw_top_trumps_server(port, force_download=False):
+def run_rw_top_trumps_server(port, force_download=False, batch=1):
     """Build and run the socket server with the top trumps evaluator (in C)"""
-    build_rw_top_trumps_server(force_download=force_download, exclusive_evaluator=True)
+    build_rw_top_trumps_server(force_download=force_download, exclusive_evaluator=True, batch=batch)
     _run_socket_server_c(port)
 
 
@@ -1027,13 +1030,15 @@ def run_rw_experiment(package_install_option=[], force_download=False, args=[]):
         if 'toy-socket' in suite_name:
             run_toy_socket_server_c(port=port)
         elif 'rw-top-trumps' in suite_name:
-            run_rw_top_trumps_server(port=port, force_download=force_download)
+            run_rw_top_trumps_server(port=port, force_download=force_download, batch=current_batch)
         elif 'rw-mario-gan' in suite_name:
             run_rw_mario_gan_server(port=port, force_download=force_download)
         else:
             raise ValueError('Suite {} not supported'.format(suite_name))
         # Build Python and run the real-world example experiment with the given arguments
-        build_python(package_install_option=package_install_option)
+        # Build only for the first batch
+        if current_batch == 1:
+            build_python(package_install_option=package_install_option)
         python(os.path.join('code-experiments', 'build', 'python'),
                ['rw_example_experiment.py'] + args)
     finally:
@@ -1298,6 +1303,7 @@ def main(args):
     package_install_option = []
     port = None
     force_rw_download = False  # Whether to force download of the data of the real-world problems
+    batch = 1
     for arg in args[1:]:
         if arg == 'and-test':
             also_test_python = True
@@ -1306,9 +1312,11 @@ def main(args):
         elif arg[:13] == 'install-home=':
             package_install_option = ['--home=' + arg[13:]]
         elif arg[:5] == 'port=':
-            port = arg[5:]
+            port = int(arg[5:])
         elif arg[:18] == 'force-rw-download=':
             force_rw_download = bool(arg[18:])
+        elif arg[:6] == 'batch=':
+            port = int(arg[6:])
     if cmd == 'build': build(package_install_option=package_install_option)
     elif cmd == 'run': run_all(package_install_option=package_install_option)
     elif cmd == 'test': test()
@@ -1346,7 +1354,7 @@ def main(args):
     elif cmd == 'test-preprocessing': test_preprocessing(package_install_option=package_install_option)
     elif cmd == 'build-toy-socket-server-c': build_toy_socket_server_c()
     elif cmd == 'build-toy-socket-server-python': build_toy_socket_server_python()
-    elif cmd == 'build-rw-top-trumps-server': build_rw_top_trumps_server(force_download=force_rw_download)
+    elif cmd == 'build-rw-top-trumps-server': build_rw_top_trumps_server(force_download=force_rw_download, batch=batch)
     elif cmd == 'build-rw-mario-gan-server': build_rw_mario_gan_server(force_download=force_rw_download)
     elif cmd == 'build-socket-servers': build_socket_servers(force_download=force_rw_download)
     elif cmd == 'run-toy-socket-server-c': run_toy_socket_server_c(port=port)
