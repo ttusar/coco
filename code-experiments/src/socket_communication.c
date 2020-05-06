@@ -68,8 +68,9 @@ static void socket_communication_data_finalize(void *stuff) {
 static socket_communication_data_t *socket_communication_data_initialize(
     const char *suite_options, const unsigned short default_port) {
 
+#if WINSOCK
   WSADATA wsa;
-
+#endif
   socket_communication_data_t *data;
   data = (socket_communication_data_t *) coco_allocate_memory(sizeof(*data));
 
