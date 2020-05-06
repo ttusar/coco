@@ -1016,9 +1016,9 @@ def run_rw_experiment(package_install_option=[], force_download=False, args=[]):
         # Parse the arguments
         for arg in args:
             if arg[:11] == 'start_port=':
-                start_port = arg[11:]
+                start_port = int(arg[11:])
             elif arg[:6] == 'batch=':
-                current_batch = arg[6:]
+                current_batch = int(arg[6:])
             elif arg[:6] == 'suite=':
                 suite_name = arg[6:]
         # Get the right port for this suite
