@@ -23,7 +23,7 @@ Example:
     `python rw_example_experiment.py suite_name=rw-top-trumps batches=4 batch=1`
 
 The socket server needs to be running when this script is called. This is done via
-`python do.py run-toy-socket-server-c port=7001`
+`python do.py run-toy-socket-server-c port=7001 batch=1`
 After the experiment has ended, the socket servers can be stopped via
 `python do.py stop-socket-servers port=7001
 
