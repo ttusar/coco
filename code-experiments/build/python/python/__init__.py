@@ -53,6 +53,10 @@ _default_observers = {
     'bbob-biobj-mixint': 'bbob-biobj',
     'toy-socket': 'bbob',
     'toy-socket-biobj': 'bbob-biobj',
+    'rw-top-trumps': 'bbob',
+    'rw-top-trumps-biobj': 'bbob-biobj',
+    'rw-mario-gan': 'bbob',
+    'rw-mario-gan-biobj': 'bbob-biobj',
     }
 
 class Suite(_Suite):

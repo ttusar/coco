@@ -1,3 +1,6 @@
-1 t1 vs t2
-2 t3 vs t4
-3 t3 vs t5
+% Direct
+1 Deck HV/Category SD
+
+% Simulation
+2 Win rate/Switches
+3 Win rate/Trick difference

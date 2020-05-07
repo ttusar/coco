@@ -1,8 +1,8 @@
 % Direct
-1 deck hypervolume
-2 standard deviation of category averages
+1 Deck hypervolume
+2 St. dev. of category averages
 
 % Simulation
-3 winrate of better player
-4 switches of trick winner
-5 trick difference at end of game
+3 Win rate of better player
+4 Switches of trick winner
+5 Trick difference at game end

@@ -86,6 +86,18 @@ def main(latex_commands_for_html):
         elif scenario == testbedsettings.scenario_mixintfixed:
             genericsettings.runlength_based_targets = False
             config.config(testbedsettings.default_testbed_mixint)
+        elif scenario == testbedsettings.scenario_ttfixed:
+            genericsettings.runlength_based_targets = False
+            config.config(testbedsettings.default_testbed_tt)
+        elif scenario == testbedsettings.scenario_ttbifixed:
+            genericsettings.runlength_based_targets = False
+            config.config(testbedsettings.default_testbed_tt_bi)
+        elif scenario == testbedsettings.scenario_mgfixed:
+            genericsettings.runlength_based_targets = False
+            config.config(testbedsettings.default_testbed_mg)
+        elif scenario == testbedsettings.scenario_mgbifixed:
+            genericsettings.runlength_based_targets = False
+            config.config(testbedsettings.default_testbed_mg_bi)
         else:
             warnings.warn("Scenario not supported yet in HTML")
 

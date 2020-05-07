@@ -17,11 +17,17 @@ scenario_largescalefixed = 'largescalefixed'
 scenario_mixintfixed = 'mixintfixed'
 scenario_biobjmixintfixed = 'biobjmixintfixed'
 
+scenario_ttfixed = 'ttfixed'
+scenario_ttbifixed = 'ttbifixed'
+scenario_mgfixed = 'mgfixed'
+scenario_mgbifixed = 'mgbifixed'
+
 all_scenarios = [scenario_rlbased, scenario_fixed,
                  scenario_biobjfixed, scenario_biobjrlbased,
                  scenario_biobjextfixed, scenario_constrainedfixed,
                  scenario_largescalefixed, scenario_mixintfixed,
-                 scenario_biobjmixintfixed]
+                 scenario_biobjmixintfixed, scenario_ttfixed, scenario_ttbifixed,
+                 scenario_mgfixed, scenario_mgbifixed]
 
 testbed_name_single = 'bbob'
 testbed_name_single_noisy = 'bbob-noisy'
@@ -31,6 +37,10 @@ testbed_name_cons = 'bbob-constrained'
 testbed_name_ls = 'bbob-largescale'
 testbed_name_mixint = 'bbob-mixint'
 testbed_name_bi_mixint = 'bbob-biobj-mixint'
+testbed_name_tt = 'rw-top-trumps'
+testbed_name_tt_bi = 'rw-top-trumps-biobj'
+testbed_name_mg = 'rw-mario-gan'
+testbed_name_mg_bi = 'rw-mario-gan-biobj'
 
 default_suite_single = 'bbob'
 default_suite_single_noisy = 'bbob-noisy'
@@ -44,7 +54,10 @@ default_testbed_cons = 'CONSBBOBTestbed'
 default_testbed_ls = 'BBOBLargeScaleTestbed'
 default_testbed_mixint = 'GECCOBBOBMixintTestbed'
 default_testbed_bi_mixint = 'GECCOBBOBBiObjMixintTestbed'
-default_testbed_mario_gan = 'MarioGanTestbed'
+default_testbed_tt = 'TopTrumpsTestbed'
+default_testbed_tt_bi = 'TopTrumpsBiobjTestbed'
+default_testbed_mg = 'MarioGanTestbed'
+default_testbed_mg_bi = 'MarioGanBiobjTestbed'
 
 current_testbed = None
 
@@ -58,7 +71,10 @@ suite_to_testbed = {
     'bbob-mixint': default_testbed_mixint,
     'bbob-biobj-mixint': default_testbed_bi_mixint,
     'bbob-JOINED-bbob-largescale': 'BBOBLargeScaleJOINEDTestbed',
-    'mario-gan': default_testbed_mario_gan,
+    testbed_name_tt: default_testbed_tt,
+    testbed_name_tt_bi: default_testbed_tt_bi,
+    testbed_name_mg: default_testbed_mg,
+    testbed_name_mg_bi: default_testbed_mg_bi,
 }
 
 
@@ -211,8 +227,6 @@ class Testbed(object):
         return dsl
 
 
-
-
 class GECCOBBOBTestbed(Testbed):
     """Testbed used in the GECCO BBOB workshops 2009, 2010, 2012, 2013, 2015,
        and 2016.
@@ -296,7 +310,6 @@ class GECCOBBOBTestbed(Testbed):
         # in config:
         self.instantiate_attributes(targetValues)
 
-
     def filter(self, dsl):
         """ Updates the dimensions in all of dsl's entries
             if both bbob and bbob-largescale data is in dsl
@@ -335,9 +348,6 @@ class GECCOBBOBTestbed(Testbed):
             # make sure that the right testbed is loaded:
 
         return dsl
-
-
-
 
 
 class BBOBLargeScaleJOINEDTestbed(GECCOBBOBTestbed):
@@ -422,7 +432,6 @@ class CONSBBOBTestbed(GECCOBBOBTestbed):
 
     )
 
-
     def __init__(self, target_values):
 
         if 11 < 3:
@@ -477,7 +486,6 @@ class GECCOBBOBNoisyTestbed(GECCOBBOBTestbed):
             setattr(self, key, val)
             if 'target_values' in key or 'targetsOfInterest' in key:
                 self.instantiate_attributes(target_values, [key])
-
 
     def filter(self, dsl):
         """ Does nothing but overwriting the method from superclass"""
@@ -694,58 +702,6 @@ class BBOBLargeScaleTestbed(GECCOBBOBTestbed):
                 self.instantiate_attributes(targetValues, [key])
 
 
-
-class MarioGanTestbed(Testbed):
-    """Testbed used in for Mario
-    """
-
-    shortinfo_filename = 'mario-gan-benchmarkshortinfos.txt'
-    pptable_target_runlengths = [0.5, 1.2, 3, 10, 50]  # used in config for expensive setting
-    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
-    dimsOfInterest = (10, 20, 30, 40)
-
-    settings = dict(
-        info_filename='mario-gan-benchmarkinfos.txt',
-        shortinfo_filename=shortinfo_filename,
-        name="mario-gan",
-        short_names=get_short_names(shortinfo_filename),
-        dimensions_to_display=(10, 20, 30, 40),
-        goto_dimension=10,  # auto-focus on this dimension in html
-        rldDimsOfInterest=dimsOfInterest,
-        tabDimsOfInterest=dimsOfInterest,
-        hardesttargetlatex='10^{-8}',  # used for ppfigs, pptable and pptables
-        ppfigs_ftarget=1e-8,  # to set target runlength in expensive setting, use genericsettings.target_runlength
-        ppfig2_ftarget=1e-8,
-        ppfigdim_target_values=(10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-8),
-        pprldistr_target_values=(10., 1e-1, 1e-4, 1e-8),
-        pprldmany_target_values=10 ** np.arange(2, -8.2, -0.2),
-        pprldmany_target_range_latex='$10^{[-8..2]}$',
-        ppscatter_target_values=np.logspace(-8, 2, 21),  # 21 was 46
-        rldValsOfInterest=(10, 1e-1, 1e-4, 1e-8),  # possibly changed in config
-        ppfvdistr_min_target=1e-8,
-        functions_with_legend=(0, 0),
-        first_function_number=1,
-        last_function_number=28,
-        reference_values_hash_dimensions=[],
-        pptable_ftarget=1e-8,  # value for determining the success ratio in all tables
-        pptable_targetsOfInterest=pptable_targetsOfInterest,
-        pptablemany_targetsOfInterest=pptable_targetsOfInterest,
-        scenario=scenario_rlbased,
-        reference_algorithm_filename='',
-        reference_algorithm_displayname='',  
-        data_format=dataformatsettings.BBOBOldDataFormat(), 
-        number_of_points=5,  # nb of target function values for each decade
-        instancesOfInterest=None  # None: consider all instances
-    ) 
-
-    def __init__(self, targetValues):
-
-        for key, val in MarioGanTestbed.settings.items():
-            setattr(self, key, val)
-        self.instantiate_attributes(targetValues)
-
-
-
 class GECCOBBOBMixintTestbed(GECCOBBOBTestbed):
     """Testbed used with the bbob-mixint test suite.
     """
@@ -810,3 +766,186 @@ class GECCOBBOBBiObjMixintTestbed(GECCOBiObjExtBBOBTestbed):
             setattr(self, key, val)
             if 'target_values' in key or 'targetsOfInterest' in key:
                 self.instantiate_attributes(targetValues, [key])
+
+
+class TopTrumpsTestbed(Testbed):
+    """Testbed used with the rw-top-trumps test suite.
+    """
+
+    shortinfo_filename = 'rw-top-trumps-benchmarkshortinfos.txt'
+    pptable_target_runlengths = [0.5, 1.2, 3, 10, 50] # used in config for expensive setting
+    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7) # for pptable and pptablemany
+    dimsOfInterest = (88, 128, 168, 208)
+
+    settings = dict(
+        info_filename='rw-top-trumps-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
+        name=testbed_name_tt,
+        short_names=get_short_names(shortinfo_filename),
+        dimensions_to_display=(88, 128, 168, 208),
+        goto_dimension=88,  # auto-focus on this dimension in html
+        rldDimsOfInterest=dimsOfInterest,
+        tabDimsOfInterest=dimsOfInterest,
+        hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
+        ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
+        ppfig2_ftarget=1e-5,
+        ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
+        pprldmany_target_values=
+        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        instances_are_uniform=False,
+        pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
+        ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
+        rldValsOfInterest=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        ppfvdistr_min_target=1e-5,
+        functions_with_legend=(1, 5),
+        first_function_number=1,
+        last_function_number=5,
+        reference_values_hash_dimensions=[],
+        pptable_ftarget=1e-5,  # value for determining the success ratio in all tables
+        pptable_targetsOfInterest=pptable_targetsOfInterest,
+        pptablemany_targetsOfInterest=pptable_targetsOfInterest,
+        scenario=scenario_ttfixed,
+        reference_algorithm_filename=None,
+        reference_algorithm_displayname=None,
+        pptable_target_runlengths=[0.5, 1.2, 3, 10, 50],  # [0.5, 2, 10, 50]  # used in config for expensive setting
+        pptables_target_runlengths=[2, 10, 50],  # used in config for expensive setting
+        data_format=dataformatsettings.BBOBNewDataFormat(),
+        number_of_points=10,  # nb of target function values for each decade
+        instancesOfInterest=None,  # None: consider all instances
+        plots_on_main_html_page=['pprldmany_88D_noiselessall.svg',  'pprldmany_128D_noiselessall.svg',
+                                 'pprldmany_168D_noiselessall.svg', 'pprldmany_208D_noiselessall.svg'],
+    )
+
+    def __init__(self, targetValues):
+        for key, val in TopTrumpsTestbed.settings.items():
+            setattr(self, key, val)
+            if 'target_values' in key or 'targetsOfInterest' in key:
+                self.instantiate_attributes(targetValues, [key])
+
+
+class TopTrumpsBiobjTestbed(TopTrumpsTestbed):
+    """Testbed used with the rw-top-trumps-biobj test suite.
+    """
+
+    shortinfo_filename = 'rw-top-trumps-biobj-benchmarkshortinfos.txt'
+    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
+    dimsOfInterest = (88, 128, 168, 208)
+
+    settings = dict(
+        info_filename='rw-top-trumps-biobj-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
+        name=testbed_name_tt_bi,
+        short_names=get_short_names(shortinfo_filename),
+        dimensions_to_display=(88, 128, 168, 208),
+        goto_dimension=88,  # auto-focus on this dimension in html
+        rldDimsOfInterest=dimsOfInterest,
+        tabDimsOfInterest=dimsOfInterest,
+        functions_with_legend=(1, 2, 3),
+        first_function_number=1,
+        last_function_number=3,
+        reference_values_hash_dimensions=[],
+        pptable_targetsOfInterest=pptable_targetsOfInterest,
+        pptablemany_targetsOfInterest=pptable_targetsOfInterest,
+        scenario=scenario_ttbifixed,
+        reference_algorithm_filename='',
+        reference_algorithm_displayname='',
+        data_format=dataformatsettings.BBOBBiObjDataFormat(),
+        number_of_points=10,  # nb of target function values for each decade
+        instancesOfInterest=None,  # None: consider all instances
+        plots_on_main_html_page=['pprldmany_88D_noiselessall.svg',  'pprldmany_128D_noiselessall.svg',
+                                 'pprldmany_168D_noiselessall.svg', 'pprldmany_208D_noiselessall.svg'],
+    )
+
+    def __init__(self, targetValues):
+        super(TopTrumpsTestbed, self).__init__(targetValues)
+
+        for key, val in TopTrumpsBiobjTestbed.settings.items():
+            setattr(self, key, val)
+            if 'target_values' in key or 'targetsOfInterest' in key:
+                self.instantiate_attributes(targetValues, [key])
+
+
+class MarioGanTestbed(GECCOBiObjBBOBTestbed):
+    """Testbed used with the rw-mario-gan test suite.
+    """
+
+    shortinfo_filename = 'rw-mario-gan-benchmarkshortinfos.txt'
+    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
+    dimsOfInterest = (10, 20, 30, 40)
+
+    settings = dict(
+        info_filename='rw-mario-gan-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
+        name=testbed_name_mg,
+        short_names=get_short_names(shortinfo_filename),
+        dimensions_to_display=(10, 20, 30, 40),
+        goto_dimension=10,  # auto-focus on this dimension in html
+        rldDimsOfInterest=dimsOfInterest,
+        tabDimsOfInterest=dimsOfInterest,
+        functions_with_legend=(1, 28),
+        first_function_number=1,
+        last_function_number=28,
+        reference_values_hash_dimensions=[],
+        pptable_targetsOfInterest=pptable_targetsOfInterest,
+        pptablemany_targetsOfInterest=pptable_targetsOfInterest,
+        scenario=scenario_mgfixed,
+        reference_algorithm_filename='',
+        reference_algorithm_displayname='',
+        data_format=dataformatsettings.BBOBNewDataFormat(),
+        number_of_points=10,  # nb of target function values for each decade
+        instancesOfInterest=None,  # None: consider all instances
+        plots_on_main_html_page=['pprldmany_10D_noiselessall.svg', 'pprldmany_20D_noiselessall.svg',
+                                 'pprldmany_30D_noiselessall.svg', 'pprldmany_40D_noiselessall.svg'],
+    )
+
+    def __init__(self, targetValues):
+        super(GECCOBiObjBBOBTestbed, self).__init__(targetValues)
+
+        for key, val in MarioGanTestbed.settings.items():
+            setattr(self, key, val)
+            if 'target_values' in key or 'targetsOfInterest' in key:
+                self.instantiate_attributes(targetValues, [key])
+
+
+class MarioGanBiobjTestbed(MarioGanTestbed):
+    """Testbed used with the rw-mario-gan test suite.
+    """
+
+    shortinfo_filename = 'rw-mario-gan-benchmarkshortinfos.txt'
+    pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
+    dimsOfInterest = (10, 20, 30, 40)
+
+    settings = dict(
+        info_filename='rw-mario-gan-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
+        name=testbed_name_mg,
+        short_names=get_short_names(shortinfo_filename),
+        dimensions_to_display=(10, 20, 30, 40),
+        goto_dimension=10,  # auto-focus on this dimension in html
+        rldDimsOfInterest=dimsOfInterest,
+        tabDimsOfInterest=dimsOfInterest,
+        functions_with_legend=(1, 10),
+        first_function_number=1,
+        last_function_number=10,
+        reference_values_hash_dimensions=[],
+        pptable_targetsOfInterest=pptable_targetsOfInterest,
+        pptablemany_targetsOfInterest=pptable_targetsOfInterest,
+        scenario=scenario_mgbifixed,
+        reference_algorithm_filename='',
+        reference_algorithm_displayname='',
+        data_format=dataformatsettings.BBOBBiObjDataFormat(),
+        number_of_points=10,  # nb of target function values for each decade
+        instancesOfInterest=None,  # None: consider all instances
+        plots_on_main_html_page=['pprldmany_10D_noiselessall.svg', 'pprldmany_20D_noiselessall.svg',
+                                 'pprldmany_30D_noiselessall.svg', 'pprldmany_40D_noiselessall.svg'],
+    )
+
+    def __init__(self, targetValues):
+        super(MarioGanTestbed, self).__init__(targetValues)
+
+        for key, val in MarioGanBiobjTestbed.settings.items():
+            setattr(self, key, val)
+            if 'target_values' in key or 'targetsOfInterest' in key:
+                self.instantiate_attributes(targetValues, [key])
+
