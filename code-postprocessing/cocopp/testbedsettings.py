@@ -782,7 +782,7 @@ class TopTrumpsTestbed(Testbed):
         shortinfo_filename=shortinfo_filename,
         name=testbed_name_tt,
         short_names=get_short_names(shortinfo_filename),
-        dimensions_to_display=(88, 128, 168, 208),
+        dimensions_to_display=dimsOfInterest,
         goto_dimension=88,  # auto-focus on this dimension in html
         rldDimsOfInterest=dimsOfInterest,
         tabDimsOfInterest=dimsOfInterest,
@@ -824,7 +824,7 @@ class TopTrumpsTestbed(Testbed):
                 self.instantiate_attributes(targetValues, [key])
 
 
-class TopTrumpsBiobjTestbed(TopTrumpsTestbed):
+class TopTrumpsBiobjTestbed(Testbed):
     """Testbed used with the rw-top-trumps-biobj test suite.
     """
 
@@ -837,19 +837,34 @@ class TopTrumpsBiobjTestbed(TopTrumpsTestbed):
         shortinfo_filename=shortinfo_filename,
         name=testbed_name_tt_bi,
         short_names=get_short_names(shortinfo_filename),
-        dimensions_to_display=(88, 128, 168, 208),
+        dimensions_to_display=dimsOfInterest,
         goto_dimension=88,  # auto-focus on this dimension in html
         rldDimsOfInterest=dimsOfInterest,
         tabDimsOfInterest=dimsOfInterest,
-        functions_with_legend=(1, 2, 3),
+        hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
+        ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
+        ppfig2_ftarget=1e-5,
+        ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
+        pprldmany_target_values=
+        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        instances_are_uniform=False,
+        pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
+        ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
+        rldValsOfInterest=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        ppfvdistr_min_target=1e-5,
+        functions_with_legend=(1, 3),
         first_function_number=1,
         last_function_number=3,
         reference_values_hash_dimensions=[],
+        pptable_ftarget=1e-5,  # value for determining the success ratio in all tables
         pptable_targetsOfInterest=pptable_targetsOfInterest,
         pptablemany_targetsOfInterest=pptable_targetsOfInterest,
         scenario=scenario_ttbifixed,
         reference_algorithm_filename='',
         reference_algorithm_displayname='',
+        pptable_target_runlengths=[0.5, 1.2, 3, 10, 50],  # [0.5, 2, 10, 50]  # used in config for expensive setting
+        pptables_target_runlengths=[2, 10, 50],  # used in config for expensive setting
         data_format=dataformatsettings.BBOBBiObjDataFormat(),
         number_of_points=10,  # nb of target function values for each decade
         instancesOfInterest=None,  # None: consider all instances
@@ -858,15 +873,13 @@ class TopTrumpsBiobjTestbed(TopTrumpsTestbed):
     )
 
     def __init__(self, targetValues):
-        super(TopTrumpsTestbed, self).__init__(targetValues)
-
         for key, val in TopTrumpsBiobjTestbed.settings.items():
             setattr(self, key, val)
             if 'target_values' in key or 'targetsOfInterest' in key:
                 self.instantiate_attributes(targetValues, [key])
 
 
-class MarioGanTestbed(GECCOBiObjBBOBTestbed):
+class MarioGanTestbed(Testbed):
     """Testbed used with the rw-mario-gan test suite.
     """
 
@@ -879,19 +892,34 @@ class MarioGanTestbed(GECCOBiObjBBOBTestbed):
         shortinfo_filename=shortinfo_filename,
         name=testbed_name_mg,
         short_names=get_short_names(shortinfo_filename),
-        dimensions_to_display=(10, 20, 30, 40),
+        dimensions_to_display=dimsOfInterest,
         goto_dimension=10,  # auto-focus on this dimension in html
         rldDimsOfInterest=dimsOfInterest,
         tabDimsOfInterest=dimsOfInterest,
+        hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
+        ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
+        ppfig2_ftarget=1e-5,
+        ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
+        pprldmany_target_values=
+        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        instances_are_uniform=False,
+        pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
+        ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
+        rldValsOfInterest=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        ppfvdistr_min_target=1e-5,
         functions_with_legend=(1, 28),
         first_function_number=1,
         last_function_number=28,
         reference_values_hash_dimensions=[],
+        pptable_ftarget=1e-5,  # value for determining the success ratio in all tables
         pptable_targetsOfInterest=pptable_targetsOfInterest,
         pptablemany_targetsOfInterest=pptable_targetsOfInterest,
         scenario=scenario_mgfixed,
         reference_algorithm_filename='',
         reference_algorithm_displayname='',
+        pptable_target_runlengths=[0.5, 1.2, 3, 10, 50],  # [0.5, 2, 10, 50]  # used in config for expensive setting
+        pptables_target_runlengths=[2, 10, 50],  # used in config for expensive setting
         data_format=dataformatsettings.BBOBNewDataFormat(),
         number_of_points=10,  # nb of target function values for each decade
         instancesOfInterest=None,  # None: consider all instances
@@ -900,15 +928,13 @@ class MarioGanTestbed(GECCOBiObjBBOBTestbed):
     )
 
     def __init__(self, targetValues):
-        super(GECCOBiObjBBOBTestbed, self).__init__(targetValues)
-
         for key, val in MarioGanTestbed.settings.items():
             setattr(self, key, val)
             if 'target_values' in key or 'targetsOfInterest' in key:
                 self.instantiate_attributes(targetValues, [key])
 
 
-class MarioGanBiobjTestbed(MarioGanTestbed):
+class MarioGanBiobjTestbed(Testbed):
     """Testbed used with the rw-mario-gan test suite.
     """
 
@@ -917,23 +943,38 @@ class MarioGanBiobjTestbed(MarioGanTestbed):
     dimsOfInterest = (10, 20, 30, 40)
 
     settings = dict(
-        info_filename='rw-mario-gan-benchmarkinfos.txt',
+        info_filename='rw-mario-gan-biobj-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_mg,
+        name=testbed_name_mg_bi,
         short_names=get_short_names(shortinfo_filename),
-        dimensions_to_display=(10, 20, 30, 40),
+        dimensions_to_display=dimsOfInterest,
         goto_dimension=10,  # auto-focus on this dimension in html
         rldDimsOfInterest=dimsOfInterest,
         tabDimsOfInterest=dimsOfInterest,
+        hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
+        ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
+        ppfig2_ftarget=1e-5,
+        ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
+        pprldmany_target_values=
+        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        instances_are_uniform=False,
+        pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
+        ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
+        rldValsOfInterest=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
+        ppfvdistr_min_target=1e-5,
         functions_with_legend=(1, 10),
         first_function_number=1,
         last_function_number=10,
         reference_values_hash_dimensions=[],
+        pptable_ftarget=1e-5,  # value for determining the success ratio in all tables
         pptable_targetsOfInterest=pptable_targetsOfInterest,
         pptablemany_targetsOfInterest=pptable_targetsOfInterest,
         scenario=scenario_mgbifixed,
         reference_algorithm_filename='',
         reference_algorithm_displayname='',
+        pptable_target_runlengths=[0.5, 1.2, 3, 10, 50],  # [0.5, 2, 10, 50]  # used in config for expensive setting
+        pptables_target_runlengths=[2, 10, 50],  # used in config for expensive setting
         data_format=dataformatsettings.BBOBBiObjDataFormat(),
         number_of_points=10,  # nb of target function values for each decade
         instancesOfInterest=None,  # None: consider all instances
@@ -942,8 +983,6 @@ class MarioGanBiobjTestbed(MarioGanTestbed):
     )
 
     def __init__(self, targetValues):
-        super(MarioGanTestbed, self).__init__(targetValues)
-
         for key, val in MarioGanBiobjTestbed.settings.items():
             setattr(self, key, val)
             if 'target_values' in key or 'targetsOfInterest' in key:

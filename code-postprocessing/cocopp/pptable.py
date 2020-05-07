@@ -99,7 +99,9 @@ def get_table_caption():
             table_caption = table_caption_start + table_caption_fixedtargets + table_caption_rest
     elif testbedsettings.current_testbed.name in ['bbob-biobj-ext', 'bbob-constrained',
                                                   'bbob-largescale', 'bbob-mixint',
-                                                  'bbob-biobj-mixint']:
+                                                  'bbob-biobj-mixint', 'rw-top-trumps',
+                                                  'rw-top-trumps-biobj', 'rw-mario-gan',
+                                                  'rw-mario-gan-biobj']:
         # all testbeds without provided reference algorithm
         table_caption = table_caption_no_reference_algorithm
     else:
