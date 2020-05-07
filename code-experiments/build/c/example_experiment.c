@@ -140,30 +140,11 @@ int main(void) {
       random_generator);
 
   example_experiment(
-      "rw-top-trumps",
-      "function_indices: 1,3 dimensions: 88 instance_indices: 1",
-      "bbob",
-      "result_folder: RS_on_rw-top-trumps",
+      "toy-socket-biobj",
+      "",
+      "bbob-biobj",
+      "result_folder: RS_on_toy-socket-biobj",
       random_generator);
-
-  example_experiment(
-      "rw-mario-gan",
-      "function_indices: 1,11,15 dimensions: 10 instance_indices: 1",
-      "bbob",
-      "result_folder: RS_on_mario-gan",
-      random_generator);
-
-  /*example_experiment("rw-ma
-   * rio-gan-biobj", "function_indices: 1 dimensions: 10 instance_indices: 1", "bbob-biobj",
-      "result_folder: RS_on_mario-gan-biobj", random_generator);*/
-
-  /*example_experiment("rw-top-trumps-biobj", "function_indices: 1,3 dimensions: 88 instance_indices: 1", "bbob-biobj",
-      "result_folder: RS_on_rw-top-trumps-biobj", random_generator);
-
-  example_experiment("toy-socket", "", "bbob-new",
-      "result_folder: RS_on_toy-socket", random_generator);
-  example_experiment("toy-socket-biobj", "", "bbob-biobj",
-      "result_folder: RS_on_toy-socket-biobj", random_generator);*/
 
   /**
    * For more details on how to change the default suite and observer options, see
