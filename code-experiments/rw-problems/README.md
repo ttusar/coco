@@ -9,7 +9,7 @@ Other currently supported suites that use this kind of external evaluation of
 solutions are `rw-top-trumps(-biobj)` and `rw-mario-gan(-biobj)`. They are not included in the
 COCO repository directly, but are downloaded when invoked (they are then stored in the
 `top_trumps` and `mario_gan` folders of the `code-experiments/rw-problems` folder).
-See below for more information.
+See [GBEA.md](GBEA.md) for more information.
 
 An external evaluator is basically a server that listens for messages
 from the client (COCO). For each evaluation of the objectives or constraints
@@ -23,7 +23,7 @@ communication (files `socket_server.py` and `socket_server.c` for Python and C, 
 and the other of the actual evaluation of solutions (files `toy_socket_evaluator.py` and 
 `toy_socket_evaluator.c` in the `toy_socket` folder for Python and C, respectively). 
 
-It should be rather easy to add aditional (real-world) evaluators to the socket servers, 
+It should be rather easy to add additional (real-world) evaluators to the socket servers, 
 look for text starting with `ADD HERE` in the files `socket_server.py` and `socket_server.c`.
 Currently, the socket server in C supports also the `rw-top-trumps(-biobj)` suites and the socket
 server in Python the `rw-mario-gan(-biobj)` suites.
@@ -86,7 +86,8 @@ python do.py run-rw-mario-gan-server <port=1234>
 ````
 for the `rw-mario-gan` evaluator.
 
-The advantage of these specific calls is that they do not require to download and compile the external evaluators
+The advantage of these specific calls is that they do not require to download and compile the 
+external evaluators
 that are not needed.
 
 To stop these servers, simply call
@@ -96,11 +97,15 @@ python do.py stop-socket-servers <port=1234>
 
 Without a specific port, this command will stop the sockets only on the default ports. 
 
-Note that the `python do.py run-*-server*` calls above change some of the files in the `code-experiments/rw-problems` folder
-(this is needed to configure the builds). All changes are reverted by the call `python do.py stop-socket-servers`.
+Note that the `python do.py run-*-server*` calls above change some of the files in the 
+`code-experiments/rw-problems` folder (this is needed to configure the builds). All changes are 
+reverted by the call `python do.py stop-socket-servers`.
 
 ### Running custom experiments
 
 Before running your own experiment that needs external evaluation of solutions, make sure to
 run the required socket server(s) as described above. Then the experiment can be carried out as
 usually. After the experiment, call `python do.py stop-socket-servers` to stop the server(s).
+
+For more information on how to run experiments on the GBEA suites (`rw-top-trumps(-biobj)` and 
+`rw-mario-gan(-biobj)`), see [GBEA.md](GBEA.md).
