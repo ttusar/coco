@@ -8,7 +8,7 @@ Socket communication is demonstrated on the example of two test suites, `toy-soc
 Other currently supported suites that use this kind of external evaluation of
 solutions are `rw-top-trumps(-biobj)` and `rw-mario-gan(-biobj)`. They are not included in the
 COCO repository directly, but are downloaded when invoked (they are then stored in the
-`top-trumps` and `mario-gan` folders of the `code-experiments/rw-problems` folder).
+`top_trumps` and `mario_gan` folders of the `code-experiments/rw-problems` folder).
 See below for more information.
 
 An external evaluator is basically a server that listens for messages
@@ -21,7 +21,7 @@ Two external evaluators are available - one in Python and the other in C (see th
 in this folder). Both are implemented using two files - one takes care of the socket 
 communication (files `socket_server.py` and `socket_server.c` for Python and C, respectively) 
 and the other of the actual evaluation of solutions (files `toy_socket_evaluator.py` and 
-`toy_socket_evaluator.c` in the `toy-socket` folder for Python and C, respectively). 
+`toy_socket_evaluator.c` in the `toy_socket` folder for Python and C, respectively). 
 
 It should be rather easy to add aditional (real-world) evaluators to the socket servers, 
 look for text starting with `ADD HERE` in the files `socket_server.py` and `socket_server.c`.
@@ -38,7 +38,7 @@ evaluators.
 By calling
 
 ````
-python do.py test-toy-socket
+python do.py run-rw-experiment
 ````
 
 form the root directory of the repository, the following will happen:
@@ -46,11 +46,11 @@ form the root directory of the repository, the following will happen:
 - the Python example experiment will be run on the `toy-socket` suite
 - when the example experiment will complete, the C socket server will be stopped
 
-See the folder `code-experiments/build/python/exdata` for the results of this experiment.
+The results of the experiment will be saved to the folder `code-experiments/build/python/exdata`.
 
 ### Starting/stopping the socket server(s)
 
-Both socket servers configured so that they can call any available evaluator are started by calling
+Both socket servers (configured so that they can call any available evaluator) are started by calling
 
 ````
 python do.py run-socket-servers <port=1234>
@@ -72,17 +72,17 @@ Running the servers in this way enables to freely use any of the available exter
 If, however, one wishes to run only the server for a specific evaluator, this can be done by invoking
 
 ````
-python do.py run-toy-socket-server
+python do.py run-toy-socket-server <port=1234>
 ````
 for the `toy-socket` evaluator
 
 ````
-python do.py run-rw-top-trumps-server
+python do.py run-rw-top-trumps-server <port=1234>
 ````
 for the `rw-top-trumps` evaluator and
 
 ````
-python do.py run-rw-mario-gan-server
+python do.py run-rw-mario-gan-server <port=1234>
 ````
 for the `rw-mario-gan` evaluator.
 
@@ -91,8 +91,10 @@ that are not needed.
 
 To stop these servers, simply call
 ````
-python do.py stop-socket-servers
+python do.py stop-socket-servers <port=1234>
 ````
+
+Without a specific port, this command will stop the sockets only on the default ports. 
 
 Note that the `python do.py run-*-server*` calls above change some of the files in the `code-experiments/rw-problems` folder
 (this is needed to configure the builds). All changes are reverted by the call `python do.py stop-socket-servers`.
