@@ -25,7 +25,8 @@ example in `C++`) are more than welcome.
 For more general information,
 - read our [benchmarking guidelines introduction](http://numbbo.github.io/coco-doc/)
 - read the [COCO experimental setup](http://numbbo.github.io/coco-doc/experimental-setup) description
-- see the [`bbob-biobj` and `bbob-biobj-ext` COCO multi-objective functions testbed](http://numbbo.github.io/coco-doc/bbob-biobj/functions) documentation and the [specificities of the performance assessment for the bi-objective testbeds](http://numbbo.github.io/coco-doc/bbob-biobj/perf-assessment).
+- see the [`bbob-biobj` and `bbob-biobj-ext` COCO multi-objective functions testbed](http://numbbo.github.io/coco-doc/bbob-biobj/functions) documentation and the [specificities of the performance assessment for the bi-objective testbeds](http://numbbo.github.io/coco-doc/bbob-biobj/perf-assessment),
+- see [evaluating solutions to real-world problems using sockets](./code-experiments/rw-problems/README.md), 
 - consult the [BBOB workshops series](http://numbbo.github.io/workshops),
 - consider to [register here](http://numbbo.github.io/register) for news, 
 - see the [previous COCO home page here](http://coco.gforge.inria.fr/) and 
@@ -290,7 +291,22 @@ our issue tracker at https://github.com/numbbo/coco/issues.
       `bbob-largescale` suites in which 80% of the variables have been discretized
     * `bbob-biobj-mixint`: a version of the (so far not supported) `bbob-biobj-ext`
       test suite with 92 functions with 80% discretized variables
+    * `rw-mario-gan`: a real-world single-objective suite with 28 scalable functions
+       (in dimensions 10, 20, 30, 40) 
+    * `rw-mario-gan-biobj`: a real-world bi-objective suite with 10 scalable functions 
+       (in dimensions 10, 20, 30, 40) 
+    * `rw-top-trumps`: a real-world single-objective integer suite with 5 scalable 
+       functions (in dimensions 88, 128, 168, 208) 
+    * `rw-top-trumps-biobj`: a real-world bi-objective integer suite with 3 scalable 
+       functions (in dimensions 88, 128, 168, 208)  
     * `toy`: a simple, probably easier-to-understand example for reading and testing
+    * `toy-socket`: a single-objective toy suite with constrained and unconstrained 
+       problems to showcase socket communication
+    * `toy-socket-biobj`: a bi-objective toy suite with constrained and unconstrained 
+       problems to showcase socket communication
+
+* code-experiments/rw-problems contains the socket communication servers, the two toy
+  socket suites and other real-world suites (downloaded when first used)
 
 * code-experiments/tools are a few meta-tools, mainly the amalgamate.py to merge all
   the C code into one file
@@ -604,7 +620,7 @@ N. Hansen, A. Auger, O. Mersmann, T. Tušar, D. Brockhoff. [COCO: A Platform for
 Links and Documentation <a name="Links"></a>
 -----------------------
 * The [_BBOB workshop series_](http://numbbo.github.io/workshops), which uses the
-  NumBBO/Coco framework extensively, can be tracked
+  NumBBO/COCO framework extensively, can be tracked
   [here](http://numbbo.github.io/workshops "BBOB Workshops")
 * Data sets from previous experiments for many algorithms are available
   at http://coco.gforge.inria.fr/doku.php?id=algorithms-bbob for the `bbob` test suite, 
@@ -628,6 +644,13 @@ Links and Documentation <a name="Links"></a>
   - for the **`bbob-mixint`** and **`bbob-biobj-mixint`** problem suites, we refer to 
     https://hal.inria.fr/hal-02067932/document and to
     http://coco.gforge.inria.fr/preliminary-bbob-mixint-documentation/bbob-mixint-doc.pdf
+  - for the **`rw-mario-gan`** and **`rw-mario-gan-biobj`** suites we refer to 
+    http://www.gm.fh-koeln.de/~naujoks/gbea/gamesbench_doc.html#mariogan)
+  - for the **`rw-top-trumps`** and **`rw-top-trumps-biobj`** suites we refer to 
+    http://www.gm.fh-koeln.de/~naujoks/gbea/gamesbench_doc.html#toptrumps
+  - for the **`toy-socket`** and **`toy-socket-biobj`** problem suites see their 
+    [short description](./code-experiments/rw-problems/toy_socket/README.md) as well as
+    [information about evaluation using sockets](./code-experiments/rw-problems/README.md)   
 * Online documentation of the NumBBO/Coco API (i.e. for the ANSI C code) is available at 
   http://numbbo.github.io/coco-doc/C
 * More detailed documentation on how the performance assessement is done can 
@@ -650,6 +673,8 @@ Comprehensive List of Documentations <a name="Documentations"></a>
   - bbob-mixint and bbob-biobj-mixint: https://hal.inria.fr/hal-02067932/document and
     http://coco.gforge.inria.fr/preliminary-bbob-mixint-documentation/bbob-mixint-doc.pdf
   - bbob-constrained (in progress): http://numbbo.github.io/coco-doc/bbob-constrained/functions/
+  - rw-mario-gan and rw-mario-gan-biobj: http://www.gm.fh-koeln.de/~naujoks/gbea/gamesbench_doc.html#mariogan
+  - rw-top-trumps and rw-top-trumps-biobj: http://www.gm.fh-koeln.de/~naujoks/gbea/gamesbench_doc.html#toptrumps
   
 
 * Performance assessment: http://numbbo.github.io/coco-doc/perf-assessment/

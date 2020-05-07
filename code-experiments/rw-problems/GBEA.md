@@ -89,7 +89,7 @@ The easiest way to run an experiment with the algorithm of your choice in Python
 replace the random search solver with a more elaborate algorithm and then run the script as 
 indicated in its documentation. 
 
-For example, to run the algorithm on the `rw-top-trumps` suite, you can either call
+For example, to run the algorithm on the `rw-top-trumps(-biobj)` suite, you can either call
 ```
 python do.py run-rw-top-trumps-server
 python code-experiments/build/python/rw_example_experiment.py suite_name=rw-top-trumps
@@ -129,14 +129,14 @@ python do.py run-c
 python do.py stop-socket-servers
 ```
 
-to run the algorithm on the `rw-top-trumps` suite or 
+to run the algorithm on the `rw-top-trumps(-biobj)` suite or 
 ```
 python do.py run-rw-mario-gan-server
 python do.py run-c
 python do.py stop-socket-servers
 ```
 
-to run it on the `rw-mario-gan` suite.
+to run it on the `rw-mario-gan(-biobj)` suite.
 
 The results will be saved to the `code-experiments/build/c/exdata` folder.
 
@@ -151,14 +151,14 @@ python do.py run-java
 python do.py stop-socket-servers
 ```
 
-to run the algorithm on the `rw-top-trumps` suite or 
+to run the algorithm on the `rw-top-trumps(-biobj)` suite or 
 ```
 python do.py run-rw-mario-gan-server
 python do.py run-java
 python do.py stop-socket-servers
 ```
 
-to run it on the `rw-mario-gan` suite.
+to run it on the `rw-mario-gan(-biobj)` suite.
 
 The results will be saved to the `code-experiments/build/java/exdata` folder.
 
@@ -173,14 +173,14 @@ python do.py run-matlab
 python do.py stop-socket-servers
 ```
 
-to run the algorithm on the `rw-top-trumps` suite or 
+to run the algorithm on the `rw-top-trumps(-biobj)` suite or 
 ```
 python do.py run-rw-mario-gan-server
 python do.py run-matlab
 python do.py stop-socket-servers
 ```
 
-to run it on the `rw-mario-gan` suite.
+to run it on the `rw-mario-gan(-biobj)` suite.
 
 Replace `run-matlab` with `run-octave` to run the experiment with Octave instead of Matlab.
 
