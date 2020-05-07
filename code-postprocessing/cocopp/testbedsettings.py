@@ -806,8 +806,8 @@ class TopTrumpsTestbed(Testbed):
         pptable_targetsOfInterest=pptable_targetsOfInterest,
         pptablemany_targetsOfInterest=pptable_targetsOfInterest,
         scenario=scenario_ttfixed,
-        reference_algorithm_filename=None,
-        reference_algorithm_displayname=None,
+        reference_algorithm_filename='',
+        reference_algorithm_displayname='',
         pptable_target_runlengths=[0.5, 1.2, 3, 10, 50],  # [0.5, 2, 10, 50]  # used in config for expensive setting
         pptables_target_runlengths=[2, 10, 50],  # used in config for expensive setting
         data_format=dataformatsettings.BBOBNewDataFormat(),

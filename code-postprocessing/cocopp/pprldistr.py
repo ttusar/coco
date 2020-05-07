@@ -178,7 +178,11 @@ def caption_single():
                                                   testbedsettings.testbed_name_cons,
                                                   testbedsettings.testbed_name_ls,
                                                   testbedsettings.testbed_name_mixint,
-                                                  testbedsettings.testbed_name_bi_mixint]:
+                                                  testbedsettings.testbed_name_bi_mixint,
+                                                  testbedsettings.testbed_name_tt,
+                                                  testbedsettings.testbed_name_mg,
+                                                  testbedsettings.testbed_name_tt_bi,
+                                                  testbedsettings.testbed_name_mg_bi]:
         # no best algorithm defined yet:
         figure_caption = caption_part_one + caption_left_fixed_targets + caption_right
     else:
@@ -250,7 +254,11 @@ def caption_two():
                                                 testbedsettings.testbed_name_cons,
                                                 testbedsettings.testbed_name_ls,
                                                 testbedsettings.testbed_name_mixint,
-                                                testbedsettings.testbed_name_bi_mixint]:
+                                                testbedsettings.testbed_name_bi_mixint,
+                                                testbedsettings.testbed_name_tt,
+                                                testbedsettings.testbed_name_mg,
+                                                testbedsettings.testbed_name_tt_bi,
+                                                testbedsettings.testbed_name_mg_bi]:
         # NOTE: no runlength-based targets supported yet
         figure_caption = caption_two_fixed
     elif testbedsettings.current_testbed.name in [testbedsettings.testbed_name_single,

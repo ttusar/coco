@@ -61,7 +61,11 @@ def get_table_caption():
                            if not (testbedsettings.current_testbed.name in (testbedsettings.testbed_name_bi_ext,
                                                                             testbedsettings.testbed_name_ls,
                                                                             testbedsettings.testbed_name_mixint,
-                                                                            testbedsettings.testbed_name_bi_mixint))
+                                                                            testbedsettings.testbed_name_bi_mixint,
+                                                                            testbedsettings.testbed_name_tt,
+                                                                            testbedsettings.testbed_name_mg,
+                                                                            testbedsettings.testbed_name_tt_bi,
+                                                                            testbedsettings.testbed_name_mg_bi))
                            else "") + r"""Best results are printed in bold.
         """ + r"""\cocoversion""")
 
@@ -70,7 +74,11 @@ def get_table_caption():
                                                 testbedsettings.testbed_name_cons,
                                                 testbedsettings.testbed_name_ls,
                                                 testbedsettings.testbed_name_mixint,
-                                                testbedsettings.testbed_name_bi_mixint]:
+                                                testbedsettings.testbed_name_bi_mixint,
+                                                testbedsettings.testbed_name_tt,
+                                                testbedsettings.testbed_name_mg,
+                                                testbedsettings.testbed_name_tt_bi,
+                                                testbedsettings.testbed_name_mg_bi]:
         # NOTE: no runlength-based targets supported yet
         table_caption = table_caption_one_noreference + table_caption_rest
     elif testbedsettings.current_testbed.name in [testbedsettings.testbed_name_single,

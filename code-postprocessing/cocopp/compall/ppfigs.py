@@ -77,7 +77,11 @@ def prepare_scaling_figure_caption():
                                                 testbedsettings.testbed_name_cons,
                                                 testbedsettings.testbed_name_ls,
                                                 testbedsettings.testbed_name_mixint,
-                                                testbedsettings.testbed_name_bi_mixint]:
+                                                testbedsettings.testbed_name_bi_mixint,
+                                                testbedsettings.testbed_name_tt,
+                                                testbedsettings.testbed_name_mg,
+                                                testbedsettings.testbed_name_tt_bi,
+                                                testbedsettings.testbed_name_mg_bi]:
         # NOTE: no runlength-based targets supported yet
         figure_caption = scaling_figure_caption_fixed
     elif testbedsettings.current_testbed.name in [testbedsettings.testbed_name_single,
@@ -135,7 +139,11 @@ def prepare_ecdfs_figure_caption():
                         testbedsettings.testbed_name_cons,
                         testbedsettings.testbed_name_ls,
                         testbedsettings.testbed_name_mixint,
-                        testbedsettings.testbed_name_bi_mixint]:
+                        testbedsettings.testbed_name_bi_mixint,
+                        testbedsettings.testbed_name_tt,
+                        testbedsettings.testbed_name_mg,
+                        testbedsettings.testbed_name_tt_bi,
+                        testbedsettings.testbed_name_mg_bi]:
         # NOTE: no runlength-based targets supported yet
         figure_caption = ecdfs_figure_caption_standard
     elif testbed.name in [testbedsettings.testbed_name_single,

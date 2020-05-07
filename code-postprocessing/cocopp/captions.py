@@ -129,7 +129,11 @@ def get_light_brown_line_text(testbedname):
         return r"""Light brown lines in the background show ECDFs for the most difficult target of all
             algorithms benchmarked during BBOB-2009."""
     elif (testbedname in [testbedsettings.testbed_name_ls,
-                          testbedsettings.testbed_name_mixint]):
+                          testbedsettings.testbed_name_mixint,
+                          testbedsettings.testbed_name_tt,
+                          testbedsettings.testbed_name_mg,
+                          testbedsettings.testbed_name_tt_bi,
+                          testbedsettings.testbed_name_mg_bi]):
         return ""
     else:
         warnings.warn("Current testbed not supported for this caption text.")
@@ -142,16 +146,22 @@ replace_dict = {
             if genericsettings.scaling_figures_with_boxes else "",
         '!!DF!!': lambda: r"""\Df""" if not (testbedsettings.current_testbed.name in [testbedsettings.testbed_name_bi,
                                                                                       testbedsettings.testbed_name_bi_ext,
-                                                                                      testbedsettings.testbed_name_bi_mixint]) else r"""\DI""",
+                                                                                      testbedsettings.testbed_name_bi_mixint,
+                                                                                      testbedsettings.testbed_name_tt_bi,
+                                                                                      testbedsettings.testbed_name_mg_bi]) else r"""\DI""",
         '!!FOPT!!': lambda: r"""\fopt""" if not (testbedsettings.current_testbed.name in [testbedsettings.testbed_name_bi,
                                                                                           testbedsettings.testbed_name_bi_ext,
-                                                                                          testbedsettings.testbed_name_bi_mixint]) else r"""\hvref""",
+                                                                                          testbedsettings.testbed_name_bi_mixint,
+                                                                                          testbedsettings.testbed_name_tt_bi,
+                                                                                          testbedsettings.testbed_name_mg_bi]) else r"""\hvref""",
         '!!DIVIDED-BY-DIMENSION!!': lambda: r"""divided by dimension and """ if ynormalize_by_dimension else "",
         '!!LIGHT-THICK-LINE!!': lambda: r"""The light thick line with diamonds indicates """ + get_reference_algorithm_text(False) + r""" for the most difficult target. """ if testbedsettings.current_testbed.reference_algorithm_filename else "",
         '!!F!!': lambda: r"""I_{\mathrm HV}^{\mathrm COCO}""" if (testbedsettings.current_testbed.name 
                                                                     in [testbedsettings.testbed_name_bi,
                                                                         testbedsettings.testbed_name_bi_ext,
-                                                                        testbedsettings.testbed_name_bi_mixint]) else "f",
+                                                                        testbedsettings.testbed_name_bi_mixint,
+                                                                        testbedsettings.testbed_name_tt_bi,
+                                                                        testbedsettings.testbed_name_mg_bi]) else "f",
         '!!THE-REF-ALG!!': lambda: get_reference_algorithm_text(False),
         '!!HARDEST-TARGET-LATEX!!': lambda: testbedsettings.current_testbed.hardesttargetlatex,
         '!!DIM!!': lambda: r"""\DIM""",
