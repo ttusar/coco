@@ -15,7 +15,8 @@ the details on running your algoirthms on these suites in one of the four COCO-s
 
 ## Preparation
 
-First download and install COCO following the instructions given [here](https://github.com/ttusar/coco/tree/gbea).
+First download and install COCO following the instructions given [here](https://github.com/ttusar/coco/tree/gbea)
+(note that the GBEA branch needs to be installed, do not change to the master branch).
 
 While the GBEA suites are not included in COCO directly, they are automatically downloaded and 
 compiled the first time you want to use them, so you don't need to handle them separately. 
