@@ -792,8 +792,7 @@ class TopTrumpsTestbed(Testbed):
         ppfig2_ftarget=1e-5,
         ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
         pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
-        pprldmany_target_values=
-        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        pprldmany_target_values=np.append(10 ** np.arange(0, -5.1, -0.1), [0]),
         instances_are_uniform=False,
         pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
         ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
@@ -848,8 +847,7 @@ class TopTrumpsBiobjTestbed(Testbed):
         ppfig2_ftarget=1e-5,
         ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
         pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
-        pprldmany_target_values=
-        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        pprldmany_target_values=np.append(10 ** np.arange(0, -5.1, -0.1), [0]),
         instances_are_uniform=False,
         pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
         ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
@@ -904,8 +902,7 @@ class MarioGanTestbed(Testbed):
         ppfig2_ftarget=1e-5,
         ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
         pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
-        pprldmany_target_values=
-        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        pprldmany_target_values=np.append(10 ** np.arange(0, -5.1, -0.1), [0]),
         instances_are_uniform=False,
         pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
         ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
@@ -960,8 +957,7 @@ class MarioGanBiobjTestbed(Testbed):
         ppfig2_ftarget=1e-5,
         ppfigdim_target_values=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
         pprldistr_target_values=(1e-1, 1e-2, 1e-3, 1e-5),
-        pprldmany_target_values=
-        np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
+        pprldmany_target_values=np.append(10 ** np.arange(0, -5.1, -0.1), [0]),
         instances_are_uniform=False,
         pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
         ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
