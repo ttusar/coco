@@ -776,6 +776,7 @@ class TopTrumpsTestbed(Testbed):
     pptable_target_runlengths = [0.5, 1.2, 3, 10, 50] # used in config for expensive setting
     pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7) # for pptable and pptablemany
     dimsOfInterest = (88, 128, 168, 208)
+    dimsOfInterest2 = (88, 168)
 
     settings = dict(
         info_filename='rw-top-trumps-benchmarkinfos.txt',
@@ -784,8 +785,8 @@ class TopTrumpsTestbed(Testbed):
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=88,  # auto-focus on this dimension in html
-        rldDimsOfInterest=dimsOfInterest,
-        tabDimsOfInterest=dimsOfInterest,
+        rldDimsOfInterest=dimsOfInterest2,
+        tabDimsOfInterest=dimsOfInterest2,
         hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
         ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
         ppfig2_ftarget=1e-5,
@@ -831,6 +832,7 @@ class TopTrumpsBiobjTestbed(Testbed):
     shortinfo_filename = 'rw-top-trumps-biobj-benchmarkshortinfos.txt'
     pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
     dimsOfInterest = (88, 128, 168, 208)
+    dimsOfInterest2 = (88, 168)
 
     settings = dict(
         info_filename='rw-top-trumps-biobj-benchmarkinfos.txt',
@@ -839,8 +841,8 @@ class TopTrumpsBiobjTestbed(Testbed):
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=88,  # auto-focus on this dimension in html
-        rldDimsOfInterest=dimsOfInterest,
-        tabDimsOfInterest=dimsOfInterest,
+        rldDimsOfInterest=dimsOfInterest2,
+        tabDimsOfInterest=dimsOfInterest2,
         hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
         ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
         ppfig2_ftarget=1e-5,
@@ -886,6 +888,7 @@ class MarioGanTestbed(Testbed):
     shortinfo_filename = 'rw-mario-gan-benchmarkshortinfos.txt'
     pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
     dimsOfInterest = (10, 20, 30, 40)
+    dimsOfInterest2 = (10, 30)
 
     settings = dict(
         info_filename='rw-mario-gan-benchmarkinfos.txt',
@@ -894,8 +897,8 @@ class MarioGanTestbed(Testbed):
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=10,  # auto-focus on this dimension in html
-        rldDimsOfInterest=dimsOfInterest,
-        tabDimsOfInterest=dimsOfInterest,
+        rldDimsOfInterest=dimsOfInterest2,
+        tabDimsOfInterest=dimsOfInterest2,
         hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
         ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
         ppfig2_ftarget=1e-5,
@@ -941,6 +944,7 @@ class MarioGanBiobjTestbed(Testbed):
     shortinfo_filename = 'rw-mario-gan-benchmarkshortinfos.txt'
     pptable_targetsOfInterest = (10, 1, 1e-1, 1e-2, 1e-3, 1e-5, 1e-7)  # for pptable and pptablemany
     dimsOfInterest = (10, 20, 30, 40)
+    dimsOfInterest2 = (10, 30)
 
     settings = dict(
         info_filename='rw-mario-gan-biobj-benchmarkinfos.txt',
@@ -949,8 +953,8 @@ class MarioGanBiobjTestbed(Testbed):
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=10,  # auto-focus on this dimension in html
-        rldDimsOfInterest=dimsOfInterest,
-        tabDimsOfInterest=dimsOfInterest,
+        rldDimsOfInterest=dimsOfInterest2,
+        tabDimsOfInterest=dimsOfInterest2,
         hardesttargetlatex='10^{-5}',  # used for ppfigs, pptable and pptables
         ppfigs_ftarget=1e-5,  # to set target runlength in expensive setting, use genericsettings.target_runlength
         ppfig2_ftarget=1e-5,
