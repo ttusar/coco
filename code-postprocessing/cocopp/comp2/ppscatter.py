@@ -68,18 +68,21 @@ def prepare_figure_caption():
         !!THE-REF-ALG!! for the given and a slightly easier
         target bracket the reference budget. """
 
-    caption_finish = r"""Markers on the upper or right edge indicate that the respective target
-        value was never reached. Markers represent dimension:
-        %d:{\color{cyan}+},
-        %d:{\color{green!45!black}$\triangledown$},
-        %d:{\color{blue}$\star$},
-        %d:$\circ$,
-        %d:{\color{red}$\Box$},
-        %d:{\color{magenta}$\Diamond$}. """ % tuple(testbedsettings.current_testbed.dimensions_to_display[:6])
+    if (len(testbedsettings.current_testbed.dimensions_to_display) >= 6):
+        caption_finish = r"""Markers on the upper or right edge indicate that the respective target
+            value was never reached. Markers represent dimension:
+            %d:{\color{cyan}+},
+            %d:{\color{green!45!black}$\triangledown$},
+            %d:{\color{blue}$\star$},
+            %d:$\circ$,
+            %d:{\color{red}$\Box$},
+            %d:{\color{magenta}$\Diamond$}. """ % tuple(testbedsettings.current_testbed.dimensions_to_display[:6])
                                                                       # the [:6] is a hack for the case of
                                                                       # both bbob and bbob-largescale data
                                                                       # post-processed together
-
+    else:
+        caption_finish = ''
+        warnings.warn('ppscatter figure caption not finalized properly')
 
     if genericsettings.runlength_based_targets:
         caption = caption_start_rlbased + caption_finish
