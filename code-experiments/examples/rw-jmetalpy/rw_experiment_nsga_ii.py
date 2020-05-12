@@ -42,7 +42,7 @@ def _get_socket_port(suite_name, start_port, current_batch):
     elif 'rw-mario-gan' in suite_name:
         return start_port + port_py_inc + current_batch
     else:
-        raise ValueError('Suite {} not supported'.format(suite_name))
+        return 0
     
     
 def parse_arguments(argv):
@@ -58,7 +58,7 @@ def parse_arguments(argv):
     budget_multiplier = 10
     batches = 1
     # Parse the command line arguments
-    for arg in argv[1:]:
+    for arg in argv:
         if arg[:6] == 'suite=':
             suite_name = arg[6:]
         elif arg[:14] == 'suite_options=':
@@ -92,9 +92,9 @@ def parse_arguments(argv):
                 current_batch=current_batch, port=port)
 
 
-if __name__ == '__main__':
+def run_experiment(argv=[]):
     # Parse the command-line arguments
-    params = parse_arguments(sys.argv)
+    params = parse_arguments(argv)
     suite_name = params['suite_name']
     suite_options = params['suite_options']
     observer_name = params['observer_name']
@@ -143,3 +143,7 @@ if __name__ == '__main__':
             observer.signal_restart(problem)
             algorithm.run()
         minimal_print(problem, final=problem.index == len(suite) - 1)
+
+
+if __name__ == '__main__':
+    run_experiment(sys.argv)
