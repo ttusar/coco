@@ -46,7 +46,7 @@ def _get_socket_port(suite_name, start_port, current_batch):
     elif 'rw-mario-gan' in suite_name:
         return start_port + port_py_inc + current_batch
     else:
-        raise ValueError('Suite {} not supported'.format(suite_name))
+        return 0
     
     
 def parse_arguments(argv):
