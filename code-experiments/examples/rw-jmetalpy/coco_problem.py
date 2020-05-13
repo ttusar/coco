@@ -73,8 +73,6 @@ class CocoProblem(JMetalProblem[CocoSolution], ABC):
     def evaluate(self, solution: CocoSolution) -> CocoSolution:
         if len(solution.constraints) > 0:
             solution.constraints = self.problem.constraint(solution.variables)
-        for i in range(self.number_of_integer_variables):
-            solution.variables[i] = round(solution.variables[i])
         solution.objectives = self.problem(solution.variables)
         return solution
 
