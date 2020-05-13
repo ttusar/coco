@@ -67,7 +67,7 @@ class CocoProblem(JMetalProblem[CocoSolution], ABC):
         )
         new_solution.variables = [
             random.uniform(self.lower_bound[i]*1.0, self.upper_bound[i]*1.0)
-            for i in range(self.number_of_integer_variables, self.number_of_variables)]
+            for i in range(self.number_of_variables)]
         return new_solution
 
     def evaluate(self, solution: CocoSolution) -> CocoSolution:
