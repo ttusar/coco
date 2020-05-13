@@ -152,5 +152,6 @@ if __name__ == '__main__':
                 # Only the bbob(-biobj) observer support signaling restarts
                 if b'bbob' in observer.name:
                     observer.signal_restart(problem)
-            solver(problem, lb, ub, budget=budget_multiplier * problem.dimension)
+            solver(problem, lb, ub,
+                   budget=budget_multiplier * problem.dimension - problem.evaluations)
         minimal_print(problem, final=problem.index == len(suite) - 1)
