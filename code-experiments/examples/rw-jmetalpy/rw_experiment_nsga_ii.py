@@ -121,8 +121,8 @@ def run_experiment(argv=[]):
             continue
         # Observe the problem
         problem.observe_with(observer)
-        # Population size should be an even number
-        population_size = int(problem.dimension / 2)
+        # Population size must be an even number
+        population_size = max(int(problem.dimension / 2), 10)
         population_size += 1 if population_size % 2 != 0 else 0
         # Restart the solver while neither the problem is solved nor the budget is exhausted
         # (not particularly useful here since NSGAII does not (yet) support restarts)
