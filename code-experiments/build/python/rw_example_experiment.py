@@ -109,7 +109,7 @@ if __name__ == '__main__':
     port = params['port']
 
     # Prepare the suite
-    suite_options = 'port: {} {}'.format(params['port'], suite_options)
+    suite_options = 'port: {} {}'.format(port, suite_options)
     suite = cocoex.Suite(suite_name, '', suite_options)
     num_obj = suite[0].number_of_objectives
     # Prepare the observers

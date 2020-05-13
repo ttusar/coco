@@ -105,9 +105,8 @@ def run_experiment(argv=[]):
     port = params['port']
 
     # Prepare the suite
-    suite_options = 'port: {} {}'.format(params['port'], suite_options)
+    suite_options = 'port: {} {}'.format(port, suite_options)
     suite = cocoex.Suite(suite_name, '', suite_options)
-    num_obj = suite[0].number_of_objectives
     # Prepare the observer
     observer = cocoex.Observer(observer_name, '{} result_folder: {}-{}{}'.format(
         observer_options, suite_name, 'NSGA-II',
