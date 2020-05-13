@@ -53,8 +53,8 @@ class CocoProblem(JMetalProblem[CocoSolution], ABC):
         self.upper_bound = problem.upper_bounds
         if use_as_continuous:
             for i in range(self.number_of_integer_variables):
-                self.lower_bound[i] -= 0.5
-                self.upper_bound[i] += 0.5
+                self.lower_bound[i] -= (0.5 - 1e-6)
+                self.upper_bound[i] += (0.5 - 1e-6)
         self.reference_point = problem.largest_fvalues_of_interest
 
     def create_solution(self) -> CocoSolution:
