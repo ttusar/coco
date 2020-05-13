@@ -125,22 +125,23 @@ def run_experiment(argv=[]):
         # Population size should be an even number
         population_size = int(problem.dimension / 2)
         population_size += 1 if population_size % 2 != 0 else 0
-        # Use jMetalPy's NSGA-II algorithm
-        algorithm = NSGAII(
-            problem=CocoProblem(problem),
-            population_size=population_size,
-            offspring_population_size=population_size,
-            mutation=PolynomialMutation(
-                probability=1.0 / problem.dimension, distribution_index=20),
-            crossover=SBXCrossover(probability=1.0, distribution_index=20),
-            termination_criterion=StoppingByEvaluations(
-                max_evaluations=budget_multiplier * problem.dimension),
-            dominance_comparator=DominanceComparator()
-        )
         # Restart the solver while neither the problem is solved nor the budget is exhausted
+        # (not particularly useful here since NSGAII does not (yet) support restarts)
         while (problem.evaluations < problem.dimension * budget_multiplier
                and not problem.final_target_hit):
             observer.signal_restart(problem)
+            # Use jMetalPy's NSGA-II algorithm
+            algorithm = NSGAII(
+                problem=CocoProblem(problem),
+                population_size=population_size,
+                offspring_population_size=population_size,
+                mutation=PolynomialMutation(
+                    probability=1.0 / problem.dimension, distribution_index=20),
+                crossover=SBXCrossover(probability=1.0, distribution_index=20),
+                termination_criterion=StoppingByEvaluations(
+                    max_evaluations=budget_multiplier * problem.dimension - problem.evaluations),
+                dominance_comparator=DominanceComparator()
+            )
             algorithm.run()
         minimal_print(problem, final=problem.index == len(suite) - 1)
 
