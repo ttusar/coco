@@ -40,7 +40,9 @@ class CocoSolution(FloatSolution):
 class CocoProblem(JMetalProblem[CocoSolution], ABC):
     """ Class representing a COCO problem. """
 
-    def __init__(self, problem: Problem):
+    def __init__(self, problem: Problem, use_as_continuous=True):
+        """If use_as_continuous, the bounds of the integer variables are shifted so that an
+        algorithm can use them as if they were continuous"""
         super(CocoProblem, self).__init__()
         self.problem = problem
         self.number_of_variables = problem.dimension
@@ -49,6 +51,11 @@ class CocoProblem(JMetalProblem[CocoSolution], ABC):
         self.number_of_integer_variables = problem.number_of_integer_variables
         self.lower_bound = problem.lower_bounds
         self.upper_bound = problem.upper_bounds
+        if use_as_continuous:
+            for i in range(self.number_of_integer_variables):
+                self.lower_bound[i] -= 0.5
+                self.upper_bound[i] += 0.5
+        self.reference_point = problem.largest_fvalues_of_interest
 
     def create_solution(self) -> CocoSolution:
         new_solution = CocoSolution(
@@ -58,23 +65,16 @@ class CocoProblem(JMetalProblem[CocoSolution], ABC):
             number_of_constraints=self.number_of_constraints,
             number_of_integer_variables=self.number_of_integer_variables
         )
-
-        # Adjustment of integer variables for continuous algorithms
-        integer_variables = \
-            [int(round(random.uniform(self.lower_bound[i]*1.0 - 0.5, self.upper_bound[i]*1.0 + 0.5)))
-             for i in range(self.number_of_integer_variables)]
-
-        float_variables = \
-            [random.uniform(self.lower_bound[i]*1.0, self.upper_bound[i]*1.0)
-             for i in range(self.number_of_integer_variables, self.number_of_variables)]
-
-        new_solution.variables = integer_variables + float_variables
-
+        new_solution.variables = [
+            random.uniform(self.lower_bound[i]*1.0, self.upper_bound[i]*1.0)
+            for i in range(self.number_of_integer_variables, self.number_of_variables)]
         return new_solution
 
     def evaluate(self, solution: CocoSolution) -> CocoSolution:
         if len(solution.constraints) > 0:
             solution.constraints = self.problem.constraint(solution.variables)
+        for i in range(self.number_of_integer_variables):
+            solution.variables[i] = round(solution.variables[i])
         solution.objectives = self.problem(solution.variables)
         return solution
 
