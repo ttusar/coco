@@ -17,7 +17,7 @@ Arguments:
 
 Example:
     # Runs the 1st of 4 batches of the rw-top-trumps-biobj suite
-    `python rw_experiment_nsga_ii.py batches=4 batch=1`
+    `python rw_experiment_jmetal.py batches=4 batch=1`
 
 The socket server needs to be running when this script is called. This is done via
 `python do.py run-rw-top-trumps-server port=7001 batch=1`
