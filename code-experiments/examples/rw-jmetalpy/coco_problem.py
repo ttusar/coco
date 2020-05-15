@@ -1,7 +1,7 @@
 """Classes needed to solve COCO problems using jMetalPy"""
 
 import random
-from cocoex import Problem
+from cocoex import Problem as CocoexProblem
 from jmetal.core.solution import FloatSolution
 from jmetal.core.problem import Problem as JMetalProblem
 from typing import List, TypeVar
@@ -40,7 +40,7 @@ class CocoSolution(FloatSolution):
 class CocoProblem(JMetalProblem[CocoSolution], ABC):
     """ Class representing a COCO problem. """
 
-    def __init__(self, problem: Problem, use_as_continuous=True):
+    def __init__(self, problem: CocoexProblem, use_as_continuous=True):
         """If use_as_continuous, the bounds of the integer variables are shifted so that an
         algorithm can use them as if they were continuous"""
         super(CocoProblem, self).__init__()
@@ -68,6 +68,8 @@ class CocoProblem(JMetalProblem[CocoSolution], ABC):
         new_solution.variables = [
             random.uniform(self.lower_bound[i]*1.0, self.upper_bound[i]*1.0)
             for i in range(self.number_of_variables)]
+        for i in range(self.number_of_integer_variables):
+            new_solution.variables[i] = round(new_solution.variables[i])
         return new_solution
 
     def evaluate(self, solution: CocoSolution) -> CocoSolution:
@@ -77,4 +79,4 @@ class CocoProblem(JMetalProblem[CocoSolution], ABC):
         return solution
 
     def get_name(self) -> str:
-        return self.problem.name
+        return self.problem.id
