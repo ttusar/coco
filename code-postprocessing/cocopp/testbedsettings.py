@@ -743,8 +743,11 @@ class GECCOBBOBBiObjMixintTestbed(GECCOBiObjExtBBOBTestbed):
     """
 
     dimsOfInterest = (10, 40)
+    shortinfo_filename = 'bbob-biobj-ext-benchmarkshortinfos.txt'
 
     settings = dict(
+        info_filename='bbob-biobj-ext-benchmarkinfos.txt',
+        shortinfo_filename=shortinfo_filename,
         name=testbed_name_bi_mixint,
         first_dimension=5,
         dimensions_to_display=[5, 10, 20, 40, 80, 160],
