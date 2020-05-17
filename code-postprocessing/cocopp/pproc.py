@@ -206,7 +206,7 @@ class RunlengthBasedTargetValues(TargetValues):
         >>> # make sure to use the right `bbob` test suite for the test below:
         >>> cocopp.genericsettings.isNoisy = False
         >>> cocopp.genericsettings.isNoiseFree = False
-        >>> cocopp.config.config('GECCOBBOBTestbed')
+        >>> cocopp.config.config('bbob')
         >>> targets = cocopp.pproc.RunlengthBasedTargetValues([0.5, 1.2, 3, 10, 50])  # by default times_dimension==True
         >>> # make also sure to have loaded the corresponding reference algo
         >>> # from BBOB-2009:
@@ -625,8 +625,6 @@ class DataSet(object):
         funvals
         generateRLData
         get_data_format
-        get_suite
-        get_testbed_name
         indexFiles
         info
         instancenumbers
@@ -646,8 +644,8 @@ class DataSet(object):
         reference_values
         splitByTrials
         success_ratio
+        suite_name
         target
-        testbed_name
         >>> all(ds.evals[:, 0] == ds.target)  # first column of ds.evals is the "target" f-value
         True
         >>> # investigate row 0,10,20,... and of the result columns 0,5,6, index 0 is ftarget
@@ -708,7 +706,7 @@ class DataSet(object):
         >>> assert 2.01200000e+03 <= (dslist[2].evals[-1])[-1] <= 2.01200001e+03
         >>> # because testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] was None
         >>> cocopp.testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] = [1, 3]
-        >>> cocopp.config.config('GECCOBBOBTestbed') # make sure that settings are used
+        >>> cocopp.config.config('bbob') # make sure that settings are used
         >>> dslist2 = cocopp.load(infoFile)
           Data consistent according to consistency_check() in pproc.DataSet
         >>> dslist2[2].instancenumbers
@@ -719,7 +717,7 @@ class DataSet(object):
         >>> assert 2.20700000e+03 <= (dslist2[2].evals[-1])[-1] <= 2.20700001e+03
         >>> # set things back to cause no troubles elsewhere:
         >>> cocopp.testbedsettings.GECCOBBOBTestbed.settings['instancesOfInterest'] = None
-        >>> cocopp.config.config('GECCOBBOBTestbed') # make sure that settings are used
+        >>> cocopp.config.config('bbob') # make sure that settings are used
 
     """
 
@@ -748,10 +746,6 @@ class DataSet(object):
     def isBiobjective(self):
         return hasattr(self, 'indicator')
 
-    def get_testbed_name(self):
-        suite = self.get_suite()
-        return testbedsettings.get_testbed_from_suite(suite)
-
     def get_data_format(self):
         # TODO: data_format is a specification of the files written by the 
         # experiment loggers. I believe it was never meant to be a specification
@@ -762,7 +756,9 @@ class DataSet(object):
             return 'bbob-biobj'
         return None
 
-    def get_suite(self):
+    @property
+    def suite_name(self):
+        """Returns a string, with the name of the DataSet's underlying test suite."""
         suite = None
         if hasattr(self, 'suite'):
             suite = getattr(self, 'suite')
@@ -828,10 +824,9 @@ class DataSet(object):
         self.isFinalized = []
         self.readmaxevals = []
         self.readfinalFminusFtarget = []
-        self.testbed_name = self.get_testbed_name()
 
         if not testbedsettings.current_testbed:
-            testbedsettings.load_current_testbed(self.testbed_name, TargetValues)
+            testbedsettings.load_current_testbed(self.suite_name, TargetValues)
 
         # Split line in data file name(s) and run time information.
         parts = data.split(', ')
@@ -1095,7 +1090,7 @@ class DataSet(object):
         elif len(self.instancenumbers) < expectedNumberOfInstances:
             is_consistent = False
             warnings.warn('  less than ' + str(expectedNumberOfInstances) +
-                                ' instances in ' + 
+                                ' instances in the set ' + 
                                 str(self.instancenumbers) + 
                                 ' (f' + str(self.funcId) + ', ' +
                                 str(self.dim) + 'D)')
@@ -2747,23 +2742,22 @@ def processInputArgs(args, process_background_algorithms=False):
 
 
 def process_arguments(args, current_hash, dictAlg, dsList, sortedAlgs):
-    for i in args:
-        i = i.strip()
-        if i == '':  # might cure an lf+cr problem when using cywin under Windows
+    for alg in args:
+        alg = alg.strip().rstrip(os.path.sep)  # lstrip would not be the same folder anymore
+        if alg == '':  # might cure an lf+cr problem when using cywin under Windows
             continue
-        if findfiles.is_recognized_repository_filetype(i):
-            filelist = findfiles.main(i)
+        if findfiles.is_recognized_repository_filetype(alg):
+            filelist = findfiles.main(alg)
             # Do here any sorting or filtering necessary.
             # filelist = list(i for i in filelist if i.count('ppdata_f005'))
             tmpDsList = DataSetList(filelist)
             for ds in tmpDsList:
-                ds._data_folder = i
-            # Nota: findfiles will find all info AND pickle files in folder i.
+                ds._data_folder = alg
+            # Nota: findfiles will find all info AND pickle files in folder alg.
             # No problem should arise if the info and pickle files have
             # redundant information. Only, the process could be more efficient
             # if pickle files were in a whole other location.
 
-            alg = i.rstrip(os.path.sep)
             if current_hash is not None and current_hash != tmpDsList.get_reference_values_hash():
                 warnings.warn(" Reference values for the algorithm '%s' are different!" % alg)
 
@@ -2779,13 +2773,13 @@ def process_arguments(args, current_hash, dictAlg, dsList, sortedAlgs):
             if all(i != alg for i in sortedAlgs):
                 sortedAlgs.append(alg)
                 dictAlg[alg] = tmpDsList
-        elif os.path.isfile(i):
+        elif os.path.isfile(alg):
             # TODO: a zipped tar file should be unzipped here, see findfiles.py
-            txt = 'The post-processing cannot operate on the single file ' + str(i)
+            txt = 'The post-processing cannot operate on the single file ' + str(alg)
             warnings.warn(txt)
             continue
         else:
-            txt = "Input folder '" + str(i) + "' could not be found."
+            txt = "Input folder '" + str(alg) + "' could not be found."
             raise Exception(txt)
 
 
@@ -2829,12 +2823,21 @@ def dictAlgByDim(dictAlg):
     for d in dims:
         for alg in dictAlg:
             tmp = DataSetList()
-            try:
+            if d in tmpdictAlg[alg]:
                 tmp = tmpdictAlg[alg][d]
-            except KeyError:
-                txt = ('No data for algorithm %s in %d-D.'
-                       % (alg, d))
-                warnings.warn(txt)
+            elif testbedsettings.current_testbed:
+                try:
+                    if d in testbedsettings.current_testbed.dimensions_to_display[:-1]:
+                        txt = ('No data for algorithm %s in %d-D.'
+                            % (alg, d))
+                        warnings.warn(txt)
+                except AttributeError: pass
+            # try:
+            #     tmp = tmpdictAlg[alg][d]
+            # except KeyError:
+            #     txt = ('No data for algorithm %s in %d-D.'
+            #            % (alg, d))
+            #     warnings.warn(txt)
 
             if alg in res.setdefault(d, {}):
                 txt = ('Duplicate data for algorithm %s in %d-D.'
@@ -2905,9 +2908,10 @@ def dictAlgByFun(dictAlg):
             try:
                 tmp = tmpdictAlg[alg][f]
             except KeyError:
-                txt = ('No data for algorithm %s on function %d.'
-                       % (alg, f)) # This message is misleading.
-                warnings.warn(txt)
+                if genericsettings.warning_level >= 10:
+                    txt = ('No data for algorithm %s on function %d.'
+                        % (alg, f)) # This message is misleading.
+                    warnings.warn(txt)
 
             if alg in res.setdefault(f, {}):
                 txt = ('Duplicate data for algorithm %s on function %d-D.'

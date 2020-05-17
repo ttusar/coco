@@ -27,18 +27,20 @@ from .toolsdivers import truncate_latex_command_file, print_done, diff_attr
 from .ppfig import Usage
 from .compall import ppfigs
 
+import matplotlib.pyplot as plt
 matplotlib.use('Agg')  # To avoid window popup and use without X forwarding
 
 __all__ = ['main']
 
 # Used by getopt:
-shortoptlist = "hvo:"
-longoptlist = ["help", "output-dir=", "noisy", "noise-free",
+short_options = "hvo:"
+long_options = ["help", "output-dir=", "noisy", "noise-free",
                "tab-only", "fig-only", "rld-only", "no-rld-single-fcts",
                "verbose", "settings=", "conv",
                "expensive", "runlength-based",
                "los-only", "crafting-effort=", "pickle",
-               "sca-only", "no-svg"]
+               "sca-only", "no-svg",
+               "include-fonts"]
 # thereby, "los-only", "crafting-effort=", and "pickle" affect only rungeneric1
 # and "sca-only" only affects rungenericmany
 
@@ -194,6 +196,11 @@ def main(argv=None):
 
             prepares also convergence plots with median function values over time
 
+        --include-fonts
+
+            generated pdfs will have the fonts included (important for ACM style
+            LaTeX submissions)
+
 
     Exceptions raised:
 
@@ -221,8 +228,8 @@ def main(argv=None):
     also be presented as a list of strings.
 
     """
-    global shortoptlist
-    global longoptlist
+    # global shortoptlist
+    # global longoptlist
 
     if argv is None:
         argv = sys.argv[1:]
@@ -230,8 +237,8 @@ def main(argv=None):
         argv = argv.split()
     try:
         try:
-            opts, args = getopt.getopt(argv, shortoptlist,
-                                       longoptlist +
+            opts, args = getopt.getopt(argv, short_options,
+                                       long_options +
                                        ['include-single', 'in-a-hurry=', 'input-path='])
         except getopt.error as msg:
             raise Usage(msg)
@@ -248,11 +255,16 @@ def main(argv=None):
 
         # Process options
         shortoptlist = list("-" + i.rstrip(":")
-                            for i in _split_short_opt_list(shortoptlist))
-        shortoptlist.remove("-o")
-        longoptlist = list("--" + i.rstrip("=") for i in longoptlist)
+                            for i in _split_short_opt_list(short_options))
+        if "-o" in shortoptlist:
+            shortoptlist.remove("-o") # 2020/6/5: TODO: not sure why this is done
+        longoptlist = list("--" + i.rstrip("=") for i in long_options)
 
-
+        plt.rc("axes", **genericsettings.rcaxes)
+        plt.rc("xtick", **genericsettings.rctick)
+        plt.rc("ytick", **genericsettings.rctick)
+        plt.rc("font", **genericsettings.rcfont)
+        plt.rc("legend", **genericsettings.rclegend)
 
         genopts = []
         outputdir = genericsettings.outputdir
@@ -293,6 +305,8 @@ def main(argv=None):
                     genericsettings.inputCrE = float(a)
                 except ValueError:
                     raise Usage('Expect a valid float for flag crafting-effort.')
+            elif o == "--include-fonts":
+                plt.rc('pdf', fonttype=42)
             elif o == "--tab-only":
                 genericsettings.isFig = False
                 genericsettings.isRLDistr = False
@@ -422,6 +436,8 @@ def main(argv=None):
         if mess:
             print('Setting changes in `cocopp.genericsettings` compared to default:')
             print(mess, end='')
+
+        plt.rcdefaults()
 
         print_done('ALL done')
         if genericsettings.interactive_mode:

@@ -6,6 +6,8 @@ import warnings
 
 from . import dataformatsettings
 
+inf_like = 3e21  # what is considers as inf in logged data, here to make an inf target
+
 scenario_rlbased = 'rlbased'
 scenario_fixed = 'fixed'
 scenario_biobjfixed = 'biobjfixed'
@@ -29,18 +31,18 @@ all_scenarios = [scenario_rlbased, scenario_fixed,
                  scenario_biobjmixintfixed, scenario_ttfixed, scenario_ttbifixed,
                  scenario_mgfixed, scenario_mgbifixed]
 
-testbed_name_single = 'bbob'
-testbed_name_single_noisy = 'bbob-noisy'
-testbed_name_bi = 'bbob-biobj'
-testbed_name_bi_ext = 'bbob-biobj-ext'
-testbed_name_cons = 'bbob-constrained'
-testbed_name_ls = 'bbob-largescale'
-testbed_name_mixint = 'bbob-mixint'
-testbed_name_bi_mixint = 'bbob-biobj-mixint'
-testbed_name_tt = 'rw-top-trumps'
-testbed_name_tt_bi = 'rw-top-trumps-biobj'
-testbed_name_mg = 'rw-mario-gan'
-testbed_name_mg_bi = 'rw-mario-gan-biobj'
+suite_name_single = 'bbob'
+suite_name_single_noisy = 'bbob-noisy'
+suite_name_bi = 'bbob-biobj'
+suite_name_bi_ext = 'bbob-biobj-ext'
+suite_name_cons = 'bbob-constrained'
+suite_name_ls = 'bbob-largescale'
+suite_name_mixint = 'bbob-mixint'
+suite_name_bi_mixint = 'bbob-biobj-mixint'
+suite_name_tt = 'rw-top-trumps'
+suite_name_tt_bi = 'rw-top-trumps-biobj'
+suite_name_mg = 'rw-mario-gan'
+suite_name_mg_bi = 'rw-mario-gan-biobj'
 
 default_suite_single = 'bbob'
 default_suite_single_noisy = 'bbob-noisy'
@@ -69,12 +71,12 @@ suite_to_testbed = {
     'bbob-constrained': default_testbed_cons,
     'bbob-largescale': default_testbed_ls,
     'bbob-mixint': default_testbed_mixint,
-    'bbob-biobj-mixint': default_testbed_bi_mixint,
+    'bbob-biobj-mixint': 'GECCOBBOBBiObjMixintTestbed',
     'bbob-JOINED-bbob-largescale': 'BBOBLargeScaleJOINEDTestbed',
-    testbed_name_tt: default_testbed_tt,
-    testbed_name_tt_bi: default_testbed_tt_bi,
-    testbed_name_mg: default_testbed_mg,
-    testbed_name_mg_bi: default_testbed_mg_bi,
+    suite_name_tt: default_testbed_tt,
+    suite_name_tt_bi: default_testbed_tt_bi,
+    suite_name_mg: default_testbed_mg,
+    suite_name_mg_bi: default_testbed_mg_bi,
 }
 
 
@@ -83,15 +85,22 @@ def reset_current_testbed():
     current_testbed = None
 
 
-def load_current_testbed(testbed_name, target_values):
+def load_current_testbed(suite_name, target_values):
+    """ Loads testbed class corresponding to suite_name.
+
+    The parameter suite_name is a string, defining the
+    test suite to be loaded, for example `bbob`, `bbob-biobj`,
+    `bbob-largescale`, ...
+    """
     global current_testbed
 
+    testbed_name = get_testbed_from_suite(suite_name)
     if testbed_name in globals():
         constructor = globals()[testbed_name]
         current_testbed = constructor(target_values)
     else:
-        raise ValueError('Testbed class %s does not exist. Add it to testbedsettings.py to process this data.'
-                         % testbed_name)
+        raise ValueError('Testbed class %s (corresponding to suite %s) does not exist.\n  Add it to testbedsettings.py to process this data.'
+                         % (testbed_name, suite_name))
     return current_testbed
 
 
@@ -240,7 +249,7 @@ class GECCOBBOBTestbed(Testbed):
     settings = dict(
         info_filename='bbob-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_single,
+        name=suite_name_single,
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=(2, 3, 5, 10, 20, 40),
         goto_dimension=20,  # auto-focus on this dimension in html
@@ -253,7 +262,7 @@ class GECCOBBOBTestbed(Testbed):
         pprldistr_target_values=(10., 1e-1, 1e-4, 1e-8),
         pprldmany_target_values=10 ** np.arange(2, -8.2, -0.2),
         pprldmany_target_range_latex='$10^{[-8..2]}$',
-        ppscatter_target_values=np.logspace(-8, 2, 21),  # 21 was 46
+        ppscatter_target_values=np.array(list(np.logspace(-8, 2, 21)) + [inf_like]),  # 21 was 46
         rldValsOfInterest=(10, 1e-1, 1e-4, 1e-8),  # possibly changed in config
         ppfvdistr_min_target=1e-8,
         functions_with_legend=(1, 24),
@@ -327,7 +336,7 @@ class GECCOBBOBTestbed(Testbed):
         bbob_detected = False
         bbob_largescale_detected = False
         for ds in dsl:
-            detected_suite = ds.get_suite()
+            detected_suite = ds.suite_name
             if detected_suite == 'bbob':
                 bbob_detected = True
             elif detected_suite == 'bbob-largescale':
@@ -338,13 +347,12 @@ class GECCOBBOBTestbed(Testbed):
                 raise ValueError("Data from %s suite is not "
                                  "compatible with other data from "
                                  "the bbob and/or bbob-largescale "
-                                 "suites" % str(ds.get_suite()))
+                                 "suites" % str(ds.suite_name))
 
         # now update all elements in flattened list if needed:
         if bbob_detected and bbob_largescale_detected:
             for ds in dsl:
-                ds.get_suite = lambda: 'bbob-JOINED-bbob-largescale'
-                ds.testbed_name = 'bbob-largescale'  # used mainly for display in plots
+                ds.suite = 'bbob-largescale'  # to be available via ds.suite_name
             # make sure that the right testbed is loaded:
 
         return dsl
@@ -403,7 +411,7 @@ class CONSBBOBTestbed(GECCOBBOBTestbed):
         info_filename='bbob-constrained-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
         short_names=get_short_names(shortinfo_filename),
-        name=testbed_name_cons,
+        name=suite_name_cons,
         functions_with_legend=(1, 48),
         first_function_number=1,
         last_function_number=48,
@@ -418,7 +426,7 @@ class CONSBBOBTestbed(GECCOBBOBTestbed):
         pprldistr_target_values = (10., 1e-1, 1e-4, min_target),
         pprldmany_target_values = 10 ** np.arange(2, min_target_exponent, -0.2),
         pprldmany_target_range_latex = '$10^{[' + min_target_latex + '..2]}$',
-        ppscatter_target_values = np.logspace(min_target_scatter, 2, 21),
+        ppscatter_target_values = np.array(list(np.logspace(min_target_scatter, 2, 21)) + [inf_like]),
         rldValsOfInterest=(10, 1e-1, 1e-4, min_target),  # possibly changed in config
         pptable_ftarget = min_target,  # value for determining the success ratio in all tables
         pptable_targetsOfInterest = pptable_targetsOfInterest,
@@ -462,7 +470,7 @@ class GECCOBBOBNoisyTestbed(GECCOBBOBTestbed):
         info_filename='bbob-noisy-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
         short_names=get_short_names(shortinfo_filename),
-        name=testbed_name_single, # TODO: until we clean the code which uses this name, we need to use it also here.
+        name=suite_name_single, # TODO: until we clean the code which uses this name, we need to use it also here.
         functions_with_legend=(101, 130),
         first_function_number=101,
         last_function_number=130,
@@ -505,7 +513,7 @@ class GECCOBiObjBBOBTestbed(Testbed):
     settings = dict(
         info_filename='bbob-biobj-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_bi,
+        name=suite_name_bi,
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=(2, 3, 5, 10, 20, 40),
         goto_dimension=20,  # auto-focus on this dimension in html
@@ -520,7 +528,7 @@ class GECCOBiObjBBOBTestbed(Testbed):
         np.append(np.append(10 ** np.arange(0, -5.1, -0.1), [0]), -10 ** np.arange(-5, -3.9, 0.2)),
         instances_are_uniform = False,
         pprldmany_target_range_latex='$\{-10^{-4}, -10^{-4.2}, $ $-10^{-4.4}, -10^{-4.6}, -10^{-4.8}, -10^{-5}, 0, 10^{-5}, 10^{-4.9}, 10^{-4.8}, \dots, 10^{-0.1}, 10^0\}$',
-        ppscatter_target_values=np.logspace(-5, 1, 21),  # 21 was 51
+        ppscatter_target_values=np.array(list(np.logspace(-5, 1, 21)) + [inf_like]),  # 21 was 51
         rldValsOfInterest=(1e-1, 1e-2, 1e-3, 1e-4, 1e-5),
         ppfvdistr_min_target=1e-5,
         functions_with_legend=(1, 30, 31, 55),
@@ -578,22 +586,21 @@ class GECCOBiObjBBOBTestbed(Testbed):
         bbobbiobj_detected = False
         bbobbiobjext_detected = False
         for ds in dsl:
-            if ds.get_suite() == 'bbob-biobj':
+            if ds.suite_name == 'bbob-biobj':
                 bbobbiobj_detected = True
-            elif ds.get_suite() == 'bbob-biobj-ext':
+            elif ds.suite_name == 'bbob-biobj-ext':
                 bbobbiobjext_detected = True
             else:
                 raise ValueError("Data from %s suite is not "
                                  "compatible with other data from "
                                  "the bbob-biobj and/or bbob-biobj-ext "
-                                 "suites" % str(ds.get_suite()))
+                                 "suites" % str(ds.suite_name))
 
         # now filter all elements in flattened list if needed:
         if bbobbiobj_detected and bbobbiobjext_detected:
             dsl = list(filter(lambda ds: ds.funcId <= 55, dsl))
             for ds in dsl:
-                ds.get_suite = lambda: 'bbob-biobj'
-                ds.testbed_name = 'bbob-biobj'   # hack, see issue #1933
+                ds.suite = 'bbob-biobj'  # to be available via ds.suite_name
         return dsl
 
 
@@ -607,7 +614,7 @@ class GECCOBiObjExtBBOBTestbed(GECCOBiObjBBOBTestbed):
     settings = dict(
         info_filename='bbob-biobj-ext-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_bi_ext,
+        name=suite_name_bi_ext,
         short_names=get_short_names(shortinfo_filename),
         functions_with_legend=(1, 30, 31, 60, 61, 92),
         first_function_number=1,
@@ -646,7 +653,7 @@ class BBOBLargeScaleTestbed(GECCOBBOBTestbed):
     settings = dict(
         info_filename='bbob-largescale-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_ls,
+        name=suite_name_ls,
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=(20, 40, 80, 160, 320, 640),
         goto_dimension=160,  # auto-focus on this dimension in html
@@ -659,7 +666,7 @@ class BBOBLargeScaleTestbed(GECCOBBOBTestbed):
         pprldistr_target_values=(10., 1e-1, 1e-4, 1e-8),
         pprldmany_target_values=10 ** np.arange(2, -8.2, -0.2),
         pprldmany_target_range_latex='$10^{[-8..2]}$',
-        ppscatter_target_values=np.logspace(-8, 2, 21),
+        ppscatter_target_values=np.array(list(np.logspace(-8, 2, 21)) + [inf_like]),
         rldValsOfInterest=(10, 1e-1, 1e-4, 1e-8),  # possibly changed in config
         ppfvdistr_min_target=1e-8,
         functions_with_legend=(1, 24),
@@ -709,7 +716,7 @@ class GECCOBBOBMixintTestbed(GECCOBBOBTestbed):
     dimsOfInterest = (10, 40)
 
     settings = dict(
-        name=testbed_name_mixint,
+        name=suite_name_mixint,
         first_dimension=5,
         dimensions_to_display=[5, 10, 20, 40, 80, 160],
         goto_dimension=40,  # auto-focus on this dimension in html
@@ -748,7 +755,7 @@ class GECCOBBOBBiObjMixintTestbed(GECCOBiObjExtBBOBTestbed):
     settings = dict(
         info_filename='bbob-biobj-ext-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_bi_mixint,
+        name=suite_name_bi_mixint,
         first_dimension=5,
         dimensions_to_display=[5, 10, 20, 40, 80, 160],
         goto_dimension=40,  # auto-focus on this dimension in html
@@ -788,7 +795,7 @@ class TopTrumpsTestbed(Testbed):
     settings = dict(
         info_filename='rw-top-trumps-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_tt,
+        name=suite_name_tt,
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=88,  # auto-focus on this dimension in html
@@ -843,7 +850,7 @@ class TopTrumpsBiobjTestbed(Testbed):
     settings = dict(
         info_filename='rw-top-trumps-biobj-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_tt_bi,
+        name=suite_name_tt_bi,
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=88,  # auto-focus on this dimension in html
@@ -898,7 +905,7 @@ class MarioGanTestbed(Testbed):
     settings = dict(
         info_filename='rw-mario-gan-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_mg,
+        name=suite_name_mg,
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=10,  # auto-focus on this dimension in html
@@ -953,7 +960,7 @@ class MarioGanBiobjTestbed(Testbed):
     settings = dict(
         info_filename='rw-mario-gan-biobj-benchmarkinfos.txt',
         shortinfo_filename=shortinfo_filename,
-        name=testbed_name_mg_bi,
+        name=suite_name_mg_bi,
         short_names=get_short_names(shortinfo_filename),
         dimensions_to_display=dimsOfInterest,
         goto_dimension=10,  # auto-focus on this dimension in html

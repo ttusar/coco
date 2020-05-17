@@ -31,8 +31,6 @@ from .toolsdivers import print_done, prepend_to_file, strip_pathname1, str_to_la
 from . import ppconverrorbars
 from .compall import pprldmany, ppfigs
 
-import matplotlib.pyplot as plt
-
 __all__ = ['main']
 
 
@@ -69,6 +67,7 @@ def main(alg, outputdir, argv=None):
     algoutputdir = os.path.join(outputdir, algfolder)
 
     print("\nPost-processing (1)")
+    print("  loading data...")
 
     dsList = DataSetList(alg)
 
@@ -83,6 +82,9 @@ def main(alg, outputdir, argv=None):
     if genericsettings.isNoiseFree and not genericsettings.isNoisy:
         dsList = dsList.dictByNoise().get('noiselessall', DataSetList())
 
+    # filter to allow postprocessing data from different test suites:
+    dsList = testbedsettings.current_testbed.filter(dsList)
+
     store_reference_values(dsList)
 
     # compute maxfuneval values
@@ -93,7 +95,7 @@ def main(alg, outputdir, argv=None):
     from . import config
     config.config_target_values_setting(genericsettings.isExpensive,
                                         genericsettings.runlength_based_targets)
-    config.config(dsList[0].testbed_name)
+    config.config(dsList[0].suite_name)
     if genericsettings.verbose:
         for i in dsList:
             # check whether current set of instances correspond to correct
@@ -139,7 +141,7 @@ def main(alg, outputdir, argv=None):
     else:
         algorithm_string = ""
     page_title = 'Results%s on the <TT>%s</TT> Benchmark Suite' % \
-                 (algorithm_string, dictFunc[list(dictFunc.keys())[0]][0].get_suite())
+                 (algorithm_string, dictFunc[list(dictFunc.keys())[0]][0].suite_name)
     ppfig.save_single_functions_html(os.path.join(algoutputdir, genericsettings.single_algorithm_file_name),
                                      page_title,
                                      htmlPage=ppfig.HtmlPage.ONE,
@@ -149,24 +151,9 @@ def main(alg, outputdir, argv=None):
     if genericsettings.isFig:
         print("Scaling figures...")
         # ERT/dim vs dim.
-        #plt.rc("axes", **inset.rcaxeslarger)
-        #plt.rc("xtick", **inset.rcticklarger)
-        #plt.rc("ytick", **inset.rcticklarger)
-        #plt.rc("font", **inset.rcfontlarger)
-        #plt.rc("legend", **inset.rclegendlarger)
-        #plt.rc('pdf', fonttype = 42)
-
         ppfigdim.main(dsList, values_of_interest, algoutputdir)
 
-        plt.rcdefaults()
         print_done()
-
-    plt.rc("axes", **genericsettings.rcaxes)
-    plt.rc("xtick", **genericsettings.rctick)
-    plt.rc("ytick", **genericsettings.rctick)
-    plt.rc("font", **genericsettings.rcfont)
-    plt.rc("legend", **genericsettings.rclegend)
-    plt.rc('pdf', fonttype = 42)
 
     if genericsettings.isConv:
         print("Generating convergence plots...")
@@ -302,7 +289,5 @@ def main(alg, outputdir, argv=None):
                      (str_to_latex(strip_pathname1(alg[0])) if len(alg) == 1 else str_to_latex(dsList[0].algId)) + '{}}'])
     print("Output data written to folder %s" %
           os.path.join(os.getcwd(), algoutputdir))
-
-    plt.rcdefaults()
 
     return dsList.dictByAlg()

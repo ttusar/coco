@@ -144,7 +144,7 @@ def main(args, outputdir):
     from . import config
     config.config_target_values_setting(genericsettings.isExpensive,
                                         genericsettings.runlength_based_targets)
-    config.config(dsList[0].get_testbed_name())
+    config.config(dsList[0].suite_name)
 
     for i in dsList:
         if i.dim not in testbedsettings.current_testbed.dimensions_to_display:
@@ -164,13 +164,6 @@ def main(args, outputdir):
                           'list the correct instances ' +
                           'of function F%d.' % i.funcId)
             last_incorrect_instances = curr_instances
-
-    plt.rc("axes", **genericsettings.rcaxes)
-    plt.rc("xtick", **genericsettings.rctick)
-    plt.rc("ytick", **genericsettings.rctick)
-    plt.rc("font", **genericsettings.rcfont)
-    plt.rc("legend", **genericsettings.rclegend)
-    plt.rc('pdf', fonttype=42)
 
     ppfig.copy_js_files(many_algorithms_output)
 
@@ -202,7 +195,7 @@ def main(args, outputdir):
 
     # empirical cumulative distribution functions (ECDFs) aka Data profiles
     if genericsettings.isRLDistr:
-        config.config(dsList[0].get_testbed_name())
+        config.config(dsList[0].suite_name)
 
         if len(genericsettings.foreground_algorithm_list) == 2:
             print("ECDF runlength ratio graphs...")
@@ -385,7 +378,7 @@ def main(args, outputdir):
                     sortedAlgs,
                     many_algorithms_output,
                     ([1, 20, 38] if (testbedsettings.current_testbed.name ==
-                                     testbedsettings.testbed_name_bi) else True),
+                                     testbedsettings.suite_name_bi) else True),
                     latex_commands_file)
         print_done()
 
@@ -423,24 +416,15 @@ def main(args, outputdir):
 
     if genericsettings.isFig:
         print("Scaling figures...")
-        plt.rc("axes", labelsize=20, titlesize=24)
-        plt.rc("xtick", labelsize=20)
-        plt.rc("ytick", labelsize=20)
-        plt.rc("font", size=20)
-        plt.rc("legend", fontsize=20)
-        plt.rc('pdf', fonttype=42)
-
         ppfigs.main(dictAlg,
                     genericsettings.ppfigs_file_name,
                     sortedAlgs,
                     many_algorithms_output,
                     latex_commands_file)
-        plt.rcdefaults()
         print_done()
+
     print("Output data written to folder %s" %
           os.path.join(os.getcwd(), many_algorithms_output))
-
-    plt.rcdefaults()
 
     return DataSetList(dsList).dictByAlg()
 
