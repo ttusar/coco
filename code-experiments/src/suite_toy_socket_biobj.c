@@ -29,7 +29,7 @@ static coco_suite_t *suite_toy_socket_biobj_initialize(const char *suite_options
 
   suite = coco_suite_allocate("toy-socket-biobj", 2, 2, dimensions, "instances: 1", 0);
 
-  suite->data = socket_communication_data_initialize(suite_options, 7251);
+  suite->data = socket_communication_data_initialize(suite_options, 7000);
   suite->data_free_function = socket_communication_data_finalize;
   return suite;
 }

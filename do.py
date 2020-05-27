@@ -749,8 +749,8 @@ def test_java():
 ################################################################################
 ## External evaluation using socket communication
 socket_server_host = '127.0.0.1'  # Local host
-socket_server_port_c = 7251
-socket_server_port_python = 7252
+socket_server_port_c = 7000
+socket_server_port_python = 7200
 socket_server_ports = [socket_server_port_c, socket_server_port_python]
 rw_evaluator_top_trumps = 'EVALUATE_RW_TOP_TRUMPS'
 rw_evaluator_mario_gan = 'EVALUATE_RW_MARIO_GAN'

@@ -28,7 +28,7 @@ static coco_suite_t *suite_rw_mario_gan_initialize(const char *suite_options) {
 
   suite = coco_suite_allocate("rw-mario-gan", 28, 4, dimensions, "instances: 1-7", 0);
 
-  suite->data = socket_communication_data_initialize(suite_options, 7252);
+  suite->data = socket_communication_data_initialize(suite_options, 7200);
   suite->data_free_function = socket_communication_data_finalize;
   return suite;
 }

@@ -62,7 +62,7 @@ and stopped by calling
 python do.py stop-socket-servers <port=1234>
 ````
 
-The ports used by the socket servers in C and Python are set to `7251` and `7252` (respectively)
+The ports used by the socket servers in C and Python are set to `7000` and `7200` (respectively)
 by default to enable both servers to work at the same time. The ports can be changed as shown
 in the code snippet above, however, this also entails setting the port number in the suite
 options (the syntax used in suite options is `"port: 1234"`). In general it should be fine to leave
