@@ -213,11 +213,15 @@ static void socket_communication_save_response(const char *response,
 static char* socket_communication_get_response(const socket_communication_data_t *data,
                                                const char *message) {
 
+#if WINSOCK
+  size_t response_len;
+#else
+  long int response_len;
+#endif
   char response[RESPONSE_SIZE];
   assert(data->sock);
 
 #if WINSOCK
-  size_t response_len;
   /* Send message */
   if (send(data->sock, message, (int)strlen(message) + 1, 0) < 0) {
     coco_error("socket_communication_evaluate(): Send failed: %d", WSAGetLastError());
@@ -231,7 +235,6 @@ static char* socket_communication_get_response(const socket_communication_data_t
   response[response_len] = '\0';
   coco_debug("Received response: %s (length %d)", response, response_len);
 #else
-  long int response_len;
   /* Send message */
   if (send(data->sock, message, strlen(message) + 1, 0) < 0) {
     coco_error("socket_communication_evaluate(): Send failed");
