@@ -47,7 +47,9 @@ from COCO repository's root folder.
 
 The port can be specified with `port=N`, but changing the default ports is generally not required. The 
 first time the servers are run, all the pertinent data is downloaded (which can take some time). 
-If you ever need to re-download the GBEA server data, set `force-rw-download=1`.
+If you ever need to re-download the GBEA server data, set `force-rw-download=1`. The `batch=K` 
+argument is relevant only when the experiments are ran in batches (see Parallelization below) for 
+more information.  
 
 You can continue working on the same console you used to run the socket server (you just might need
 to press `enter` first.)
@@ -70,8 +72,9 @@ This is rather straightforward for the Mario GAN server - you can run as many se
 just make sure to assign them different ports. 
 
 To do the same for the Top Trumps server, you have to use different ports *and* different batch 
-numbers (see above the `<batch=K>` argument). This will make sure enough copies of the Top Trumps
-library are available. 
+numbers (see above the `<batch=K>` argument). The Top Trumps server is built from scratch only for
+the first batch, so you should always run the first batch before any other ones. 
+
 
 ### Troubleshooting
 
@@ -107,8 +110,7 @@ from COCO repository's root folder. The latter replaces the three commands above
 The results will be saved to the `code-experiments/build/python/exdata` folder.
 
 **Experiments in Python can be easily parallelized** by setting the number of total batches and the 
-current batch as follows (for complicated underlying reasons make sure that the first batch is 
-called before the others)
+current batch as follows (make sure that the first batch is called before the others)
 ```
 python do.py run-rw-experiment suite_name=rw-top-trumps batches=4 batch=1
 python do.py run-rw-experiment suite_name=rw-top-trumps batches=4 batch=2
