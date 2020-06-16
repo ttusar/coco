@@ -857,37 +857,30 @@ def build_toy_socket_server_python():
 
 def _build_rw_top_trumps_lib():
     """Build the top trumps library with the top trumps evaluator (in C)"""
+    # Build the library
+    rw_library = 'rw_top_trumps'
+    make(os.path.join('code-experiments', 'rw-problems', 'top_trumps'), 'clean',
+         verbose=_build_verbosity)
+    make(os.path.join('code-experiments', 'rw-problems', 'top_trumps'), 'all',
+         verbose=_build_verbosity)
+    if 'win32' in sys.platform:
+        rw_library += '.dll'
+    else:
+        rw_library = 'lib' + rw_library + '.so'
     try:
-        # Build the library
-        rw_library = 'rw_top_trumps'
-        make(os.path.join('code-experiments', 'rw-problems', 'top_trumps'), 'clean',
-             verbose=_build_verbosity)
-        make(os.path.join('code-experiments', 'rw-problems', 'top_trumps'), 'all',
-             verbose=_build_verbosity)
-        if 'win32' in sys.platform:
-            rw_library += '.dll'
-        else:
-            rw_library = 'lib' + rw_library + '.so'
-        try:
-            # Copy the library so that the socket server finds it
-            copy_file(os.path.join('code-experiments', 'rw-problems', 'top_trumps', rw_library),
-                      os.path.join('code-experiments', 'rw-problems', rw_library))
-        except PermissionError:
-            # The rw-top-trumps library is probably already used by some running server
-            print('WARNING! The rw-top-trumps library was not copied due to a permission error')
-        if 'darwin' in sys.platform:
-            library_des = '/usr/local/lib/' + rw_library
-            if not os.path.lexists(library_des):
-                # Create a symlink to the library to be used at run-time
-                library_src = os.path.abspath(os.path.join('code-experiments', 'rw-problems',
-                                                           'top_trumps', rw_library))
-                os.symlink(library_src, library_des)
-    except PermissionError as e:
-        print('Encountered a permission error, the rw-top-trumps library is probably used by the'
-              'server. Stop the socket server and try again. \nError: {}'.format(e))
-        sys.exit(-1)
-    except subprocess.CalledProcessError:
-        sys.exit(-1)
+        # Copy the library so that the socket server finds it
+        copy_file(os.path.join('code-experiments', 'rw-problems', 'top_trumps', rw_library),
+                  os.path.join('code-experiments', 'rw-problems', rw_library))
+    except PermissionError:
+        # The rw-top-trumps library is probably already used by some running server
+        print('WARNING! The rw-top-trumps library was not copied due to a permission error')
+    if 'darwin' in sys.platform:
+        library_des = '/usr/local/lib/' + rw_library
+        if not os.path.lexists(library_des):
+            # Create a symlink to the library to be used at run-time
+            library_src = os.path.abspath(os.path.join('code-experiments', 'rw-problems',
+                                                       'top_trumps', rw_library))
+            os.symlink(library_src, library_des)
 
 
 def build_rw_top_trumps_server(force_download=False, exclusive_evaluator=True):
@@ -942,9 +935,11 @@ def run_toy_socket_server_python(port):
     _run_socket_server_python(port)
 
 
-def run_rw_top_trumps_server(port, force_download=False):
-    """Build and run the socket server with the top trumps evaluator (in C)"""
-    build_rw_top_trumps_server(force_download=force_download, exclusive_evaluator=True)
+def run_rw_top_trumps_server(port, force_download=False, batch=1):
+    """Build (if batch == 1) and run the socket server with the top trumps evaluator (in C)"""
+    if batch == 1:
+        # Only build the server for the first batch
+        build_rw_top_trumps_server(force_download=force_download, exclusive_evaluator=True)
     _run_socket_server_c(port)
 
 
@@ -1029,7 +1024,7 @@ def run_rw_experiment(package_install_option=[], force_download=False, args=[]):
         if 'toy-socket' in suite_name:
             run_toy_socket_server_c(port=port)
         elif 'rw-top-trumps' in suite_name:
-            run_rw_top_trumps_server(port=port, force_download=force_download)
+            run_rw_top_trumps_server(port=port, force_download=force_download, batch=current_batch)
         elif 'rw-mario-gan' in suite_name:
             run_rw_mario_gan_server(port=port, force_download=force_download)
         else:
@@ -1302,6 +1297,7 @@ def main(args):
     package_install_option = []
     port = None
     force_rw_download = False  # Whether to force download of the data of the real-world problems
+    batch = 1
     for arg in args[1:]:
         if arg == 'and-test':
             also_test_python = True
@@ -1313,6 +1309,8 @@ def main(args):
             port = int(arg[5:])
         elif arg[:18] == 'force-rw-download=':
             force_rw_download = bool(arg[18:])
+        elif arg[:6] == 'batch=':
+            batch = int(arg[6:])
     if cmd == 'build': build(package_install_option=package_install_option)
     elif cmd == 'run': run_all(package_install_option=package_install_option)
     elif cmd == 'test': test()
@@ -1355,7 +1353,7 @@ def main(args):
     elif cmd == 'build-socket-servers': build_socket_servers(force_download=force_rw_download)
     elif cmd == 'run-toy-socket-server-c': run_toy_socket_server_c(port=port)
     elif cmd == 'run-toy-socket-server-python': run_toy_socket_server_python(port=port)
-    elif cmd == 'run-rw-top-trumps-server': run_rw_top_trumps_server(port=port, force_download=force_rw_download)
+    elif cmd == 'run-rw-top-trumps-server': run_rw_top_trumps_server(port=port, force_download=force_rw_download, batch=batch)
     elif cmd == 'run-rw-mario-gan-server': run_rw_mario_gan_server(port=port, force_download=force_rw_download)
     elif cmd == 'run-socket-servers': run_socket_servers(force_download=force_rw_download)
     elif cmd == 'stop-socket-servers': stop_socket_servers(port=port)
