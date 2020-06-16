@@ -123,7 +123,7 @@ if __name__ == '__main__':
     # Run the solver on the problems of the suite in the current batch
     for problem_index, problem in enumerate(suite):
         # Skip problems not in this batch
-        if (problem_index + current_batch) % batches:
+        if (problem_index + current_batch - 1) % batches:
             continue
         # Use the observer
         problem.observe_with(observer)
