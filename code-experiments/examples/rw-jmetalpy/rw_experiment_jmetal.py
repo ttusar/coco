@@ -13,7 +13,7 @@ Arguments:
     batches=BATCHES                    # Number of all batches to parallelize the experiment
                                        # (default 1)
     batch=BATCH                        # This batch (default 1)
-    start_port=PORT                    # Port for the first batch (default 7000)
+    start_port=PORT                    # Starting port (default 7000)
 
 Example:
     # Runs the 1st of 4 batches of the rw-top-trumps-biobj suite
@@ -63,14 +63,9 @@ def parse_arguments(argv):
     start_port = 7000  # Do not change
     observer_name = 'bbob-biobj'
     observer_options = ''
-    if 11 < 3:
-        suite_name = 'bbob-biobj-mixint'
-        suite_options = 'dimensions: 5,10 function_indices: 1-92 instance_indices: 1'
-        budget_multiplier = 10000
-    else:
-        suite_name = 'rw-top-trumps-biobj'
-        suite_options = 'dimensions: 88,128 function_indices: 1 instance_indices: 1-5'
-        budget_multiplier = 1000
+    suite_name = 'rw-top-trumps-biobj'
+    suite_options = ''
+    budget_multiplier = 1
     # Parse the command line arguments
     for arg in argv:
         if arg[:6] == 'suite=':

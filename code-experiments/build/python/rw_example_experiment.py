@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 """
 An example experiment for real-world problems that use sockets for evaluating solutions.
-Showcases the use of two observers (the 'standard' bbob(-biobj) and the rw observer), batch
-evaluations and restarts.
+Showcases batch evaluations and restarts.
 
 By default (without arguments), performs an experiment with the toy-socket suite.
 
 Arguments:
-    suite=SUITE_NAME                   # Suite name (default toy-socket)
+    suite=SUITE_NAME                   # Suite name (default 'toy-socket')
     suite_options=SUITE_OPTIONS        # Suite options (default '')
-    observer=OBSERVER_NAME             # Name of the observer where 'bbob(-biobj)', 'rw' and 'both'
-                                       # are supported (default 'both')
+    observer=OBSERVER_NAME             # Observer name (default 'bbob')
     observer_options=OBSERVER_OPTIONS  # Observer options (default '')
     budget_multiplier=BUDGET           # Budget multiplier (default 10)
     batches=BATCHES                    # Number of all batches to parallelize the experiment
                                        # (default 1)
     batch=BATCH                        # This batch (default 1)
-    start_port=PORT                    # Port for the first batch (default 7000)
+    start_port=PORT                    # Starting port (default 7000)
 
 Example:
     # Runs the 1st of 4 batches of the rw-top-trumps suite
@@ -57,7 +55,7 @@ def parse_arguments(argv):
     start_port = 7000
     # Other defaults
     suite_options = ''
-    observer_name = 'both'
+    observer_name = 'bbob'
     observer_options = ''
     budget_multiplier = 10
     batches = 1
@@ -112,17 +110,9 @@ if __name__ == '__main__':
     suite_options = 'port: {} {}'.format(port, suite_options)
     suite = cocoex.Suite(suite_name, '', suite_options)
     num_obj = suite[0].number_of_objectives
-    # Prepare the observers
-    if observer_name in ['bbob', 'bbob-biobj', 'rw']:
-        observer_names = [observer_name]
-    elif observer_name == 'both':
-        observer_names = ['rw', 'bbob'] if num_obj == 1 else ['rw', 'bbob-biobj']
-    else:
-        raise ValueError('Observer name {} not supported'.format(observer_name))
-    observers = [cocoex.Observer(observer_n, '{} result_folder: {}{}{}'.format(
-        observer_options, suite_name,
-        '-{}'.format(observer_n) if len(observer_names) > 1 else '',
-        '-batch-{}'.format(current_batch) if batches > 1 else '')) for observer_n in observer_names]
+    # Prepare the observer
+    observer = cocoex.Observer(observer_name, '{} result_folder: {}{}'.format(
+        observer_options, suite_name, '-batch-{}'.format(current_batch) if batches > 1 else ''))
 
     # Use minimal printing
     minimal_print = cocoex.utilities.MiniPrint()
@@ -135,9 +125,8 @@ if __name__ == '__main__':
         # Skip problems not in this batch
         if (problem_index + current_batch - 1) % batches:
             continue
-        # Use all chosen observers
-        for observer in observers:
-            problem.observe_with(observer)
+        # Use the observer
+        problem.observe_with(observer)
         lb = problem.lower_bounds
         ub = problem.upper_bounds
         # To use a continuous optimizer, equalize the bounds of integer variables
@@ -148,10 +137,8 @@ if __name__ == '__main__':
         # Restart the solver while neither the problem is solved nor the budget is exhausted
         while (problem.evaluations < problem.dimension * budget_multiplier
                and not problem.final_target_hit):
-            for observer in observers:
-                # Only the bbob(-biobj) observer support signaling restarts
-                if b'bbob' in observer.name:
-                    observer.signal_restart(problem)
+            if b'bbob' in observer.name:
+                observer.signal_restart(problem)
             solver(problem, lb, ub,
                    budget=budget_multiplier * problem.dimension - problem.evaluations)
         minimal_print(problem, final=problem.index == len(suite) - 1)

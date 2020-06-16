@@ -10,7 +10,7 @@ respectively, and
 
 More informations about the suites can be found at the
 [GBEA website](http://www.gm.fh-koeln.de/~naujoks/gbea/gamesbench_doc.html#abstract), here we give 
-the details on running your algoirthms on these suites in one of the four COCO-supported languages 
+the details on running your algorithms on these suites in one of the four COCO-supported languages 
 (Python, C/C++, Java, Matlab/Octave).
 
 ## Preparation
