@@ -18,6 +18,7 @@ import signal
 import re
 import socket
 from multiprocessing import Process
+import time
 
 
 ## Change to the root directory of repository and add our tools/
@@ -1038,6 +1039,8 @@ def run_rw_experiment(package_install_option=[], force_download=False, args=[]):
         # Build only for the first batch
         if current_batch == 1:
             build_python(package_install_option=package_install_option)
+        else:
+            time.sleep(3)  # Wait a few seconds for the servers to start
         python(os.path.join('code-experiments', 'build', 'python'),
                ['rw_example_experiment.py'] + args)
     finally:
