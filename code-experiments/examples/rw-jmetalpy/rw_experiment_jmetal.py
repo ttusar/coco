@@ -130,7 +130,7 @@ def run_experiment(argv=[]):
     # Run the algorithm on the problems of the suite in the current batch
     for problem_index, problem in enumerate(suite):
         # Skip problems not in this batch
-        if (problem_index + current_batch - 1) % batches:
+        if (problem_index + current_batch) % batches:
             continue
         # Observe the problem
         problem.observe_with(observer)
